@@ -1,0 +1,18 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: store_management
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes" # Disposable local database only; no credential is committed.
+    ports:
+      - "3307:3306"
+    volumes:
+      - local-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  local-mysql-data:
