@@ -131,7 +131,9 @@ public sealed class S3Service : IS3Service
         var imageKey = RemovePrefix(key, _root);
         return imageKey.Equals("0.png", StringComparison.OrdinalIgnoreCase) ||
             imageKey.Equals(_publicPrefix, StringComparison.OrdinalIgnoreCase) ||
-            imageKey.StartsWith($"{_publicPrefix}/", StringComparison.OrdinalIgnoreCase);
+            imageKey.StartsWith($"{_publicPrefix}/", StringComparison.OrdinalIgnoreCase) ||
+            imageKey.Equals(_privatePrefix, StringComparison.OrdinalIgnoreCase) ||
+            imageKey.StartsWith($"{_privatePrefix}/", StringComparison.OrdinalIgnoreCase);
     }
 
     private bool IsPrivateKey(string key) =>
