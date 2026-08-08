@@ -8,15 +8,17 @@ namespace dotnet_backend.Services;
 public class OrderItemService : IOrderItemService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IS3Service _s3Service;
 
-    public OrderItemService(ApplicationDbContext context)
+    public OrderItemService(ApplicationDbContext context, IS3Service s3Service)
     {
         _context = context;
+        _s3Service = s3Service;
     }
 
     public async Task<IEnumerable<OrderItemWithProductDto>> GetOrderItemsWithProductsAsync(int orderId)
     {
-        return await _context.OrderItems
+        var orderItems = await _context.OrderItems
             .Where(oi => oi.OrderId == orderId)
             .Join(
                 _context.Products,
@@ -39,6 +41,18 @@ public class OrderItemService : IOrderItemService
                 }
             )
             .ToListAsync();
+
+        foreach (var item in orderItems)
+        {
+            if (!string.IsNullOrWhiteSpace(item.ImageUrl) &&
+                !(Uri.TryCreate(item.ImageUrl, UriKind.Absolute, out var imageUri) &&
+                  (imageUri.Scheme == Uri.UriSchemeHttp || imageUri.Scheme == Uri.UriSchemeHttps)))
+            {
+                item.ImageUrl = await _s3Service.GetImageUrlAsync(item.ImageUrl);
+            }
+        }
+
+        return orderItems;
     }
 
 }

@@ -15,11 +15,13 @@ public class OrderService : IOrderService
 {
     private readonly ApplicationDbContext _context;
     private readonly PromotionService _promotionService;
+    private readonly IS3Service _s3Service;
 
-    public OrderService(ApplicationDbContext context, PromotionService promotionService)
+    public OrderService(ApplicationDbContext context, PromotionService promotionService, IS3Service s3Service)
     {
         _context = context;
         _promotionService = promotionService;
+        _s3Service = s3Service;
     }
 
     public async Task<IEnumerable<PromotionDto>> GetAllPromosAsync()
@@ -616,7 +618,7 @@ public class OrderService : IOrderService
 
         if (order == null) return null!;
 
-        return new OrderDto
+        var result = new OrderDto
         {
             OrderId = order.OrderId,
             CustomerId = order.CustomerId,
@@ -679,10 +681,23 @@ public class OrderService : IOrderService
                     Unit = oi.Product.Unit ?? "",
                     CreatedAt = oi.Product.CreatedAt,
                     CategoryId = oi.Product.CategoryId,
-                    SupplierId = oi.Product.SupplierId
+                    SupplierId = oi.Product.SupplierId,
+                    ImageUrl = oi.Product.ImageUrl
                 }
             }).ToList()
         };
+
+        foreach (var item in result.OrderItems)
+        {
+            if (!string.IsNullOrWhiteSpace(item.Product?.ImageUrl) &&
+                !(Uri.TryCreate(item.Product.ImageUrl, UriKind.Absolute, out var imageUri) &&
+                  (imageUri.Scheme == Uri.UriSchemeHttp || imageUri.Scheme == Uri.UriSchemeHttps)))
+            {
+                item.Product!.ImageUrl = await _s3Service.GetImageUrlAsync(item.Product.ImageUrl);
+            }
+        }
+
+        return result;
     }
 
 
@@ -1020,6 +1035,16 @@ public class OrderService : IOrderService
                 ImageUrl = ci.Product.ImageUrl
             }
         }).ToList();
+
+        foreach (var item in orderItems)
+        {
+            if (!string.IsNullOrWhiteSpace(item.Product?.ImageUrl) &&
+                !(Uri.TryCreate(item.Product.ImageUrl, UriKind.Absolute, out var imageUri) &&
+                  (imageUri.Scheme == Uri.UriSchemeHttp || imageUri.Scheme == Uri.UriSchemeHttps)))
+            {
+                item.Product!.ImageUrl = await _s3Service.GetImageUrlAsync(item.Product.ImageUrl);
+            }
+        }
 
         var total = orderItems.Sum(x => x.Subtotal);
 

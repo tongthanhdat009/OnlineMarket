@@ -14,11 +14,13 @@ namespace dotnet_backend.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IPromotionService _promotionService;
+        private readonly IS3Service _s3Service;
 
-        public CartService(ApplicationDbContext context, IPromotionService promotionService)
+        public CartService(ApplicationDbContext context, IPromotionService promotionService, IS3Service s3Service)
         {
             _context = context;
             _promotionService = promotionService;
+            _s3Service = s3Service;
         }
 
         /// <summary>
@@ -26,11 +28,23 @@ namespace dotnet_backend.Services
         /// </summary>
         public async Task<List<CartItem>> GetCartItemsAsync(int customerId)
         {
-            return await _context.CartItems
+            var cartItems = await _context.CartItems
                 .Include(ci => ci.Product)
                 .ThenInclude(p => p.Category)
                 .Where(ci => ci.CustomerId == customerId)
                 .ToListAsync();
+
+            foreach (var item in cartItems)
+            {
+                if (!string.IsNullOrWhiteSpace(item.Product?.ImageUrl) &&
+                    !(Uri.TryCreate(item.Product.ImageUrl, UriKind.Absolute, out var imageUri) &&
+                      (imageUri.Scheme == Uri.UriSchemeHttp || imageUri.Scheme == Uri.UriSchemeHttps)))
+                {
+                    item.Product!.ImageUrl = await _s3Service.GetImageUrlAsync(item.Product.ImageUrl!);
+                }
+            }
+
+            return cartItems;
         }
 
         /// <summary>
