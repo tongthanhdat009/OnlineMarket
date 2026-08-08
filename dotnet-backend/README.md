@@ -235,7 +235,9 @@ If `ConnectionStrings__DefaultConnection` is absent, copy the ignored local plac
 ```bash
 cd dotnet-backend
 cp .env.example .env
-set -a; . ./.env; set +a
+# Replace Jwt__Secret in .env with a local-only random value:
+secret="$(openssl rand -hex 32)" && sed -i "s|^Jwt__Secret=.*|Jwt__Secret=$secret|" .env && unset secret
+while IFS= read -r line; do [[ $line == \#* || -z $line ]] || export "$line"; done < .env
 
 docker compose up -d
 # Wait until the db healthcheck is healthy, then start API:
