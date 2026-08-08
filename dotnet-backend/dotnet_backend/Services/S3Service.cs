@@ -123,6 +123,7 @@ public sealed class S3Service : IS3Service
             return CombineKey(key);
         if (key.Equals(_privatePrefix, StringComparison.OrdinalIgnoreCase) || key.StartsWith($"{_privatePrefix}/", StringComparison.OrdinalIgnoreCase))
             return CombineKey(key);
+        if (IsLegacyProductImageFileName(key)) return CombineKey(_publicPrefix, key);
         return key;
     }
 
@@ -130,11 +131,22 @@ public sealed class S3Service : IS3Service
     {
         var key = NormalizeKey(ExtractKeyFromUrl(s3Key));
         var imageKey = RemovePrefix(key, _root);
-        return imageKey.Equals("0.png", StringComparison.OrdinalIgnoreCase) ||
-            imageKey.Equals(_publicPrefix, StringComparison.OrdinalIgnoreCase) ||
+        return imageKey.Equals(_publicPrefix, StringComparison.OrdinalIgnoreCase) ||
             imageKey.StartsWith($"{_publicPrefix}/", StringComparison.OrdinalIgnoreCase) ||
             imageKey.Equals(_privatePrefix, StringComparison.OrdinalIgnoreCase) ||
             imageKey.StartsWith($"{_privatePrefix}/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsLegacyProductImageFileName(string key)
+    {
+        if (key.Length == 0 || key.Contains('/')) return false;
+
+        return key.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+            key.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+            key.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
+            key.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) ||
+            key.EndsWith(".gif", StringComparison.OrdinalIgnoreCase) ||
+            key.EndsWith(".avif", StringComparison.OrdinalIgnoreCase);
     }
 
     private bool IsPrivateKey(string key) =>
