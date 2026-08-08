@@ -237,7 +237,7 @@ cd dotnet-backend
 cp .env.example .env
 # Replace Jwt__Secret in .env with a local-only random value:
 secret="$(openssl rand -hex 32)" && sed -i "s|^Jwt__Secret=.*|Jwt__Secret=$secret|" .env && unset secret
-while IFS= read -r line; do [[ $line == \#* || -z $line ]] || export "$line"; done < .env
+set -a; source .env; set +a
 
 docker compose up -d
 # Wait until the db healthcheck is healthy, then start API:
