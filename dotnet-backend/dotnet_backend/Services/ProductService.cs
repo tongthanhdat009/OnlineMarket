@@ -225,13 +225,19 @@ public class ProductService : IProductService
             throw new ArgumentException("Giá phải lớn hơn 0.");
         }
 
+        var imageUrl = string.IsNullOrEmpty(productDto.ImageUrl) ? "0.png" : productDto.ImageUrl;
+        if (!IsManagedImageKey(imageUrl))
+        {
+            throw new ArgumentException("ImageUrl phải là key ảnh sản phẩm do server cấp.");
+        }
+
         var product = new Product
         {
             ProductName = productDto.ProductName,
             Price = productDto.Price,
             Barcode = productDto.Barcode,
             Unit = productDto.Unit,
-            ImageUrl = string.IsNullOrEmpty(productDto.ImageUrl) ? "0.png" : productDto.ImageUrl,
+            ImageUrl = imageUrl,
             CategoryId = productDto.CategoryId,
             SupplierId = productDto.SupplierId
         };
@@ -335,19 +341,14 @@ public class ProductService : IProductService
         productToUpdate.Price = productDto.Price;
         productToUpdate.Barcode = productDto.Barcode;
         productToUpdate.Unit = productDto.Unit;
-        // Chỉ cập nhật ImageUrl nếu không phải là presigned URL (giữ nguyên giá trị cũ nếu frontend gửi URL)
         if (!string.IsNullOrEmpty(productDto.ImageUrl))
         {
-            // Nếu là presigned URL hoặc full URL, giữ nguyên giá trị cũ
-            if (productDto.ImageUrl.StartsWith("http"))
+            if (!IsManagedImageKey(productDto.ImageUrl))
             {
-                // Giữ nguyên ImageUrl cũ trong DB (không thay đổi)
+                throw new ArgumentException("ImageUrl phải là key ảnh sản phẩm do server cấp.");
             }
-            else
-            {
-                // Đây là key hoặc "0.png"
-                productToUpdate.ImageUrl = productDto.ImageUrl;
-            }
+
+            productToUpdate.ImageUrl = productDto.ImageUrl;
         }
         // Nếu null thì giữ nguyên giá trị cũ (không thay đổi)
         productToUpdate.CategoryId = productDto.CategoryId;
@@ -461,6 +462,10 @@ public class ProductService : IProductService
 
         return s3Key;
     }
+
+    private static bool IsManagedImageKey(string imageUrl) =>
+        imageUrl.Equals("0.png", StringComparison.OrdinalIgnoreCase) ||
+        imageUrl.StartsWith("public/", StringComparison.OrdinalIgnoreCase);
 
     private static async Task<ImageType?> DetectImageTypeAsync(Microsoft.AspNetCore.Http.IFormFile imageFile)
     {

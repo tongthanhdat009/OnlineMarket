@@ -50,15 +50,20 @@ public sealed class S3Service : IS3Service
     {
         if (string.IsNullOrWhiteSpace(s3Key)) return string.Empty;
         var key = NormalizeKey(ExtractKeyFromUrl(s3Key));
+        if (!IsManagedProductImageKey(key)) return string.Empty;
+
         var baseUrl = IsPrivateKey(key) ? _privateUrl : _publicUrl;
         return BuildObjectUrl(baseUrl, key);
     }
 
     public Task<string> GetImageUrlAsync(string s3Key, int expirationMinutes = 60)
     {
-        return IsPrivateKey(NormalizeKey(ExtractKeyFromUrl(s3Key)))
-            ? GetPresignedUrlAsync(s3Key, expirationMinutes)
-            : Task.FromResult(GetFileUrl(s3Key));
+        var key = NormalizeKey(ExtractKeyFromUrl(s3Key));
+        if (!IsManagedProductImageKey(key)) return Task.FromResult(string.Empty);
+
+        return IsPrivateKey(key)
+            ? GetPresignedUrlAsync(key, expirationMinutes)
+            : Task.FromResult(GetFileUrl(key));
     }
 
     private Task<string> GetPresignedUrlAsync(string s3Key, int expirationMinutes = 60)
@@ -78,6 +83,8 @@ public sealed class S3Service : IS3Service
     {
         if (string.IsNullOrWhiteSpace(s3Key)) return false;
         var key = NormalizeKey(ExtractKeyFromUrl(s3Key));
+        if (!IsManagedProductImageKey(key)) return false;
+
         try
         {
             await _s3Client.DeleteObjectAsync(new DeleteObjectRequest
@@ -117,6 +124,14 @@ public sealed class S3Service : IS3Service
         if (key.Equals(_privatePrefix, StringComparison.OrdinalIgnoreCase) || key.StartsWith($"{_privatePrefix}/", StringComparison.OrdinalIgnoreCase))
             return CombineKey(key);
         return key;
+    }
+
+    private bool IsManagedProductImageKey(string key)
+    {
+        var imageKey = RemovePrefix(key, _root);
+        return imageKey.Equals("0.png", StringComparison.OrdinalIgnoreCase) ||
+            imageKey.Equals(_publicPrefix, StringComparison.OrdinalIgnoreCase) ||
+            imageKey.StartsWith($"{_publicPrefix}/", StringComparison.OrdinalIgnoreCase);
     }
 
     private bool IsPrivateKey(string key) =>
