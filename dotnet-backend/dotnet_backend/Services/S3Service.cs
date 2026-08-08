@@ -41,7 +41,8 @@ public sealed class S3Service : IS3Service
             InputStream = fileStream,
             Key = key,
             BucketName = _bucket,
-            ContentType = contentType
+            ContentType = contentType,
+            CannedACL = S3CannedACL.PublicRead
         });
         return key;
     }
