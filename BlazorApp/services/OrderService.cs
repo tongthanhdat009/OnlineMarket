@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using BlazorApp.Dto;
 using System.Text.Json;
@@ -25,13 +26,25 @@ namespace BlazorApp.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IApiService _apiService;
+        private readonly IAuthService _authService;
         private readonly IJSRuntime _jsRuntime;
 
-        public OrderService(HttpClient httpClient, IApiService apiService, IJSRuntime jsRuntime)
+        public OrderService(HttpClient httpClient, IApiService apiService, IAuthService authService, IJSRuntime jsRuntime)
         {
             _httpClient = httpClient;
             _apiService = apiService;
+            _authService = authService;
             _jsRuntime = jsRuntime;
+        }
+
+        private async Task SetAuthorizationHeaderAsync()
+        {
+            var token = await _authService.GetTokenAsync();
+            if (!string.IsNullOrEmpty(token))
+            {
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
+            }
         }
 
         public async Task<List<OrderDto>> GetOnlineOrdersByCustomerIdAsync()
@@ -87,6 +100,7 @@ namespace BlazorApp.Services
         {
             try
             {
+                await _authService.SetAuthorizationHeaderAsync();
                 var response = await _httpClient.GetAsync($"api/customer/orders/{orderId}/invoice-pdf");
                 if (response.IsSuccessStatusCode)
                 {
@@ -120,6 +134,7 @@ namespace BlazorApp.Services
 
         public async Task<OrderDto?> CreateOrderFromCartAsync(CreateOrderFromCartRequest request)
         {
+            await _authService.SetAuthorizationHeaderAsync();
             var response = await _httpClient.PostAsJsonAsync("api/customer/orders/create-from-cart", request);
             if (response.IsSuccessStatusCode)
             {
@@ -135,6 +150,7 @@ namespace BlazorApp.Services
 
         public async Task<OrderDto?> PreviewOrderFromCartAsync(CreateOrderFromCartRequest request)
         {
+            await _authService.SetAuthorizationHeaderAsync();
             var response = await _httpClient.PostAsJsonAsync("api/customer/orders/preview", request);
             if (response.IsSuccessStatusCode)
             {
@@ -150,6 +166,7 @@ namespace BlazorApp.Services
 
         public async Task<OrderDto?> CheckoutFromCartAsync(CreateOrderFromCartRequest request)
         {
+            await _authService.SetAuthorizationHeaderAsync();
             var response = await _httpClient.PostAsJsonAsync("api/customer/orders/checkout", request);
             if (response.IsSuccessStatusCode)
             {
@@ -165,12 +182,14 @@ namespace BlazorApp.Services
 
         public async Task<List<OrderDto>> GetMyOrdersAsync()
         {
+            await _authService.SetAuthorizationHeaderAsync();
             var orders = await _httpClient.GetFromJsonAsync<List<OrderDto>>("api/customer/orders");
             return orders ?? new List<OrderDto>();
         }
 
         public async Task<OrderDto?> GetOrderByIdAsync(int orderId)
         {
+            await _authService.SetAuthorizationHeaderAsync();
             return await _httpClient.GetFromJsonAsync<OrderDto>($"api/customer/orders/{orderId}");
         }
 
@@ -178,6 +197,7 @@ namespace BlazorApp.Services
         {
             try
             {
+                await _authService.SetAuthorizationHeaderAsync();
                 var response = await _httpClient.PostAsJsonAsync($"api/customer/orders/{orderId}/cancel", cancelDto);
                 if (response.IsSuccessStatusCode)
                 {
