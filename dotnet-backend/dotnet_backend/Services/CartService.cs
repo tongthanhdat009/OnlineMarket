@@ -29,6 +29,7 @@ namespace dotnet_backend.Services
         public async Task<List<CartItem>> GetCartItemsAsync(int customerId)
         {
             var cartItems = await _context.CartItems
+                .AsNoTracking()
                 .Include(ci => ci.Product)
                 .ThenInclude(p => p.Category)
                 .Where(ci => ci.CustomerId == customerId)
