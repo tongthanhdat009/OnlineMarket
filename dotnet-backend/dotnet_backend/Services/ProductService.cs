@@ -453,6 +453,6 @@ public class ProductService : IProductService
         _context.Products.Update(product);
         await _context.SaveChangesAsync();
 
-        return newFileName;
+        return s3Key;
     }
 }

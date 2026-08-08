@@ -8,9 +8,9 @@ namespace dotnet_backend.Services;
 public sealed class S3Service : IS3Service
 {
     private readonly IAmazonS3 _s3Client;
-    private readonly string _defaultBucket;
-    private readonly string _publicBucket;
-    private readonly string _privateBucket;
+    private readonly string _bucket;
+    private readonly string _publicPrefix;
+    private readonly string _privatePrefix;
     private readonly string _root;
     private readonly string _publicUrl;
     private readonly string _privateUrl;
@@ -20,9 +20,9 @@ public sealed class S3Service : IS3Service
     public S3Service(IAmazonS3 s3Client, IConfiguration configuration)
     {
         _s3Client = s3Client;
-        _defaultBucket = Setting(configuration, "AWS:BucketName", "AWS_BUCKET") ?? throw new ArgumentNullException("AWS_BUCKET");
-        _publicBucket = Setting(configuration, "AWS:PublicBucket", "AWS_PUBLIC_BUCKET") ?? _defaultBucket;
-        _privateBucket = Setting(configuration, "AWS:PrivateBucket", "AWS_PRIVATE_BUCKET") ?? _defaultBucket;
+        _bucket = Setting(configuration, "AWS:BucketName", "AWS_BUCKET") ?? throw new ArgumentNullException("AWS_BUCKET");
+        _publicPrefix = NormalizePrefix(Setting(configuration, "AWS:PublicBucket", "AWS_PUBLIC_BUCKET") ?? "public");
+        _privatePrefix = NormalizePrefix(Setting(configuration, "AWS:PrivateBucket", "AWS_PRIVATE_BUCKET") ?? "private");
         _root = NormalizePrefix(Setting(configuration, "AWS:Root", "AWS_ROOT"));
         _endpoint = (Setting(configuration, "AWS:Endpoint", "AWS_ENDPOINT") ?? string.Empty).TrimEnd('/');
         _publicUrl = (Setting(configuration, "AWS:PublicUrl", "AWS_PUBLIC_URL") ?? Setting(configuration, "AWS:Url", "AWS_URL") ?? string.Empty).TrimEnd('/');
@@ -32,15 +32,15 @@ public sealed class S3Service : IS3Service
 
     public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType)
     {
-        var name = NormalizePrefix(fileName);
-        if (name.StartsWith("public/", StringComparison.OrdinalIgnoreCase)) name = name["public/".Length..];
-        if (_root.Length > 0 && name.StartsWith($"{_root}/public/", StringComparison.OrdinalIgnoreCase)) name = name[(_root.Length + "/public/".Length)..];
-        var key = CombineKey("public", name);
+        var name = ExtractKeyFromUrl(fileName);
+        name = RemovePrefix(name, _root);
+        name = RemovePrefix(name, _publicPrefix);
+        var key = CombineKey(_publicPrefix, name);
         await new TransferUtility(_s3Client).UploadAsync(new TransferUtilityUploadRequest
         {
             InputStream = fileStream,
             Key = key,
-            BucketName = _publicBucket,
+            BucketName = _bucket,
             ContentType = contentType
         });
         return key;
@@ -49,15 +49,14 @@ public sealed class S3Service : IS3Service
     public string GetFileUrl(string s3Key)
     {
         if (string.IsNullOrWhiteSpace(s3Key)) return string.Empty;
-        var key = ExtractKeyFromUrl(s3Key);
-        var bucket = IsPrivateKey(key) ? _privateBucket : _publicBucket;
+        var key = NormalizeKey(ExtractKeyFromUrl(s3Key));
         var baseUrl = IsPrivateKey(key) ? _privateUrl : _publicUrl;
-        return BuildObjectUrl(baseUrl, bucket, key);
+        return BuildObjectUrl(baseUrl, key);
     }
 
     public Task<string> GetImageUrlAsync(string s3Key, int expirationMinutes = 60)
     {
-        return IsPrivateKey(ExtractKeyFromUrl(s3Key))
+        return IsPrivateKey(NormalizeKey(ExtractKeyFromUrl(s3Key)))
             ? GetPresignedUrlAsync(s3Key, expirationMinutes)
             : Task.FromResult(GetFileUrl(s3Key));
     }
@@ -65,10 +64,10 @@ public sealed class S3Service : IS3Service
     public Task<string> GetPresignedUrlAsync(string s3Key, int expirationMinutes = 60)
     {
         if (string.IsNullOrWhiteSpace(s3Key)) return Task.FromResult(string.Empty);
-        var key = ExtractKeyFromUrl(s3Key);
+        var key = NormalizeKey(ExtractKeyFromUrl(s3Key));
         var url = _s3Client.GetPreSignedURL(new GetPreSignedUrlRequest
         {
-            BucketName = IsPrivateKey(key) ? _privateBucket : _publicBucket,
+            BucketName = _bucket,
             Key = key,
             Expires = DateTime.UtcNow.AddMinutes(Math.Clamp(expirationMinutes, 1, 1440))
         });
@@ -78,12 +77,12 @@ public sealed class S3Service : IS3Service
     public async Task<bool> DeleteFileAsync(string s3Key)
     {
         if (string.IsNullOrWhiteSpace(s3Key)) return false;
-        var key = ExtractKeyFromUrl(s3Key);
+        var key = NormalizeKey(ExtractKeyFromUrl(s3Key));
         try
         {
             await _s3Client.DeleteObjectAsync(new DeleteObjectRequest
             {
-                BucketName = IsPrivateKey(key) ? _privateBucket : _publicBucket,
+                BucketName = _bucket,
                 Key = key
             });
             return true;
@@ -97,12 +96,12 @@ public sealed class S3Service : IS3Service
     public async Task<bool> FileExistsAsync(string s3Key)
     {
         if (string.IsNullOrWhiteSpace(s3Key)) return false;
-        var key = ExtractKeyFromUrl(s3Key);
+        var key = NormalizeKey(ExtractKeyFromUrl(s3Key));
         try
         {
             await _s3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest
             {
-                BucketName = IsPrivateKey(key) ? _privateBucket : _publicBucket,
+                BucketName = _bucket,
                 Key = key
             });
             return true;
@@ -133,28 +132,57 @@ public sealed class S3Service : IS3Service
             : $"{_root}/{key}";
     }
 
-    private bool IsPrivateKey(string key) =>
-        key.Equals("private", StringComparison.OrdinalIgnoreCase) ||
-        key.StartsWith("private/", StringComparison.OrdinalIgnoreCase) ||
-        (_root.Length > 0 && key.StartsWith($"{_root}/private/", StringComparison.OrdinalIgnoreCase));
-
-    private string BuildObjectUrl(string baseUrl, string bucket, string key)
+    private string NormalizeKey(string key)
     {
+        if (_root.Length > 0 && key.StartsWith($"{_root}/", StringComparison.OrdinalIgnoreCase)) return key;
+        if (key.Equals(_publicPrefix, StringComparison.OrdinalIgnoreCase) || key.StartsWith($"{_publicPrefix}/", StringComparison.OrdinalIgnoreCase))
+            return CombineKey(key);
+        if (key.Equals(_privatePrefix, StringComparison.OrdinalIgnoreCase) || key.StartsWith($"{_privatePrefix}/", StringComparison.OrdinalIgnoreCase))
+            return CombineKey(key);
+        return key;
+    }
+
+    private bool IsPrivateKey(string key) =>
+        key.Equals(_privatePrefix, StringComparison.OrdinalIgnoreCase) ||
+        key.StartsWith($"{_privatePrefix}/", StringComparison.OrdinalIgnoreCase) ||
+        (_root.Length > 0 && key.StartsWith($"{_root}/{_privatePrefix}/", StringComparison.OrdinalIgnoreCase));
+
+    private string BuildObjectUrl(string baseUrl, string key)
+    {
+        var pathKey = key;
         if (!string.IsNullOrWhiteSpace(baseUrl))
-            return $"{baseUrl}/{Uri.EscapeDataString(key).Replace("%2F", "/", StringComparison.OrdinalIgnoreCase)}";
-        if (!string.IsNullOrWhiteSpace(_endpoint))
-            return $"{_endpoint}/{bucket}/{Uri.EscapeDataString(key).Replace("%2F", "/", StringComparison.OrdinalIgnoreCase)}";
-        return $"https://{bucket}.s3.{_region}.amazonaws.com/{Uri.EscapeDataString(key).Replace("%2F", "/", StringComparison.OrdinalIgnoreCase)}";
+        {
+            if (_root.Length > 0 && Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri))
+            {
+                var basePath = NormalizePrefix(uri.AbsolutePath);
+                if (basePath.StartsWith($"{_bucket}/", StringComparison.OrdinalIgnoreCase)) basePath = basePath[(_bucket.Length + 1)..];
+                if (basePath.Equals(_root, StringComparison.OrdinalIgnoreCase) || basePath.EndsWith($"/{_root}", StringComparison.OrdinalIgnoreCase))
+                    pathKey = RemovePrefix(pathKey, _root);
+            }
+
+            return $"{baseUrl}/{EscapeKey(pathKey)}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(_endpoint)) return $"{_endpoint}/{_bucket}/{EscapeKey(key)}";
+        return $"https://{_bucket}.s3.{_region}.amazonaws.com/{EscapeKey(key)}";
     }
 
     private string ExtractKeyFromUrl(string urlOrKey)
     {
         if (!Uri.TryCreate(urlOrKey, UriKind.Absolute, out var uri)) return NormalizePrefix(urlOrKey);
-        var path = uri.AbsolutePath.Trim('/');
-        var bucket = uri.Host.Split('.')[0];
-        if (path.StartsWith($"{bucket}/", StringComparison.OrdinalIgnoreCase)) path = path[(bucket.Length + 1)..];
+        var path = NormalizePrefix(uri.AbsolutePath);
+        if (path.StartsWith($"{_bucket}/", StringComparison.OrdinalIgnoreCase)) path = path[(_bucket.Length + 1)..];
         return Uri.UnescapeDataString(path);
     }
+
+    private static string RemovePrefix(string value, string prefix)
+    {
+        if (prefix.Length == 0) return value;
+        if (value.Equals(prefix, StringComparison.OrdinalIgnoreCase)) return string.Empty;
+        return value.StartsWith($"{prefix}/", StringComparison.OrdinalIgnoreCase) ? value[(prefix.Length + 1)..] : value;
+    }
+
+    private static string EscapeKey(string key) => Uri.EscapeDataString(key).Replace("%2F", "/", StringComparison.OrdinalIgnoreCase);
 
     private static string? Setting(IConfiguration configuration, string key, string environmentKey) =>
         configuration[key] ?? configuration[environmentKey];
