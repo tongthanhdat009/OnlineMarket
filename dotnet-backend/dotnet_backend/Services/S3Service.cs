@@ -126,8 +126,9 @@ public sealed class S3Service : IS3Service
         return key;
     }
 
-    private bool IsManagedProductImageKey(string key)
+    public bool IsManagedProductImageKey(string s3Key)
     {
+        var key = NormalizeKey(ExtractKeyFromUrl(s3Key));
         var imageKey = RemovePrefix(key, _root);
         return imageKey.Equals("0.png", StringComparison.OrdinalIgnoreCase) ||
             imageKey.Equals(_publicPrefix, StringComparison.OrdinalIgnoreCase) ||

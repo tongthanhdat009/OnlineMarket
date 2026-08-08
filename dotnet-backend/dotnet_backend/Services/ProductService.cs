@@ -226,7 +226,7 @@ public class ProductService : IProductService
         }
 
         var imageUrl = string.IsNullOrEmpty(productDto.ImageUrl) ? "0.png" : productDto.ImageUrl;
-        if (!IsManagedImageKey(imageUrl))
+        if (!_s3Service.IsManagedProductImageKey(imageUrl))
         {
             throw new ArgumentException("ImageUrl phải là key ảnh sản phẩm do server cấp.");
         }
@@ -343,7 +343,7 @@ public class ProductService : IProductService
         productToUpdate.Unit = productDto.Unit;
         if (!string.IsNullOrEmpty(productDto.ImageUrl))
         {
-            if (!IsManagedImageKey(productDto.ImageUrl))
+            if (!_s3Service.IsManagedProductImageKey(productDto.ImageUrl))
             {
                 throw new ArgumentException("ImageUrl phải là key ảnh sản phẩm do server cấp.");
             }
@@ -462,10 +462,6 @@ public class ProductService : IProductService
 
         return s3Key;
     }
-
-    private static bool IsManagedImageKey(string imageUrl) =>
-        imageUrl.Equals("0.png", StringComparison.OrdinalIgnoreCase) ||
-        imageUrl.StartsWith("public/", StringComparison.OrdinalIgnoreCase);
 
     private static async Task<ImageType?> DetectImageTypeAsync(Microsoft.AspNetCore.Http.IFormFile imageFile)
     {

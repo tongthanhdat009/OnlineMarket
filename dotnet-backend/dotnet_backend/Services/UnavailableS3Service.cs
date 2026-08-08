@@ -15,6 +15,8 @@ public sealed class UnavailableS3Service : IS3Service
     public Task<string> GetImageUrlAsync(string s3Key, int expirationMinutes = 60) =>
         Task.FromException<string>(NotConfigured());
 
+    public bool IsManagedProductImageKey(string s3Key) => false;
+
     public Task<bool> DeleteFileAsync(string s3Key) =>
         Task.FromException<bool>(NotConfigured());
 }
