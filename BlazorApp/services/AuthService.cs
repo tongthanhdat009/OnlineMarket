@@ -16,7 +16,8 @@ namespace BlazorApp.Services
         Task<bool> IsAuthenticatedAsync();
         Task<bool> UpdateProfileAsync(UpdateProfileRequest request);
         Task<bool> ChangePasswordAsync(ChangePasswordRequest request);
-        
+        Task SetAuthorizationHeaderAsync();
+
     }
 
     public class AuthService : IAuthService
