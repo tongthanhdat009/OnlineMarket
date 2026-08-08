@@ -61,7 +61,7 @@ public sealed class S3Service : IS3Service
             : Task.FromResult(GetFileUrl(s3Key));
     }
 
-    public Task<string> GetPresignedUrlAsync(string s3Key, int expirationMinutes = 60)
+    private Task<string> GetPresignedUrlAsync(string s3Key, int expirationMinutes = 60)
     {
         if (string.IsNullOrWhiteSpace(s3Key)) return Task.FromResult(string.Empty);
         var key = NormalizeKey(ExtractKeyFromUrl(s3Key));
@@ -86,29 +86,6 @@ public sealed class S3Service : IS3Service
                 Key = key
             });
             return true;
-        }
-        catch (AmazonS3Exception)
-        {
-            return false;
-        }
-    }
-
-    public async Task<bool> FileExistsAsync(string s3Key)
-    {
-        if (string.IsNullOrWhiteSpace(s3Key)) return false;
-        var key = NormalizeKey(ExtractKeyFromUrl(s3Key));
-        try
-        {
-            await _s3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest
-            {
-                BucketName = _bucket,
-                Key = key
-            });
-            return true;
-        }
-        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
-            return false;
         }
         catch (AmazonS3Exception)
         {

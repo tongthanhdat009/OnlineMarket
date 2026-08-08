@@ -4,6 +4,7 @@ using dotnet_backend.Database;
 using dotnet_backend.Services.Interface;
 using dotnet_backend.Models;
 using dotnet_backend.Dtos;
+using System.Text;
 
 namespace dotnet_backend.Services;
 
@@ -415,6 +416,12 @@ public class ProductService : IProductService
 
     public async Task<string> UploadProductImageAsync(int productId, Microsoft.AspNetCore.Http.IFormFile imageFile)
     {
+        var imageType = await DetectImageTypeAsync(imageFile);
+        if (imageType is null || !MatchesDeclaredType(imageFile, imageType.Value))
+        {
+            throw new ArgumentException("File ảnh không hợp lệ hoặc không khớp với phần mở rộng/MIME type.");
+        }
+
         // Tìm sản phẩm
         var product = await _context.Products.FindAsync(productId);
         if (product == null)
@@ -424,8 +431,7 @@ public class ProductService : IProductService
 
         // Tạo tên file mới với timestamp (giây)
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
-        var newFileName = $"public/{timestamp}{extension}";
+        var newFileName = $"public/{timestamp}{imageType.Value.Extension}";
 
         // Xóa ảnh cũ nếu không phải 0.png
         if (!string.IsNullOrEmpty(product.ImageUrl) && product.ImageUrl != "0.png")
@@ -441,11 +447,11 @@ public class ProductService : IProductService
             }
         }
 
-        // Upload lên S3
+        // Upload lên S3 bằng MIME type được phát hiện từ nội dung.
         string s3Key;
         using (var stream = imageFile.OpenReadStream())
         {
-            s3Key = await _s3Service.UploadFileAsync(stream, newFileName, imageFile.ContentType);
+            s3Key = await _s3Service.UploadFileAsync(stream, newFileName, imageType.Value.ContentType);
         }
 
         // Cập nhật ImageUrl trong database (chỉ lưu key, không lưu full URL)
@@ -455,4 +461,41 @@ public class ProductService : IProductService
 
         return s3Key;
     }
+
+    private static async Task<ImageType?> DetectImageTypeAsync(Microsoft.AspNetCore.Http.IFormFile imageFile)
+    {
+        await using var stream = imageFile.OpenReadStream();
+        var header = new byte[12];
+        var bytesRead = 0;
+        while (bytesRead < header.Length)
+        {
+            var read = await stream.ReadAsync(header.AsMemory(bytesRead));
+            if (read == 0) break;
+            bytesRead += read;
+        }
+
+        if (bytesRead >= 3 && header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF)
+            return new ImageType(".jpg", "image/jpeg");
+        if (bytesRead >= 8 && header.AsSpan(0, 8).SequenceEqual(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }))
+            return new ImageType(".png", "image/png");
+        if (bytesRead >= 6 && Encoding.ASCII.GetString(header, 0, 6) is "GIF87a" or "GIF89a")
+            return new ImageType(".gif", "image/gif");
+        if (bytesRead >= 12 && Encoding.ASCII.GetString(header, 0, 4) == "RIFF" && Encoding.ASCII.GetString(header, 8, 4) == "WEBP")
+            return new ImageType(".webp", "image/webp");
+
+        return null;
+    }
+
+    private static bool MatchesDeclaredType(Microsoft.AspNetCore.Http.IFormFile imageFile, ImageType imageType)
+    {
+        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+        var extensionMatches = imageType.Extension == extension ||
+            (imageType.Extension == ".jpg" && extension == ".jpeg");
+        var contentTypeMatches = string.IsNullOrWhiteSpace(imageFile.ContentType) ||
+            imageFile.ContentType.Equals(imageType.ContentType, StringComparison.OrdinalIgnoreCase) ||
+            (imageType.ContentType == "image/jpeg" && imageFile.ContentType.Equals("image/jpg", StringComparison.OrdinalIgnoreCase));
+        return extensionMatches && contentTypeMatches;
+    }
+
+    private readonly record struct ImageType(string Extension, string ContentType);
 }
