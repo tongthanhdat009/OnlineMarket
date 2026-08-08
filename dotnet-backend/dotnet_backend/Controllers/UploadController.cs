@@ -5,6 +5,7 @@ using dotnet_backend.Services.Interface;
 namespace dotnet_backend.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class UploadController : ControllerBase
 {
