@@ -1,0 +1,32 @@
+/* Custom styles that complement Bootstrap */
+
+.nav-link {
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    transform: translateX(5px);
+}
+
+.nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+}
+
+@media (max-width: 991px) {
+    .collapse:not(.show) {
+        display: none;
+    }
+    
+    .collapse.show {
+        display: block;
+    }
+}
+
+@media (min-width: 992px) {
+    .collapse {
+        display: block !important;
+    }
+}

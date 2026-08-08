@@ -112,6 +112,228 @@ namespace dotnet_backend.Migrations
                     b.HasIndex(new[] { "OrderId" }, "fk_bills_orders");
 
                     b.ToTable("bills", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            BillId = 1,
+                            Address = "Địa chỉ 5",
+                            BillStatus = "exported",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            CustomerId = 5,
+                            DiscountAmount = 100000.00m,
+                            Email = "kh5@mail.com",
+                            FinalAmount = 1192330.00m,
+                            Name = "Khách hàng 5",
+                            OrderId = 1,
+                            PaidAt = new DateTime(2025, 10, 8, 12, 25, 48, 0, DateTimeKind.Unspecified),
+                            PayStatus = "paid",
+                            PaymentMethod = "cash",
+                            Phone = "0909000005",
+                            TotalAmount = 1292330.00m
+                        },
+                        new
+                        {
+                            BillId = 2,
+                            BillStatus = "exported",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            CustomerId = 17,
+                            DiscountAmount = 0.00m,
+                            FinalAmount = 1731608.00m,
+                            OrderId = 2,
+                            PaidAt = new DateTime(2025, 10, 8, 12, 26, 48, 0, DateTimeKind.Unspecified),
+                            PayStatus = "paid",
+                            PaymentMethod = "e-wallet",
+                            TotalAmount = 1731608.00m
+                        },
+                        new
+                        {
+                            BillId = 3,
+                            BillStatus = "exported",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            CustomerId = 8,
+                            DiscountAmount = 0.00m,
+                            FinalAmount = 720782.00m,
+                            OrderId = 3,
+                            PaidAt = new DateTime(2025, 10, 8, 12, 27, 48, 0, DateTimeKind.Unspecified),
+                            PayStatus = "paid",
+                            PaymentMethod = "e-wallet",
+                            TotalAmount = 720782.00m
+                        },
+                        new
+                        {
+                            BillId = 4,
+                            Address = "Địa chỉ 5",
+                            BillStatus = "exported",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            CustomerId = 5,
+                            DiscountAmount = 100000.00m,
+                            Email = "kh5@mail.com",
+                            FinalAmount = 3788671.00m,
+                            Name = "Khách hàng 5",
+                            OrderId = 6,
+                            PaidAt = new DateTime(2025, 10, 8, 12, 28, 48, 0, DateTimeKind.Unspecified),
+                            PayStatus = "paid",
+                            PaymentMethod = "cash",
+                            Phone = "0909000005",
+                            TotalAmount = 3888671.00m
+                        },
+                        new
+                        {
+                            BillId = 5,
+                            Address = "Địa chỉ 9",
+                            BillStatus = "exported",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            CustomerId = 9,
+                            DiscountAmount = 102518.80m,
+                            Email = "kh9@mail.com",
+                            FinalAmount = 410075.20m,
+                            Name = "Khách hàng 9",
+                            OrderId = 7,
+                            PaidAt = new DateTime(2025, 10, 8, 12, 29, 48, 0, DateTimeKind.Unspecified),
+                            PayStatus = "paid",
+                            PaymentMethod = "e-wallet",
+                            Phone = "0909000009",
+                            TotalAmount = 512594.00m
+                        },
+                        new
+                        {
+                            BillId = 6,
+                            Address = "Địa chỉ 11",
+                            BillStatus = "exported",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            CustomerId = 11,
+                            DiscountAmount = 100000.00m,
+                            Email = "kh11@mail.com",
+                            FinalAmount = 970239.00m,
+                            Name = "Khách hàng 11",
+                            OrderId = 10,
+                            PaidAt = new DateTime(2025, 10, 8, 12, 30, 48, 0, DateTimeKind.Unspecified),
+                            PayStatus = "paid",
+                            PaymentMethod = "card",
+                            Phone = "0909000011",
+                            TotalAmount = 1070239.00m
+                        },
+                        new
+                        {
+                            BillId = 7,
+                            Address = "Địa chỉ 6",
+                            BillStatus = "exported",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            CustomerId = 6,
+                            DiscountAmount = 50000.00m,
+                            Email = "kh6@mail.com",
+                            FinalAmount = 2846096.00m,
+                            Name = "Khách hàng 6",
+                            OrderId = 14,
+                            PaidAt = new DateTime(2025, 10, 8, 12, 31, 48, 0, DateTimeKind.Unspecified),
+                            PayStatus = "paid",
+                            PaymentMethod = "cash",
+                            Phone = "0909000006",
+                            TotalAmount = 2896096.00m
+                        },
+                        new
+                        {
+                            BillId = 8,
+                            Address = "Địa chỉ 10",
+                            BillStatus = "exported",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            CustomerId = 10,
+                            DiscountAmount = 50000.00m,
+                            Email = "kh10@mail.com",
+                            FinalAmount = 974090.00m,
+                            Name = "Khách hàng 10",
+                            OrderId = 16,
+                            PaidAt = new DateTime(2025, 10, 8, 12, 32, 48, 0, DateTimeKind.Unspecified),
+                            PayStatus = "paid",
+                            PaymentMethod = "cash",
+                            Phone = "0909000010",
+                            TotalAmount = 1024090.00m
+                        },
+                        new
+                        {
+                            BillId = 9,
+                            Address = "Địa chỉ 6",
+                            BillStatus = "exported",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            CustomerId = 6,
+                            DiscountAmount = 323227.65m,
+                            Email = "kh6@mail.com",
+                            FinalAmount = 1831623.35m,
+                            Name = "Khách hàng 6",
+                            OrderId = 23,
+                            PaidAt = new DateTime(2025, 10, 8, 12, 33, 48, 0, DateTimeKind.Unspecified),
+                            PayStatus = "paid",
+                            PaymentMethod = "cash",
+                            Phone = "0909000006",
+                            TotalAmount = 2154851.00m
+                        },
+                        new
+                        {
+                            BillId = 10,
+                            Address = "Địa chỉ 2",
+                            BillStatus = "exported",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            CustomerId = 2,
+                            DiscountAmount = 100000.00m,
+                            Email = "kh2@mail.com",
+                            FinalAmount = 293847.00m,
+                            Name = "Khách hàng 2",
+                            OrderId = 25,
+                            PaidAt = new DateTime(2025, 10, 8, 12, 34, 48, 0, DateTimeKind.Unspecified),
+                            PayStatus = "paid",
+                            PaymentMethod = "cash",
+                            Phone = "0909000002",
+                            TotalAmount = 393847.00m
+                        },
+                        new
+                        {
+                            BillId = 11,
+                            Address = "Địa chỉ 1",
+                            BillStatus = "pending",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            CustomerId = 1,
+                            DiscountAmount = 0.00m,
+                            Email = "kh1@mail.com",
+                            FinalAmount = 94180.00m,
+                            Name = "Khách hàng 1",
+                            OrderId = 5,
+                            PayStatus = "unpaid",
+                            PaymentMethod = "cash",
+                            Phone = "0909000001",
+                            TotalAmount = 94180.00m
+                        },
+                        new
+                        {
+                            BillId = 12,
+                            BillStatus = "pending",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            CustomerId = 20,
+                            DiscountAmount = 0.00m,
+                            FinalAmount = 1532741.00m,
+                            OrderId = 11,
+                            PayStatus = "unpaid",
+                            PaymentMethod = "e-wallet",
+                            TotalAmount = 1532741.00m
+                        },
+                        new
+                        {
+                            BillId = 13,
+                            Address = "Địa chỉ 10",
+                            BillStatus = "exported",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            CustomerId = 10,
+                            DiscountAmount = 27900.00m,
+                            Email = "kh10@mail.com",
+                            FinalAmount = 158100.00m,
+                            Name = "Khách hàng 10",
+                            OrderId = 15,
+                            PaidAt = new DateTime(2025, 10, 8, 12, 35, 48, 0, DateTimeKind.Unspecified),
+                            PayStatus = "paid",
+                            PaymentMethod = "card",
+                            Phone = "0909000010",
+                            TotalAmount = 186000.00m
+                        });
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.CartItem", b =>
@@ -175,6 +397,33 @@ namespace dotnet_backend.Migrations
                         .HasName("PRIMARY");
 
                     b.ToTable("categories", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            CategoryId = 1,
+                            CategoryName = "Đồ uống"
+                        },
+                        new
+                        {
+                            CategoryId = 2,
+                            CategoryName = "Bánh kẹo"
+                        },
+                        new
+                        {
+                            CategoryId = 3,
+                            CategoryName = "Gia vị"
+                        },
+                        new
+                        {
+                            CategoryId = 4,
+                            CategoryName = "Đồ gia dụng"
+                        },
+                        new
+                        {
+                            CategoryId = 5,
+                            CategoryName = "Mỹ phẩm"
+                        });
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.Customer", b =>
@@ -219,6 +468,208 @@ namespace dotnet_backend.Migrations
                         .HasName("PRIMARY");
 
                     b.ToTable("customers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            CustomerId = 1,
+                            Address = "Địa chỉ 1",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh1@mail.com",
+                            Name = "Khách hàng 1",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000001"
+                        },
+                        new
+                        {
+                            CustomerId = 2,
+                            Address = "Địa chỉ 2",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh2@mail.com",
+                            Name = "Khách hàng 2",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000002"
+                        },
+                        new
+                        {
+                            CustomerId = 3,
+                            Address = "Địa chỉ 3",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh3@mail.com",
+                            Name = "Khách hàng 3",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000003"
+                        },
+                        new
+                        {
+                            CustomerId = 4,
+                            Address = "Địa chỉ 4",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh4@mail.com",
+                            Name = "Khách hàng 4",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000004"
+                        },
+                        new
+                        {
+                            CustomerId = 5,
+                            Address = "Địa chỉ 5",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh5@mail.com",
+                            Name = "Khách hàng 5",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000005"
+                        },
+                        new
+                        {
+                            CustomerId = 6,
+                            Address = "Địa chỉ 6",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh6@mail.com",
+                            Name = "Khách hàng 6",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000006"
+                        },
+                        new
+                        {
+                            CustomerId = 7,
+                            Address = "Địa chỉ 7",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh7@mail.com",
+                            Name = "Khách hàng 7",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000007"
+                        },
+                        new
+                        {
+                            CustomerId = 8,
+                            Address = "Địa chỉ 8",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh8@mail.com",
+                            Name = "Khách hàng 8",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000008"
+                        },
+                        new
+                        {
+                            CustomerId = 9,
+                            Address = "Địa chỉ 9",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh9@mail.com",
+                            Name = "Khách hàng 9",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000009"
+                        },
+                        new
+                        {
+                            CustomerId = 10,
+                            Address = "Địa chỉ 10",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh10@mail.com",
+                            Name = "Khách hàng 10",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000010"
+                        },
+                        new
+                        {
+                            CustomerId = 11,
+                            Address = "Địa chỉ 11",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh11@mail.com",
+                            Name = "Khách hàng 11",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000011"
+                        },
+                        new
+                        {
+                            CustomerId = 12,
+                            Address = "Địa chỉ 12",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh12@mail.com",
+                            Name = "Khách hàng 12",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000012"
+                        },
+                        new
+                        {
+                            CustomerId = 13,
+                            Address = "Địa chỉ 13",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh13@mail.com",
+                            Name = "Khách hàng 13",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000013"
+                        },
+                        new
+                        {
+                            CustomerId = 14,
+                            Address = "Địa chỉ 14",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh14@mail.com",
+                            Name = "Khách hàng 14",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000014"
+                        },
+                        new
+                        {
+                            CustomerId = 15,
+                            Address = "Địa chỉ 15",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh15@mail.com",
+                            Name = "Khách hàng 15",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000015"
+                        },
+                        new
+                        {
+                            CustomerId = 16,
+                            Address = "Địa chỉ 16",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh16@mail.com",
+                            Name = "Khách hàng 16",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000016"
+                        },
+                        new
+                        {
+                            CustomerId = 17,
+                            Address = "Địa chỉ 17",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh17@mail.com",
+                            Name = "Khách hàng 17",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000017"
+                        },
+                        new
+                        {
+                            CustomerId = 18,
+                            Address = "Địa chỉ 18",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh18@mail.com",
+                            Name = "Khách hàng 18",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000018"
+                        },
+                        new
+                        {
+                            CustomerId = 19,
+                            Address = "Địa chỉ 19",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh19@mail.com",
+                            Name = "Khách hàng 19",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000019"
+                        },
+                        new
+                        {
+                            CustomerId = 20,
+                            Address = "Địa chỉ 20",
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Email = "kh20@mail.com",
+                            Name = "Khách hàng 20",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Phone = "0909000020"
+                        });
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.Inventory", b =>
@@ -252,6 +703,358 @@ namespace dotnet_backend.Migrations
                     b.HasIndex(new[] { "ProductId" }, "fk_inventory_products");
 
                     b.ToTable("inventory", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            InventoryId = 1,
+                            ProductId = 1,
+                            Quantity = 25,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 2,
+                            ProductId = 2,
+                            Quantity = 169,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 3,
+                            ProductId = 3,
+                            Quantity = 77,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 4,
+                            ProductId = 4,
+                            Quantity = 169,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 5,
+                            ProductId = 5,
+                            Quantity = 90,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 6,
+                            ProductId = 6,
+                            Quantity = 105,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 7,
+                            ProductId = 7,
+                            Quantity = 125,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 8,
+                            ProductId = 8,
+                            Quantity = 37,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 9,
+                            ProductId = 9,
+                            Quantity = 74,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 10,
+                            ProductId = 10,
+                            Quantity = 149,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 11,
+                            ProductId = 11,
+                            Quantity = 69,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 12,
+                            ProductId = 12,
+                            Quantity = 23,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 13,
+                            ProductId = 13,
+                            Quantity = 46,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 14,
+                            ProductId = 14,
+                            Quantity = 144,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 15,
+                            ProductId = 15,
+                            Quantity = 134,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 16,
+                            ProductId = 16,
+                            Quantity = 182,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 17,
+                            ProductId = 17,
+                            Quantity = 99,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 18,
+                            ProductId = 18,
+                            Quantity = 72,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 19,
+                            ProductId = 19,
+                            Quantity = 128,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 20,
+                            ProductId = 20,
+                            Quantity = 123,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 21,
+                            ProductId = 21,
+                            Quantity = 155,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 22,
+                            ProductId = 22,
+                            Quantity = 78,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 23,
+                            ProductId = 23,
+                            Quantity = 166,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 24,
+                            ProductId = 24,
+                            Quantity = 117,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 25,
+                            ProductId = 25,
+                            Quantity = 168,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 26,
+                            ProductId = 26,
+                            Quantity = 197,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 27,
+                            ProductId = 27,
+                            Quantity = 36,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 28,
+                            ProductId = 28,
+                            Quantity = 145,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 29,
+                            ProductId = 29,
+                            Quantity = 61,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 30,
+                            ProductId = 30,
+                            Quantity = 139,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 31,
+                            ProductId = 31,
+                            Quantity = 47,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 32,
+                            ProductId = 32,
+                            Quantity = 154,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 33,
+                            ProductId = 33,
+                            Quantity = 194,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 34,
+                            ProductId = 34,
+                            Quantity = 41,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 35,
+                            ProductId = 35,
+                            Quantity = 154,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 36,
+                            ProductId = 36,
+                            Quantity = 71,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 37,
+                            ProductId = 37,
+                            Quantity = 49,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 38,
+                            ProductId = 38,
+                            Quantity = 165,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 39,
+                            ProductId = 39,
+                            Quantity = 73,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 40,
+                            ProductId = 40,
+                            Quantity = 176,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 41,
+                            ProductId = 41,
+                            Quantity = 41,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 42,
+                            ProductId = 42,
+                            Quantity = 34,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 43,
+                            ProductId = 43,
+                            Quantity = 175,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 44,
+                            ProductId = 44,
+                            Quantity = 59,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 45,
+                            ProductId = 45,
+                            Quantity = 198,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 46,
+                            ProductId = 46,
+                            Quantity = 106,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 47,
+                            ProductId = 47,
+                            Quantity = 99,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 48,
+                            ProductId = 48,
+                            Quantity = 55,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 49,
+                            ProductId = 49,
+                            Quantity = 62,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            InventoryId = 50,
+                            ProductId = 50,
+                            Quantity = 33,
+                            UpdatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified)
+                        });
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.Order", b =>
@@ -340,6 +1143,464 @@ namespace dotnet_backend.Migrations
                     b.HasIndex(new[] { "UserId" }, "fk_orders_users");
 
                     b.ToTable("orders", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            OrderId = 1,
+                            Address = "Địa chỉ 5",
+                            CustomerId = 5,
+                            DiscountAmount = 100000.00m,
+                            Email = "kh5@mail.com",
+                            Name = "Khách hàng 5",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            Phone = "0909000005",
+                            PromoId = 5,
+                            TotalAmount = 1292330.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 2,
+                            CustomerId = 17,
+                            DiscountAmount = 0.00m,
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            TotalAmount = 1731608.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 3,
+                            CustomerId = 8,
+                            DiscountAmount = 0.00m,
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            TotalAmount = 720782.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 4,
+                            Address = "Địa chỉ 20",
+                            CustomerId = 20,
+                            DiscountAmount = 21686.00m,
+                            Email = "kh20@mail.com",
+                            Name = "Khách hàng 20",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            Phone = "0909000020",
+                            PromoId = 5,
+                            TotalAmount = 21686.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 5,
+                            Address = "Địa chỉ 1",
+                            CustomerId = 1,
+                            DiscountAmount = 0.00m,
+                            Email = "kh1@mail.com",
+                            Name = "Khách hàng 1",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "online",
+                            PayStatus = "paid",
+                            Phone = "0909000001",
+                            TotalAmount = 94180.00m,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            OrderId = 6,
+                            Address = "Địa chỉ 5",
+                            CustomerId = 5,
+                            DiscountAmount = 100000.00m,
+                            Email = "kh5@mail.com",
+                            Name = "Khách hàng 5",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            Phone = "0909000005",
+                            PromoId = 2,
+                            TotalAmount = 3888671.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 7,
+                            Address = "Địa chỉ 9",
+                            CustomerId = 9,
+                            DiscountAmount = 102518.80m,
+                            Email = "kh9@mail.com",
+                            Name = "Khách hàng 9",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            Phone = "0909000009",
+                            PromoId = 4,
+                            TotalAmount = 512594.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 8,
+                            Address = "Địa chỉ 11",
+                            CustomerId = 11,
+                            DiscountAmount = 171502.90m,
+                            Email = "kh11@mail.com",
+                            Name = "Khách hàng 11",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "online",
+                            PayStatus = "paid",
+                            Phone = "0909000011",
+                            PromoId = 3,
+                            TotalAmount = 1715029.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 9,
+                            CustomerId = 11,
+                            DiscountAmount = 0.00m,
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            TotalAmount = 2484051.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 10,
+                            Address = "Địa chỉ 11",
+                            CustomerId = 11,
+                            DiscountAmount = 100000.00m,
+                            Email = "kh11@mail.com",
+                            Name = "Khách hàng 11",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "online",
+                            PayStatus = "paid",
+                            Phone = "0909000011",
+                            PromoId = 2,
+                            TotalAmount = 1070239.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 11,
+                            CustomerId = 20,
+                            DiscountAmount = 0.00m,
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            TotalAmount = 1532741.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 12,
+                            CustomerId = 10,
+                            DiscountAmount = 0.00m,
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            TotalAmount = 1785354.00m,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            OrderId = 13,
+                            Address = "Địa chỉ 10",
+                            CustomerId = 10,
+                            DiscountAmount = 100000.00m,
+                            Email = "kh10@mail.com",
+                            Name = "Khách hàng 10",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "online",
+                            PayStatus = "paid",
+                            Phone = "0909000010",
+                            PromoId = 2,
+                            TotalAmount = 1588276.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 14,
+                            Address = "Địa chỉ 6",
+                            CustomerId = 6,
+                            DiscountAmount = 50000.00m,
+                            Email = "kh6@mail.com",
+                            Name = "Khách hàng 6",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            Phone = "0909000006",
+                            PromoId = 2,
+                            TotalAmount = 2896096.00m,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            OrderId = 15,
+                            Address = "Địa chỉ 10",
+                            CustomerId = 10,
+                            DiscountAmount = 27900.00m,
+                            Email = "kh10@mail.com",
+                            Name = "Khách hàng 10",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "online",
+                            PayStatus = "paid",
+                            Phone = "0909000010",
+                            PromoId = 3,
+                            TotalAmount = 186000.00m,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            OrderId = 16,
+                            Address = "Địa chỉ 10",
+                            CustomerId = 10,
+                            DiscountAmount = 50000.00m,
+                            Email = "kh10@mail.com",
+                            Name = "Khách hàng 10",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            Phone = "0909000010",
+                            PromoId = 5,
+                            TotalAmount = 1024090.00m,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            OrderId = 17,
+                            CustomerId = 19,
+                            DiscountAmount = 0.00m,
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            TotalAmount = 467148.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 18,
+                            Address = "Địa chỉ 10",
+                            CustomerId = 10,
+                            DiscountAmount = 0.00m,
+                            Email = "kh10@mail.com",
+                            Name = "Khách hàng 10",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "online",
+                            PayStatus = "paid",
+                            Phone = "0909000010",
+                            TotalAmount = 394342.00m,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            OrderId = 19,
+                            Address = "Địa chỉ 8",
+                            CustomerId = 8,
+                            DiscountAmount = 294845.55m,
+                            Email = "kh8@mail.com",
+                            Name = "Khách hàng 8",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            Phone = "0909000008",
+                            PromoId = 4,
+                            TotalAmount = 1965637.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 20,
+                            CustomerId = 3,
+                            DiscountAmount = 0.00m,
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            TotalAmount = 2889813.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 21,
+                            Address = "Địa chỉ 9",
+                            CustomerId = 9,
+                            DiscountAmount = 0.00m,
+                            Email = "kh9@mail.com",
+                            Name = "Khách hàng 9",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "online",
+                            PayStatus = "paid",
+                            Phone = "0909000009",
+                            TotalAmount = 2288406.00m,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            OrderId = 22,
+                            CustomerId = 17,
+                            DiscountAmount = 0.00m,
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            TotalAmount = 331008.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 23,
+                            Address = "Địa chỉ 6",
+                            CustomerId = 6,
+                            DiscountAmount = 323227.65m,
+                            Email = "kh6@mail.com",
+                            Name = "Khách hàng 6",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "online",
+                            PayStatus = "paid",
+                            Phone = "0909000006",
+                            PromoId = 1,
+                            TotalAmount = 2154851.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 24,
+                            Address = "Địa chỉ 1",
+                            CustomerId = 1,
+                            DiscountAmount = 170802.90m,
+                            Email = "kh1@mail.com",
+                            Name = "Khách hàng 1",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            Phone = "0909000001",
+                            PromoId = 1,
+                            TotalAmount = 1138686.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 25,
+                            Address = "Địa chỉ 2",
+                            CustomerId = 2,
+                            DiscountAmount = 100000.00m,
+                            Email = "kh2@mail.com",
+                            Name = "Khách hàng 2",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            Phone = "0909000002",
+                            PromoId = 5,
+                            TotalAmount = 393847.00m,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            OrderId = 26,
+                            Address = "Địa chỉ 15",
+                            CustomerId = 15,
+                            DiscountAmount = 52131.60m,
+                            Email = "kh15@mail.com",
+                            Name = "Khách hàng 15",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "online",
+                            PayStatus = "paid",
+                            Phone = "0909000015",
+                            PromoId = 1,
+                            TotalAmount = 260658.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 27,
+                            CustomerId = 4,
+                            DiscountAmount = 0.00m,
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            TotalAmount = 933199.00m,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            OrderId = 28,
+                            CustomerId = 16,
+                            DiscountAmount = 0.00m,
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "offline",
+                            PayStatus = "paid",
+                            TotalAmount = 2609123.00m,
+                            UserId = 2
+                        },
+                        new
+                        {
+                            OrderId = 29,
+                            Address = "Địa chỉ 4",
+                            CustomerId = 4,
+                            DiscountAmount = 481258.40m,
+                            Email = "kh4@mail.com",
+                            Name = "Khách hàng 4",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "online",
+                            PayStatus = "paid",
+                            Phone = "0909000004",
+                            PromoId = 4,
+                            TotalAmount = 2406292.00m,
+                            UserId = 3
+                        },
+                        new
+                        {
+                            OrderId = 30,
+                            Address = "Địa chỉ 1",
+                            CustomerId = 1,
+                            DiscountAmount = 0.00m,
+                            Email = "kh1@mail.com",
+                            Name = "Khách hàng 1",
+                            OrderDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            OrderStatus = "completed",
+                            OrderType = "online",
+                            PayStatus = "paid",
+                            Phone = "0909000001",
+                            TotalAmount = 2912134.00m,
+                            UserId = 3
+                        });
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.OrderItem", b =>
@@ -381,6 +1642,836 @@ namespace dotnet_backend.Migrations
                     b.HasIndex(new[] { "ProductId" }, "fk_order_items_products");
 
                     b.ToTable("order_items", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            OrderItemId = 1,
+                            OrderId = 1,
+                            Price = 31265.00m,
+                            ProductId = 23,
+                            Quantity = 2,
+                            Subtotal = 62530.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 2,
+                            OrderId = 1,
+                            Price = 205683.00m,
+                            ProductId = 5,
+                            Quantity = 2,
+                            Subtotal = 411366.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 3,
+                            OrderId = 1,
+                            Price = 477948.00m,
+                            ProductId = 47,
+                            Quantity = 1,
+                            Subtotal = 477948.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 4,
+                            OrderId = 1,
+                            Price = 170243.00m,
+                            ProductId = 25,
+                            Quantity = 2,
+                            Subtotal = 340486.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 5,
+                            OrderId = 2,
+                            Price = 447059.00m,
+                            ProductId = 39,
+                            Quantity = 1,
+                            Subtotal = 447059.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 6,
+                            OrderId = 2,
+                            Price = 51108.00m,
+                            ProductId = 14,
+                            Quantity = 1,
+                            Subtotal = 51108.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 7,
+                            OrderId = 2,
+                            Price = 411147.00m,
+                            ProductId = 46,
+                            Quantity = 3,
+                            Subtotal = 1233441.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 8,
+                            OrderId = 3,
+                            Price = 202167.00m,
+                            ProductId = 18,
+                            Quantity = 3,
+                            Subtotal = 606501.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 9,
+                            OrderId = 3,
+                            Price = 44219.00m,
+                            ProductId = 34,
+                            Quantity = 1,
+                            Subtotal = 44219.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 10,
+                            OrderId = 3,
+                            Price = 23354.00m,
+                            ProductId = 26,
+                            Quantity = 3,
+                            Subtotal = 70062.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 11,
+                            OrderId = 4,
+                            Price = 10843.00m,
+                            ProductId = 24,
+                            Quantity = 2,
+                            Subtotal = 21686.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 12,
+                            OrderId = 5,
+                            Price = 94180.00m,
+                            ProductId = 9,
+                            Quantity = 1,
+                            Subtotal = 94180.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 13,
+                            OrderId = 6,
+                            Price = 186886.00m,
+                            ProductId = 18,
+                            Quantity = 3,
+                            Subtotal = 560658.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 14,
+                            OrderId = 6,
+                            Price = 199267.00m,
+                            ProductId = 22,
+                            Quantity = 2,
+                            Subtotal = 398534.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 15,
+                            OrderId = 6,
+                            Price = 215726.00m,
+                            ProductId = 42,
+                            Quantity = 3,
+                            Subtotal = 647178.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 16,
+                            OrderId = 6,
+                            Price = 474268.00m,
+                            ProductId = 17,
+                            Quantity = 3,
+                            Subtotal = 1422804.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 17,
+                            OrderId = 6,
+                            Price = 286499.00m,
+                            ProductId = 20,
+                            Quantity = 3,
+                            Subtotal = 859497.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 18,
+                            OrderId = 7,
+                            Price = 256297.00m,
+                            ProductId = 8,
+                            Quantity = 2,
+                            Subtotal = 512594.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 19,
+                            OrderId = 8,
+                            Price = 355116.00m,
+                            ProductId = 42,
+                            Quantity = 1,
+                            Subtotal = 355116.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 20,
+                            OrderId = 8,
+                            Price = 129224.00m,
+                            ProductId = 43,
+                            Quantity = 2,
+                            Subtotal = 258448.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 21,
+                            OrderId = 8,
+                            Price = 367155.00m,
+                            ProductId = 31,
+                            Quantity = 3,
+                            Subtotal = 1101465.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 22,
+                            OrderId = 9,
+                            Price = 48755.00m,
+                            ProductId = 17,
+                            Quantity = 2,
+                            Subtotal = 97510.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 23,
+                            OrderId = 9,
+                            Price = 381904.00m,
+                            ProductId = 12,
+                            Quantity = 2,
+                            Subtotal = 763808.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 24,
+                            OrderId = 9,
+                            Price = 167445.00m,
+                            ProductId = 43,
+                            Quantity = 2,
+                            Subtotal = 334890.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 25,
+                            OrderId = 9,
+                            Price = 429281.00m,
+                            ProductId = 19,
+                            Quantity = 3,
+                            Subtotal = 1287843.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 26,
+                            OrderId = 10,
+                            Price = 232635.00m,
+                            ProductId = 25,
+                            Quantity = 1,
+                            Subtotal = 232635.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 27,
+                            OrderId = 10,
+                            Price = 245362.00m,
+                            ProductId = 1,
+                            Quantity = 2,
+                            Subtotal = 490724.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 28,
+                            OrderId = 10,
+                            Price = 127233.00m,
+                            ProductId = 23,
+                            Quantity = 2,
+                            Subtotal = 254466.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 29,
+                            OrderId = 10,
+                            Price = 46207.00m,
+                            ProductId = 49,
+                            Quantity = 2,
+                            Subtotal = 92414.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 30,
+                            OrderId = 11,
+                            Price = 347879.00m,
+                            ProductId = 3,
+                            Quantity = 2,
+                            Subtotal = 695758.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 31,
+                            OrderId = 11,
+                            Price = 130215.00m,
+                            ProductId = 23,
+                            Quantity = 3,
+                            Subtotal = 390645.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 32,
+                            OrderId = 11,
+                            Price = 64761.00m,
+                            ProductId = 4,
+                            Quantity = 1,
+                            Subtotal = 64761.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 33,
+                            OrderId = 11,
+                            Price = 240159.00m,
+                            ProductId = 33,
+                            Quantity = 1,
+                            Subtotal = 240159.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 34,
+                            OrderId = 11,
+                            Price = 141418.00m,
+                            ProductId = 7,
+                            Quantity = 1,
+                            Subtotal = 141418.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 35,
+                            OrderId = 12,
+                            Price = 455428.00m,
+                            ProductId = 40,
+                            Quantity = 2,
+                            Subtotal = 910856.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 36,
+                            OrderId = 12,
+                            Price = 75412.00m,
+                            ProductId = 46,
+                            Quantity = 2,
+                            Subtotal = 150824.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 37,
+                            OrderId = 12,
+                            Price = 189856.00m,
+                            ProductId = 34,
+                            Quantity = 2,
+                            Subtotal = 379712.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 38,
+                            OrderId = 12,
+                            Price = 114654.00m,
+                            ProductId = 25,
+                            Quantity = 3,
+                            Subtotal = 343962.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 39,
+                            OrderId = 13,
+                            Price = 143251.00m,
+                            ProductId = 24,
+                            Quantity = 2,
+                            Subtotal = 286502.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 40,
+                            OrderId = 13,
+                            Price = 381347.00m,
+                            ProductId = 23,
+                            Quantity = 2,
+                            Subtotal = 762694.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 41,
+                            OrderId = 13,
+                            Price = 179146.00m,
+                            ProductId = 18,
+                            Quantity = 2,
+                            Subtotal = 358292.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 42,
+                            OrderId = 13,
+                            Price = 90394.00m,
+                            ProductId = 9,
+                            Quantity = 2,
+                            Subtotal = 180788.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 43,
+                            OrderId = 14,
+                            Price = 327016.00m,
+                            ProductId = 24,
+                            Quantity = 2,
+                            Subtotal = 654032.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 44,
+                            OrderId = 14,
+                            Price = 403478.00m,
+                            ProductId = 2,
+                            Quantity = 1,
+                            Subtotal = 403478.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 45,
+                            OrderId = 14,
+                            Price = 404474.00m,
+                            ProductId = 27,
+                            Quantity = 3,
+                            Subtotal = 1213422.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 46,
+                            OrderId = 14,
+                            Price = 312582.00m,
+                            ProductId = 4,
+                            Quantity = 2,
+                            Subtotal = 625164.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 47,
+                            OrderId = 15,
+                            Price = 105328.00m,
+                            ProductId = 18,
+                            Quantity = 1,
+                            Subtotal = 105328.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 48,
+                            OrderId = 15,
+                            Price = 17303.00m,
+                            ProductId = 27,
+                            Quantity = 2,
+                            Subtotal = 34606.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 49,
+                            OrderId = 15,
+                            Price = 23033.00m,
+                            ProductId = 50,
+                            Quantity = 2,
+                            Subtotal = 46066.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 50,
+                            OrderId = 16,
+                            Price = 43160.00m,
+                            ProductId = 15,
+                            Quantity = 1,
+                            Subtotal = 43160.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 51,
+                            OrderId = 16,
+                            Price = 18541.00m,
+                            ProductId = 16,
+                            Quantity = 2,
+                            Subtotal = 37082.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 52,
+                            OrderId = 16,
+                            Price = 492698.00m,
+                            ProductId = 44,
+                            Quantity = 1,
+                            Subtotal = 492698.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 53,
+                            OrderId = 16,
+                            Price = 451150.00m,
+                            ProductId = 41,
+                            Quantity = 1,
+                            Subtotal = 451150.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 54,
+                            OrderId = 17,
+                            Price = 467148.00m,
+                            ProductId = 42,
+                            Quantity = 1,
+                            Subtotal = 467148.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 55,
+                            OrderId = 18,
+                            Price = 64334.00m,
+                            ProductId = 30,
+                            Quantity = 1,
+                            Subtotal = 64334.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 56,
+                            OrderId = 18,
+                            Price = 178454.00m,
+                            ProductId = 11,
+                            Quantity = 1,
+                            Subtotal = 178454.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 57,
+                            OrderId = 18,
+                            Price = 50518.00m,
+                            ProductId = 20,
+                            Quantity = 3,
+                            Subtotal = 151554.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 58,
+                            OrderId = 19,
+                            Price = 89280.00m,
+                            ProductId = 16,
+                            Quantity = 1,
+                            Subtotal = 89280.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 59,
+                            OrderId = 19,
+                            Price = 404655.00m,
+                            ProductId = 23,
+                            Quantity = 3,
+                            Subtotal = 1213965.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 60,
+                            OrderId = 19,
+                            Price = 331196.00m,
+                            ProductId = 11,
+                            Quantity = 2,
+                            Subtotal = 662392.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 61,
+                            OrderId = 20,
+                            Price = 367325.00m,
+                            ProductId = 49,
+                            Quantity = 1,
+                            Subtotal = 367325.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 62,
+                            OrderId = 20,
+                            Price = 264392.00m,
+                            ProductId = 32,
+                            Quantity = 2,
+                            Subtotal = 528784.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 63,
+                            OrderId = 20,
+                            Price = 345903.00m,
+                            ProductId = 19,
+                            Quantity = 3,
+                            Subtotal = 1037709.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 64,
+                            OrderId = 20,
+                            Price = 392028.00m,
+                            ProductId = 17,
+                            Quantity = 2,
+                            Subtotal = 784056.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 65,
+                            OrderId = 20,
+                            Price = 171939.00m,
+                            ProductId = 19,
+                            Quantity = 1,
+                            Subtotal = 171939.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 66,
+                            OrderId = 21,
+                            Price = 227666.00m,
+                            ProductId = 11,
+                            Quantity = 3,
+                            Subtotal = 682998.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 67,
+                            OrderId = 21,
+                            Price = 436122.00m,
+                            ProductId = 25,
+                            Quantity = 2,
+                            Subtotal = 872244.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 68,
+                            OrderId = 21,
+                            Price = 340400.00m,
+                            ProductId = 48,
+                            Quantity = 1,
+                            Subtotal = 340400.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 69,
+                            OrderId = 21,
+                            Price = 58482.00m,
+                            ProductId = 10,
+                            Quantity = 2,
+                            Subtotal = 116964.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 70,
+                            OrderId = 21,
+                            Price = 137900.00m,
+                            ProductId = 4,
+                            Quantity = 2,
+                            Subtotal = 275800.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 71,
+                            OrderId = 22,
+                            Price = 165504.00m,
+                            ProductId = 40,
+                            Quantity = 2,
+                            Subtotal = 331008.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 72,
+                            OrderId = 23,
+                            Price = 296698.00m,
+                            ProductId = 1,
+                            Quantity = 2,
+                            Subtotal = 593396.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 73,
+                            OrderId = 23,
+                            Price = 384657.00m,
+                            ProductId = 16,
+                            Quantity = 3,
+                            Subtotal = 1153971.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 74,
+                            OrderId = 23,
+                            Price = 135828.00m,
+                            ProductId = 40,
+                            Quantity = 3,
+                            Subtotal = 407484.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 75,
+                            OrderId = 24,
+                            Price = 379562.00m,
+                            ProductId = 3,
+                            Quantity = 3,
+                            Subtotal = 1138686.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 76,
+                            OrderId = 25,
+                            Price = 22063.00m,
+                            ProductId = 9,
+                            Quantity = 1,
+                            Subtotal = 22063.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 77,
+                            OrderId = 25,
+                            Price = 185892.00m,
+                            ProductId = 16,
+                            Quantity = 2,
+                            Subtotal = 371784.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 78,
+                            OrderId = 26,
+                            Price = 130329.00m,
+                            ProductId = 47,
+                            Quantity = 2,
+                            Subtotal = 260658.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 79,
+                            OrderId = 27,
+                            Price = 448581.00m,
+                            ProductId = 37,
+                            Quantity = 1,
+                            Subtotal = 448581.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 80,
+                            OrderId = 27,
+                            Price = 484618.00m,
+                            ProductId = 23,
+                            Quantity = 1,
+                            Subtotal = 484618.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 81,
+                            OrderId = 28,
+                            Price = 357837.00m,
+                            ProductId = 20,
+                            Quantity = 3,
+                            Subtotal = 1073511.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 82,
+                            OrderId = 28,
+                            Price = 161219.00m,
+                            ProductId = 34,
+                            Quantity = 1,
+                            Subtotal = 161219.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 83,
+                            OrderId = 28,
+                            Price = 458131.00m,
+                            ProductId = 1,
+                            Quantity = 3,
+                            Subtotal = 1374393.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 84,
+                            OrderId = 29,
+                            Price = 485514.00m,
+                            ProductId = 28,
+                            Quantity = 1,
+                            Subtotal = 485514.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 85,
+                            OrderId = 29,
+                            Price = 487044.00m,
+                            ProductId = 7,
+                            Quantity = 3,
+                            Subtotal = 1461132.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 86,
+                            OrderId = 29,
+                            Price = 235885.00m,
+                            ProductId = 42,
+                            Quantity = 1,
+                            Subtotal = 235885.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 87,
+                            OrderId = 29,
+                            Price = 223761.00m,
+                            ProductId = 38,
+                            Quantity = 1,
+                            Subtotal = 223761.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 88,
+                            OrderId = 30,
+                            Price = 426943.00m,
+                            ProductId = 25,
+                            Quantity = 1,
+                            Subtotal = 426943.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 89,
+                            OrderId = 30,
+                            Price = 130209.00m,
+                            ProductId = 11,
+                            Quantity = 3,
+                            Subtotal = 390627.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 90,
+                            OrderId = 30,
+                            Price = 73116.00m,
+                            ProductId = 5,
+                            Quantity = 2,
+                            Subtotal = 146232.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 91,
+                            OrderId = 30,
+                            Price = 272220.00m,
+                            ProductId = 46,
+                            Quantity = 2,
+                            Subtotal = 544440.00m
+                        },
+                        new
+                        {
+                            OrderItemId = 92,
+                            OrderId = 30,
+                            Price = 467964.00m,
+                            ProductId = 23,
+                            Quantity = 3,
+                            Subtotal = 1403892.00m
+                        });
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.Payment", b =>
@@ -425,6 +2516,278 @@ namespace dotnet_backend.Migrations
                     b.HasIndex(new[] { "OrderId" }, "fk_payments_orders");
 
                     b.ToTable("payments", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            PaymentId = 1,
+                            Amount = 1192330.00m,
+                            OrderId = 1,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 2,
+                            Amount = 1731608.00m,
+                            OrderId = 2,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "e-wallet",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 3,
+                            Amount = 720782.00m,
+                            OrderId = 3,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "e-wallet",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 4,
+                            Amount = 0.00m,
+                            OrderId = 4,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "card",
+                            TransactionStatus = "pending"
+                        },
+                        new
+                        {
+                            PaymentId = 5,
+                            Amount = 94180.00m,
+                            OrderId = 5,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 6,
+                            Amount = 3788671.00m,
+                            OrderId = 6,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 7,
+                            Amount = 410075.20m,
+                            OrderId = 7,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "e-wallet",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 8,
+                            Amount = 1543526.10m,
+                            OrderId = 8,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 9,
+                            Amount = 2484051.00m,
+                            OrderId = 9,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 10,
+                            Amount = 970239.00m,
+                            OrderId = 10,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "card",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 11,
+                            Amount = 1532741.00m,
+                            OrderId = 11,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "e-wallet",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 12,
+                            Amount = 1785354.00m,
+                            OrderId = 12,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "card",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 13,
+                            Amount = 1488276.00m,
+                            OrderId = 13,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "card",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 14,
+                            Amount = 2846096.00m,
+                            OrderId = 14,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 15,
+                            Amount = 158100.00m,
+                            OrderId = 15,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "card",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 16,
+                            Amount = 974090.00m,
+                            OrderId = 16,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 17,
+                            Amount = 467148.00m,
+                            OrderId = 17,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 18,
+                            Amount = 394342.00m,
+                            OrderId = 18,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "e-wallet",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 19,
+                            Amount = 1670791.45m,
+                            OrderId = 19,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "card",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 20,
+                            Amount = 2889813.00m,
+                            OrderId = 20,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "card",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 21,
+                            Amount = 2288406.00m,
+                            OrderId = 21,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 22,
+                            Amount = 331008.00m,
+                            OrderId = 22,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "e-wallet",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 23,
+                            Amount = 1831623.35m,
+                            OrderId = 23,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 24,
+                            Amount = 967883.10m,
+                            OrderId = 24,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "e-wallet",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 25,
+                            Amount = 293847.00m,
+                            OrderId = 25,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 26,
+                            Amount = 208526.40m,
+                            OrderId = 26,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 27,
+                            Amount = 933199.00m,
+                            OrderId = 27,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 28,
+                            Amount = 2609123.00m,
+                            OrderId = 28,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "card",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 29,
+                            Amount = 1925033.60m,
+                            OrderId = 29,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "cash",
+                            TransactionStatus = "success"
+                        },
+                        new
+                        {
+                            PaymentId = 30,
+                            Amount = 2912134.00m,
+                            OrderId = 30,
+                            PaymentDate = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            PaymentMethod = "card",
+                            TransactionStatus = "success"
+                        });
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.Permission", b =>
@@ -465,8 +2828,78 @@ namespace dotnet_backend.Migrations
                         {
                             PermissionId = 1,
                             ActionKey = "dashboard_view",
-                            Description = "View dashboard statistics",
-                            PermissionName = "View dashboard"
+                            Description = "Xem báo cáo tổng quan về tình hình kinh doanh.",
+                            PermissionName = "Xem thống kê doanh thu"
+                        },
+                        new
+                        {
+                            PermissionId = 2,
+                            ActionKey = "user_manage",
+                            Description = "Tạo, sửa, xóa tài khoản nhân viên và phân quyền.",
+                            PermissionName = "Quản lý người dùng"
+                        },
+                        new
+                        {
+                            PermissionId = 3,
+                            ActionKey = "supplier_manage",
+                            Description = "Thêm, sửa, xóa thông tin nhà cung cấp.",
+                            PermissionName = "Quản lý nhà cung cấp"
+                        },
+                        new
+                        {
+                            PermissionId = 4,
+                            ActionKey = "category_manage",
+                            Description = "Quản lý các loại sản phẩm.",
+                            PermissionName = "Quản lý danh mục sản phẩm"
+                        },
+                        new
+                        {
+                            PermissionId = 5,
+                            ActionKey = "inventory_manage",
+                            Description = "Nhập hàng, kiểm kê và quản lý số lượng tồn kho.",
+                            PermissionName = "Quản lý kho"
+                        },
+                        new
+                        {
+                            PermissionId = 6,
+                            ActionKey = "promotion_manage",
+                            Description = "Tạo và quản lý các chương trình giảm giá.",
+                            PermissionName = "Quản lý khuyến mãi"
+                        },
+                        new
+                        {
+                            PermissionId = 7,
+                            ActionKey = "role_manage",
+                            Description = "Tạo và quản lý các nhóm quyền.",
+                            PermissionName = "Quản lý phân quyền"
+                        },
+                        new
+                        {
+                            PermissionId = 8,
+                            ActionKey = "permission_manage",
+                            Description = "Tạo và quản lý các chức năng.",
+                            PermissionName = "Quản lý chức năng"
+                        },
+                        new
+                        {
+                            PermissionId = 9,
+                            ActionKey = "customer_manage",
+                            Description = "Thêm, sửa, xóa, tìm kiếm thông tin khách hàng.",
+                            PermissionName = "Quản lý khách hàng"
+                        },
+                        new
+                        {
+                            PermissionId = 10,
+                            ActionKey = "product_manage",
+                            Description = "Quản lý thông tin sản phẩm và giá cả.",
+                            PermissionName = "Quản lý sản phẩm"
+                        },
+                        new
+                        {
+                            PermissionId = 11,
+                            ActionKey = "order_manage",
+                            Description = "Tạo đơn hàng mới, thêm chi tiết hóa đơn và thanh toán.",
+                            PermissionName = "Quản lý đơn hàng"
                         });
                 });
 
@@ -538,6 +2971,658 @@ namespace dotnet_backend.Migrations
                     b.HasIndex(new[] { "SupplierId" }, "fk_products_suppliers");
 
                     b.ToTable("products", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            ProductId = 1,
+                            Barcode = "8900000000001",
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "coca-cola-lon.jpg",
+                            Price = 500000.00m,
+                            ProductName = "Coca Cola lon",
+                            SupplierId = 1,
+                            Unit = "lon"
+                        },
+                        new
+                        {
+                            ProductId = 2,
+                            Barcode = "8900000000002",
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "pepsi-lon.jpg",
+                            Price = 114807.00m,
+                            ProductName = "Pepsi lon",
+                            SupplierId = 3,
+                            Unit = "lon"
+                        },
+                        new
+                        {
+                            ProductId = 3,
+                            Barcode = "8900000000003",
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "tra-xanh-0-do.jpg",
+                            Price = 415725.00m,
+                            ProductName = "Trà Xanh 0 độ",
+                            SupplierId = 3,
+                            Unit = "chai"
+                        },
+                        new
+                        {
+                            ProductId = 4,
+                            Barcode = "8900000000004",
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "sting-dau.jpg",
+                            Price = 351670.00m,
+                            ProductName = "Sting dâu",
+                            SupplierId = 1,
+                            Unit = "lon"
+                        },
+                        new
+                        {
+                            ProductId = 5,
+                            Barcode = "8900000000005",
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "red-bull.jpg",
+                            Price = 402179.00m,
+                            ProductName = "Red Bull",
+                            SupplierId = 2,
+                            Unit = "lon"
+                        },
+                        new
+                        {
+                            ProductId = 6,
+                            Barcode = "8900000000006",
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "banh-oreo.jpg",
+                            Price = 209283.00m,
+                            ProductName = "Bánh Oreo",
+                            SupplierId = 2,
+                            Unit = "hộp"
+                        },
+                        new
+                        {
+                            ProductId = 7,
+                            Barcode = "8900000000007",
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "banh-chocopie.jpg",
+                            Price = 212528.00m,
+                            ProductName = "Bánh Chocopie",
+                            SupplierId = 3,
+                            Unit = "hộp"
+                        },
+                        new
+                        {
+                            ProductId = 8,
+                            Barcode = "8900000000008",
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "keo-alpenliebe.jpg",
+                            Price = 34313.00m,
+                            ProductName = "Kẹo Alpenliebe",
+                            SupplierId = 2,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 9,
+                            Barcode = "8900000000009",
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "keo-bac-ha.jpg",
+                            Price = 316289.00m,
+                            ProductName = "Kẹo bạc hà",
+                            SupplierId = 1,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 10,
+                            Barcode = "8900000000010",
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "socola-kitKat.jpg",
+                            Price = 139959.00m,
+                            ProductName = "Socola KitKat",
+                            SupplierId = 2,
+                            Unit = "cái"
+                        },
+                        new
+                        {
+                            ProductId = 11,
+                            Barcode = "8900000000011",
+                            CategoryId = 3,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "nuoc-man-nam-ngu.jpg",
+                            Price = 51792.00m,
+                            ProductName = "Nước mắm Nam Ngư",
+                            SupplierId = 1,
+                            Unit = "chai"
+                        },
+                        new
+                        {
+                            ProductId = 12,
+                            Barcode = "8900000000012",
+                            CategoryId = 3,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "nuoc-tuong-maggi.jpg",
+                            Price = 462539.00m,
+                            ProductName = "Nước tương Maggi",
+                            SupplierId = 2,
+                            Unit = "chai"
+                        },
+                        new
+                        {
+                            ProductId = 13,
+                            Barcode = "8900000000013",
+                            CategoryId = 3,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "muoi-i-ot.jpg",
+                            Price = 173302.00m,
+                            ProductName = "Muối i-ốt",
+                            SupplierId = 3,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 14,
+                            Barcode = "8900000000014",
+                            CategoryId = 3,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "bot-ngot-ajinomoto.jpg",
+                            Price = 443069.00m,
+                            ProductName = "Bột ngọt Ajinomoto",
+                            SupplierId = 1,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 15,
+                            Barcode = "8900000000015",
+                            CategoryId = 3,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "dau-an-tuong-an.jpg",
+                            Price = 281354.00m,
+                            ProductName = "Dầu ăn Tường An",
+                            SupplierId = 2,
+                            Unit = "chai"
+                        },
+                        new
+                        {
+                            ProductId = 16,
+                            Barcode = "8900000000016",
+                            CategoryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "noi-com-dien.jpg",
+                            Price = 405347.00m,
+                            ProductName = "Nồi cơm điện",
+                            SupplierId = 1,
+                            Unit = "cái"
+                        },
+                        new
+                        {
+                            ProductId = 17,
+                            Barcode = "8900000000017",
+                            CategoryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "am-sieu-toc.jpg",
+                            Price = 113087.00m,
+                            ProductName = "Ấm siêu tốc",
+                            SupplierId = 3,
+                            Unit = "cái"
+                        },
+                        new
+                        {
+                            ProductId = 18,
+                            Barcode = "8900000000018",
+                            CategoryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "quat-may.jpg",
+                            Price = 69968.00m,
+                            ProductName = "Quạt máy",
+                            SupplierId = 2,
+                            Unit = "cái"
+                        },
+                        new
+                        {
+                            ProductId = 19,
+                            Barcode = "8900000000019",
+                            CategoryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "bep-gas-mini.jpg",
+                            Price = 416845.00m,
+                            ProductName = "Bếp gas mini",
+                            SupplierId = 1,
+                            Unit = "cái"
+                        },
+                        new
+                        {
+                            ProductId = 20,
+                            Barcode = "8900000000020",
+                            CategoryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "may-xay-sinh-to.jpg",
+                            Price = 334564.00m,
+                            ProductName = "Máy xay sinh tố",
+                            SupplierId = 3,
+                            Unit = "cái"
+                        },
+                        new
+                        {
+                            ProductId = 21,
+                            Barcode = "8900000000021",
+                            CategoryId = 5,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "sua-rua-mat-hazeline.jpg",
+                            Price = 188475.00m,
+                            ProductName = "Sữa rửa mặt Hazeline",
+                            SupplierId = 1,
+                            Unit = "chai"
+                        },
+                        new
+                        {
+                            ProductId = 22,
+                            Barcode = "8900000000022",
+                            CategoryId = 5,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "kem-duong-da-pond.jpg",
+                            Price = 413840.00m,
+                            ProductName = "Kem dưỡng da Pond's",
+                            SupplierId = 1,
+                            Unit = "hộp"
+                        },
+                        new
+                        {
+                            ProductId = 23,
+                            Barcode = "8900000000023",
+                            CategoryId = 5,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "dau-goi-sunsilk.jpg",
+                            Price = 158950.00m,
+                            ProductName = "Dầu gội Sunsilk",
+                            SupplierId = 3,
+                            Unit = "chai"
+                        },
+                        new
+                        {
+                            ProductId = 24,
+                            Barcode = "8900000000024",
+                            CategoryId = 5,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "sua-tam-dove.jpg",
+                            Price = 336928.00m,
+                            ProductName = "Sữa tắm Dove",
+                            SupplierId = 2,
+                            Unit = "chai"
+                        },
+                        new
+                        {
+                            ProductId = 25,
+                            Barcode = "8900000000025",
+                            CategoryId = 5,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "nuoc-hoa-romano.jpg",
+                            Price = 352508.00m,
+                            ProductName = "Nước hoa Romano",
+                            SupplierId = 1,
+                            Unit = "chai"
+                        },
+                        new
+                        {
+                            ProductId = 26,
+                            Barcode = "8900000000026",
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "ca-phe-g7.jpg",
+                            Price = 201228.00m,
+                            ProductName = "Cà phê G7",
+                            SupplierId = 1,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 27,
+                            Barcode = "8900000000027",
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "tra-lipton.jpg",
+                            Price = 38039.00m,
+                            ProductName = "Trà Lipton",
+                            SupplierId = 1,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 28,
+                            Barcode = "8900000000028",
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "sua-vinamilk.jpg",
+                            Price = 252845.00m,
+                            ProductName = "Sữa Vinamilk",
+                            SupplierId = 1,
+                            Unit = "hộp"
+                        },
+                        new
+                        {
+                            ProductId = 29,
+                            Barcode = "8900000000029",
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "sua-th-true-milk.jpg",
+                            Price = 35278.00m,
+                            ProductName = "Sữa TH True Milk",
+                            SupplierId = 2,
+                            Unit = "hộp"
+                        },
+                        new
+                        {
+                            ProductId = 30,
+                            Barcode = "8900000000030",
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "nuoc-suoi-lavie.jpg",
+                            Price = 331637.00m,
+                            ProductName = "Nước suối Lavie",
+                            SupplierId = 3,
+                            Unit = "chai"
+                        },
+                        new
+                        {
+                            ProductId = 31,
+                            Barcode = "8900000000031",
+                            CategoryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "khan-giay-tempo.jpg",
+                            Price = 102525.00m,
+                            ProductName = "Khăn giấy Tempo",
+                            SupplierId = 3,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 32,
+                            Barcode = "8900000000032",
+                            CategoryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "giay-ve-sinh-pulppy.jpg",
+                            Price = 495429.00m,
+                            ProductName = "Giấy vệ sinh Pulppy",
+                            SupplierId = 3,
+                            Unit = "cuốn"
+                        },
+                        new
+                        {
+                            ProductId = 33,
+                            Barcode = "8900000000033",
+                            CategoryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "binh-nuoc-lock-lock.jpg",
+                            Price = 354771.00m,
+                            ProductName = "Bình nước Lock&Lock",
+                            SupplierId = 2,
+                            Unit = "cái"
+                        },
+                        new
+                        {
+                            ProductId = 34,
+                            Barcode = "8900000000034",
+                            CategoryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "hop-nhua-tupperware.jpg",
+                            Price = 297415.00m,
+                            ProductName = "Hộp nhựa Tupperware",
+                            SupplierId = 1,
+                            Unit = "cái"
+                        },
+                        new
+                        {
+                            ProductId = 35,
+                            Barcode = "8900000000035",
+                            CategoryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "dao-inox.jpg",
+                            Price = 47523.00m,
+                            ProductName = "Dao Inox",
+                            SupplierId = 3,
+                            Unit = "cái"
+                        },
+                        new
+                        {
+                            ProductId = 36,
+                            Barcode = "8900000000036",
+                            CategoryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "ban-chai-colgate.jpg",
+                            Price = 136417.00m,
+                            ProductName = "Bàn chải Colgate",
+                            SupplierId = 1,
+                            Unit = "cái"
+                        },
+                        new
+                        {
+                            ProductId = 37,
+                            Barcode = "8900000000037",
+                            CategoryId = 5,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "kem-danh-rang-ps.jpg",
+                            Price = 93713.00m,
+                            ProductName = "Kem đánh răng P/S",
+                            SupplierId = 2,
+                            Unit = "tuýp"
+                        },
+                        new
+                        {
+                            ProductId = 38,
+                            Barcode = "8900000000038",
+                            CategoryId = 5,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "nuoc-suc-mieng-listerine.jpg",
+                            Price = 223906.00m,
+                            ProductName = "Nước súc miệng Listerine",
+                            SupplierId = 3,
+                            Unit = "chai"
+                        },
+                        new
+                        {
+                            ProductId = 39,
+                            Barcode = "8900000000039",
+                            CategoryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "bong-tay-trang.jpg",
+                            Price = 317819.00m,
+                            ProductName = "Bông tẩy trang",
+                            SupplierId = 2,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 40,
+                            Barcode = "8900000000040",
+                            CategoryId = 4,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "khau-trang-3m.jpg",
+                            Price = 464252.00m,
+                            ProductName = "Khẩu trang 3M",
+                            SupplierId = 1,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 41,
+                            Barcode = "8900000000041",
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "banh-mi-sandwich.jpg",
+                            Price = 279350.00m,
+                            ProductName = "Bánh mì sandwich",
+                            SupplierId = 1,
+                            Unit = "ổ"
+                        },
+                        new
+                        {
+                            ProductId = 42,
+                            Barcode = "8900000000042",
+                            CategoryId = 3,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "mi-goi-hao-hao.jpg",
+                            Price = 9413.00m,
+                            ProductName = "Mì gói Hảo Hảo",
+                            SupplierId = 2,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 43,
+                            Barcode = "8900000000043",
+                            CategoryId = 3,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "mi-omachi.jpg",
+                            Price = 26616.00m,
+                            ProductName = "Mì Omachi",
+                            SupplierId = 2,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 44,
+                            Barcode = "8900000000044",
+                            CategoryId = 3,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "bun-kho.jpg",
+                            Price = 350911.00m,
+                            ProductName = "Bún khô",
+                            SupplierId = 1,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 45,
+                            Barcode = "8900000000045",
+                            CategoryId = 3,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "pho-an-lien.jpg",
+                            Price = 407779.00m,
+                            ProductName = "Phở ăn liền",
+                            SupplierId = 1,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 46,
+                            Barcode = "8900000000046",
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "nuoc_ngot_sprite.jpg",
+                            Price = 230083.00m,
+                            ProductName = "Nước ngọt Sprite",
+                            SupplierId = 1,
+                            Unit = "lon"
+                        },
+                        new
+                        {
+                            ProductId = 47,
+                            Barcode = "8900000000047",
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "tra-sua-dong-chai.jpg",
+                            Price = 15130.00m,
+                            ProductName = "Trà sữa đóng chai",
+                            SupplierId = 3,
+                            Unit = "chai"
+                        },
+                        new
+                        {
+                            ProductId = 48,
+                            Barcode = "8900000000048",
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "snack-oishi.jpg",
+                            Price = 43415.00m,
+                            ProductName = "Snack Oishi",
+                            SupplierId = 3,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 49,
+                            Barcode = "8900000000049",
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "snack-lay.jpg",
+                            Price = 83536.00m,
+                            ProductName = "Snack Lay's",
+                            SupplierId = 2,
+                            Unit = "gói"
+                        },
+                        new
+                        {
+                            ProductId = 50,
+                            Barcode = "8900000000050",
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            Deleted = false,
+                            ImageUrl = "keo-deo-haribo.jpg",
+                            Price = 328680.00m,
+                            ProductName = "Kẹo dẻo Haribo",
+                            SupplierId = 2,
+                            Unit = "gói"
+                        });
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.Promotion", b =>
@@ -610,6 +3695,78 @@ namespace dotnet_backend.Migrations
                         .IsUnique();
 
                     b.ToTable("promotions", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            PromoId = 1,
+                            Description = "Giảm 10% cho mọi đơn hàng",
+                            DiscountType = "percent",
+                            DiscountValue = 10.00m,
+                            EndDate = new DateOnly(2025, 12, 31),
+                            MinOrderAmount = 0.00m,
+                            PromoCode = "SALE10",
+                            StartDate = new DateOnly(2025, 1, 1),
+                            Status = "active",
+                            UsageLimit = 0,
+                            UsedCount = 0
+                        },
+                        new
+                        {
+                            PromoId = 2,
+                            Description = "Giảm 50,000 cho đơn từ 300,000 trở lên",
+                            DiscountType = "fixed",
+                            DiscountValue = 50000.00m,
+                            EndDate = new DateOnly(2025, 12, 31),
+                            MinOrderAmount = 300000.00m,
+                            PromoCode = "FREESHIP50K",
+                            StartDate = new DateOnly(2025, 3, 1),
+                            Status = "active",
+                            UsageLimit = 500,
+                            UsedCount = 0
+                        },
+                        new
+                        {
+                            PromoId = 3,
+                            Description = "Giảm 20% cho khách hàng mới",
+                            DiscountType = "percent",
+                            DiscountValue = 20.00m,
+                            EndDate = new DateOnly(2025, 6, 30),
+                            MinOrderAmount = 0.00m,
+                            PromoCode = "NEWUSER",
+                            StartDate = new DateOnly(2025, 1, 1),
+                            Status = "active",
+                            UsageLimit = 1,
+                            UsedCount = 0
+                        },
+                        new
+                        {
+                            PromoId = 4,
+                            Description = "Giảm 15% mùa hè",
+                            DiscountType = "percent",
+                            DiscountValue = 15.00m,
+                            EndDate = new DateOnly(2025, 8, 31),
+                            MinOrderAmount = 50000.00m,
+                            PromoCode = "SUMMER15",
+                            StartDate = new DateOnly(2025, 6, 1),
+                            Status = "active",
+                            UsageLimit = 1000,
+                            UsedCount = 0
+                        },
+                        new
+                        {
+                            PromoId = 5,
+                            Description = "Giảm 100,000 cho đơn từ 1 triệu",
+                            DiscountType = "fixed",
+                            DiscountValue = 100000.00m,
+                            EndDate = new DateOnly(2025, 12, 31),
+                            MinOrderAmount = 1000000.00m,
+                            PromoCode = "VIP100K",
+                            StartDate = new DateOnly(2025, 1, 1),
+                            Status = "active",
+                            UsageLimit = 200,
+                            UsedCount = 0
+                        });
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.RefundRequest", b =>
@@ -688,6 +3845,63 @@ namespace dotnet_backend.Migrations
                     b.HasIndex(new[] { "ProcessedBy" }, "fk_refunds_users");
 
                     b.ToTable("refund_requests", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            RefundId = 1,
+                            AdminNote = "Đã hoàn tiền qua chuyển khoản",
+                            CreatedAt = new DateTime(2025, 10, 8, 13, 0, 0, 0, DateTimeKind.Unspecified),
+                            CustomerAccountHolder = "Khách hàng 5",
+                            CustomerBankAccount = "1234567890123",
+                            CustomerBankName = "Vietcombank",
+                            OrderId = 1,
+                            ProcessedBy = 1,
+                            Reason = "Sản phẩm bị lỗi, không đúng mô tả",
+                            RefundAmount = 1192330.00m,
+                            Status = "completed",
+                            UpdatedAt = new DateTime(2025, 10, 8, 14, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            RefundId = 2,
+                            AdminNote = "Đã duyệt, chờ hoàn tiền",
+                            CreatedAt = new DateTime(2025, 10, 9, 10, 0, 0, 0, DateTimeKind.Unspecified),
+                            CustomerAccountHolder = "Khách hàng 10",
+                            CustomerBankAccount = "9876543210123",
+                            CustomerBankName = "Techcombank",
+                            OrderId = 8,
+                            ProcessedBy = 1,
+                            Reason = "Muốn đổi sản phẩm khác",
+                            RefundAmount = 500000.00m,
+                            Status = "approved",
+                            UpdatedAt = new DateTime(2025, 10, 9, 11, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            RefundId = 3,
+                            CreatedAt = new DateTime(2025, 10, 10, 9, 0, 0, 0, DateTimeKind.Unspecified),
+                            OrderId = 5,
+                            Reason = "Hủy đơn hàng",
+                            RefundAmount = 94180.00m,
+                            Status = "pending",
+                            UpdatedAt = new DateTime(2025, 10, 10, 9, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            RefundId = 4,
+                            AdminNote = "Không đủ bằng chứng",
+                            CreatedAt = new DateTime(2025, 10, 11, 15, 0, 0, 0, DateTimeKind.Unspecified),
+                            CustomerAccountHolder = "Khách hàng 11",
+                            CustomerBankAccount = "1122334455667",
+                            CustomerBankName = "MB Bank",
+                            OrderId = 10,
+                            ProcessedBy = 1,
+                            Reason = "Sản phẩm hư hỏng khi vận chuyển",
+                            RefundAmount = 200000.00m,
+                            Status = "rejected",
+                            UpdatedAt = new DateTime(2025, 10, 11, 16, 0, 0, 0, DateTimeKind.Unspecified)
+                        });
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.Role", b =>
@@ -721,8 +3935,14 @@ namespace dotnet_backend.Migrations
                         new
                         {
                             RoleId = 1,
-                            Description = "Local development administrator",
+                            Description = "Quản trị viên hệ thống, có toàn quyền truy cập.",
                             RoleName = "Admin"
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            Description = "Nhân viên bán hàng, có quyền hạn giới hạn.",
+                            RoleName = "Staff"
                         });
                 });
 
@@ -748,6 +3968,71 @@ namespace dotnet_backend.Migrations
                         {
                             RoleId = 1,
                             PermissionId = 1
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 2
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 3
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 4
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 5
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 6
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 7
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 8
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 9
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 9
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 10
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 10
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 11
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionId = 11
                         });
                 });
 
@@ -784,6 +4069,32 @@ namespace dotnet_backend.Migrations
                         .HasName("PRIMARY");
 
                     b.ToTable("suppliers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            SupplierId = 1,
+                            Address = "Hà Nội",
+                            Email = "abc@gmail.com",
+                            Name = "Công ty ABC",
+                            Phone = "0909123456"
+                        },
+                        new
+                        {
+                            SupplierId = 2,
+                            Address = "TP HCM",
+                            Email = "xyz@gmail.com",
+                            Name = "Công ty XYZ",
+                            Phone = "0912123456"
+                        },
+                        new
+                        {
+                            SupplierId = 3,
+                            Address = "Đà Nẵng",
+                            Email = "123@gmail.com",
+                            Name = "Công ty 123",
+                            Phone = "0933123456"
+                        });
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.User", b =>
@@ -831,6 +4142,35 @@ namespace dotnet_backend.Migrations
                         .IsUnique();
 
                     b.ToTable("users", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            FullName = "Quản trị viên",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Role = 1,
+                            Username = "admin"
+                        },
+                        new
+                        {
+                            UserId = 2,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            FullName = "Nguyễn Văn A",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Role = 2,
+                            Username = "staff01"
+                        },
+                        new
+                        {
+                            UserId = 3,
+                            CreatedAt = new DateTime(2025, 10, 8, 12, 20, 48, 0, DateTimeKind.Unspecified),
+                            FullName = "Lê Thị B",
+                            Password = "$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK",
+                            Role = 2,
+                            Username = "staff02"
+                        });
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.Bill", b =>

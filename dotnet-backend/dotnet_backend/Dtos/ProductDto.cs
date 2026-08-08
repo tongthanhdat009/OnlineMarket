@@ -1,0 +1,27 @@
+using dotnet_backend.Models;
+using dotnet_backend.Dtos;
+
+public class ProductDto
+{
+    public int ProductId { get; set; }
+    public string ProductName { get; set; } = null!;
+    public decimal Price { get; set; }
+    public string? Barcode { get; set; }
+    public string? Unit { get; set; }
+
+    public string? ImageUrl { get; set; }
+
+    public DateTime? CreatedAt { get; set; }
+
+    public virtual CategoryDto? Category { get; set; }
+
+    public virtual SupplierDto? Supplier { get; set; }
+
+    public int? CategoryId { get; set; }
+
+    public int? SupplierId { get; set; }
+
+    public int? Quantity { get; set; }
+    
+    public bool Deleted { get; set; }
+}

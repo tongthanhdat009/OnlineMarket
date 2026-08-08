@@ -1,0 +1,425 @@
+@page "/products/{productId:int}"
+@layout CustomerLayout
+@using BlazorApp.Services
+@using BlazorApp.Dto
+@using BlazorApp.Services.Interface
+@inject IApiService ApiService
+@inject IAuthService AuthService
+@inject IProductService ProductService
+@inject IS3ImageService S3ImageService
+@inject IToastService ToastService
+@inject ICartStateService CartStateService
+@inject NavigationManager Navigation
+
+<PageTitle>@(product?.ProductName ?? "Chi tiết sản phẩm") - Store Manager</PageTitle>
+
+<div class="container my-4" style="max-width: 1200px;">
+    @if (isLoading)
+    {
+        <div class="card border-1 shadow-sm rounded-4 text-center p-5">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Đang tải sản phẩm...</p>
+        </div>
+    }
+    else if (product == null)
+    {
+        <div class="card border-1 shadow-sm rounded-4 text-center p-5">
+            <i class="bi bi-box-seam text-muted" style="font-size: 4rem;"></i>
+            <h3 class="mt-3">Không tìm thấy sản phẩm</h3>
+            <a href="/products" class="btn btn-success mt-3 px-4">
+                <i class="bi bi-arrow-left me-2"></i>
+                Quay lại danh sách
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="/products" class="text-decoration-none text-success">Sản phẩm</a></li>
+                <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">@product.ProductName</li>
+            </ol>
+        </nav>
+
+        <div class="card border-1 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-body p-4">
+                <div class="row g-4">
+                    <!-- Product Images -->
+                    <div class="col-lg-6">
+                        <div class="sticky-top z-2" style="top: 2rem;">
+                            <div class="rounded-4 overflow-hidden" style="height: 500px;">
+                                <ProductImage ImageUrl="@product.ImageUrl" 
+                                            Alt="@product.ProductName" 
+                                            CssClass="w-100 h-100" 
+                                            Style="object-fit: cover;" 
+                                            IconSize="5rem" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Details -->
+                    <div class="col-lg-6">
+                        <div class="d-flex flex-column gap-3">
+                            <!-- Category Badge -->
+                            <div>
+                                <span class="badge rounded-pill px-3 py-2" style="background-color: #e8f5e9; color: #2ecc71;">
+                                    <i class="bi bi-tag me-1"></i>
+                                    @product.CategoryName
+                                </span>
+                            </div>
+                            
+                            <!-- Product Name -->
+                            <h1 class="display-6 fw-bold text-dark">@product.ProductName</h1>
+                            
+                            <!-- Price -->
+                            <div class="py-3 border-top border-bottom">
+                                <h2 class="text-success fw-bold mb-0" style="font-size: 2.5rem;">@product.Price.ToString("N0") đ</h2>
+                            </div>
+
+                            <!-- Description -->
+                            @if (!string.IsNullOrEmpty(product.Description))
+                            {
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-3">Mô tả sản phẩm</h5>
+                                    <p class="text-muted lh-lg">@product.Description</p>
+                                </div>
+                            }
+
+                            <!-- Product Meta -->
+                            <div class="card bg-light border-1 rounded-3">
+                                <div class="card-body p-3">
+                                    <div class="d-flex flex-column gap-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <i class="bi bi-box text-success fs-5"></i>
+                                            <span class="text-dark">Mã sản phẩm: <strong>@GetProductCode(product.ProductId)</strong></span>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(product.Barcode))
+                                        {
+                                            <div class="d-flex align-items-center gap-3">
+                                                <i class="bi bi-upc-scan text-success fs-5"></i>
+                                                <span class="text-dark">Mã vạch: <strong>@product.Barcode</strong></span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(product.Unit))
+                                        {
+                                            <div class="d-flex align-items-center gap-3">
+                                                <i class="bi bi-box-seam text-success fs-5"></i>
+                                                <span class="text-dark">Đơn vị: <strong>@product.Unit</strong></span>
+                                            </div>
+                                        }
+                                        @if (product.Supplier != null)
+                                        {
+                                            <div class="d-flex align-items-center gap-3">
+                                                <i class="bi bi-building text-success fs-5"></i>
+                                                <span class="text-dark">Nhà cung cấp: <strong>@product.Supplier.Name</strong></span>
+                                            </div>
+                                        }
+                                        <div class="d-flex align-items-center gap-3">
+                                            <i class="bi @(product.IsInStock ? "bi-check-circle text-success" : "bi-x-circle text-danger") fs-5"></i>
+                                            <span class="@(product.IsInStock ? "text-success" : "text-danger") fw-bold">@product.StockStatus</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            @if (product.IsInStock)
+                            {
+                                <div class="row g-2 mt-2">
+                                    <div class="col-md-6">
+                                        <button class="btn btn-outline-success btn-lg w-100 rounded-3 fw-semibold" @onclick="HandleAddToCart">
+                                            <i class="bi bi-cart-plus me-2"></i>
+                                            Thêm vào giỏ hàng
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <button class="btn btn-success btn-lg w-100 rounded-3 fw-semibold" @onclick="HandleBuyNow">
+                                            <i class="bi bi-lightning-fill me-2"></i>
+                                            Mua ngay
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-danger border-1 shadow-sm d-flex align-items-center" role="alert">
+                                    <i class="bi bi-exclamation-circle me-2 fs-4"></i>
+                                    <strong>Sản phẩm hiện đang hết hàng</strong>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Products Section -->
+        @if (relatedProducts.Any())
+        {
+            <section class="mt-5">
+                <h3 class="fw-bold text-dark mb-4">
+                    <i class="bi bi-grid-3x3-gap text-success me-2"></i>
+                    Sản phẩm cùng danh mục
+                </h3>
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-4">
+                    @foreach (var relatedProduct in relatedProducts.Take(4))
+                    {
+                        <div class="col">
+                            <div class="card border-0 shadow-sm rounded-4 h-100 product-card-hover" @onclick="() => NavigateToProduct(relatedProduct.ProductId)" style="cursor: pointer;">
+                                <div class="position-relative overflow-hidden rounded-top-4" style="height: 200px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                                    @if (productImageUrls.ContainsKey(relatedProduct.ProductId))
+                                    {
+                                        <img src="@productImageUrls[relatedProduct.ProductId]" 
+                                             alt="@relatedProduct.ProductName" 
+                                             class="w-100 h-100" 
+                                             style="object-fit: cover; transition: transform 0.3s ease;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="d-flex align-items-center justify-content-center h-100">
+                                            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                        </div>
+                                    }
+                                    @if (relatedProduct.IsInStock)
+                                    {
+                                        <span class="badge bg-success position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill">
+                                            <i class="bi bi-check-circle me-1"></i>Còn hàng
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill">
+                                            <i class="bi bi-x-circle me-1"></i>Hết hàng
+                                        </span>
+                                    }
+                                </div>
+                                <div class="card-body p-3">
+                                    <h6 class="fw-semibold text-dark mb-2 text-truncate-2" title="@relatedProduct.ProductName">@relatedProduct.ProductName</h6>
+                                    <div class="d-flex align-items-center justify-content-between mt-auto">
+                                        <div class="text-success fw-bold fs-5">@relatedProduct.Price.ToString("N0") <small class="text-muted fw-normal">đ</small></div>
+                                    </div>
+                                    <button class="btn btn-outline-success btn-sm w-100 mt-3 view-detail-btn rounded-pill">
+                                        <span>Xem chi tiết</span>
+                                        <i class="bi bi-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+    }
+</div>
+
+<style>
+    /* Breadcrumb hover effect */
+    .breadcrumb-item a:hover {
+        color: #2ecc71 !important;
+    }
+
+    /* Button hover effects */
+    .btn-outline-success:hover,
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        border-color: #27ae60;
+    }
+
+    .btn-success:hover {
+        background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    }
+
+    .btn-outline-success {
+        color: #2ecc71;
+        border-color: #2ecc71;
+    }
+
+    .btn-outline-success:hover {
+        background-color: #2ecc71;
+        border-color: #2ecc71;
+    }
+
+    .text-success {
+        color: #2ecc71 !important;
+    }
+
+    /* Product card hover effect */
+    .product-card-hover {
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+
+    .product-card-hover:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 30px rgba(46, 204, 113, 0.2) !important;
+        border-color: #2ecc71;
+    }
+
+    .view-detail-btn {
+        transition: all 0.3s ease;
+    }
+
+    .product-card-hover:hover .view-detail-btn {
+        background-color: #2ecc71;
+        border-color: #2ecc71;
+        color: white;
+    }
+
+    .view-detail-btn i {
+        transition: transform 0.3s ease;
+    }
+
+    .product-card-hover:hover .view-detail-btn i {
+        transform: translateX(5px);
+    }
+
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 2.8em;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int ProductId { get; set; }
+
+    private ProductDto? product;
+    private List<ProductDto> relatedProducts = new();
+    private Dictionary<int, string> productImageUrls = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProduct();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadProduct();
+    }
+
+    private async Task LoadProduct()
+    {
+        isLoading = true;
+        try
+        {
+            // TODO: Implement GetProductByIdAsync in ProductService
+            // product = await ProductService.GetProductByIdAsync(ProductId);
+            
+            // Temporary: Get from all products list
+            var products = await ProductService.GetAllProductsAsync();
+            product = products.FirstOrDefault(p => p.ProductId == ProductId);
+
+            // Load related products from the same category
+            if (product != null)
+            {
+                relatedProducts = products
+                    .Where(p => p.CategoryId == product.CategoryId && 
+                               p.ProductId != ProductId && 
+                               !p.Deleted && 
+                               p.IsInStock)
+                    .Take(8)
+                    .ToList();
+                
+                // Preload S3 image URLs for related products
+                productImageUrls.Clear();
+                foreach (var relatedProduct in relatedProducts)
+                {
+                    if (!string.IsNullOrEmpty(relatedProduct.ImageUrl))
+                    {
+                        var imageUrl = await S3ImageService.GetImageUrlAsync(relatedProduct.ImageUrl);
+                        productImageUrls[relatedProduct.ProductId] = imageUrl;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading product: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+   private async Task HandleAddToCart()
+{
+    if (!await AuthService.IsAuthenticatedAsync())
+    {
+        Navigation.NavigateTo($"/login?returnUrl=/products/{ProductId}", true);
+        return;
+    }
+
+    var currentUser = await AuthService.GetCurrentUserAsync();
+    if (currentUser == null) return;
+
+    int customerId = currentUser.CustomerId;
+
+    try
+    {
+        var body = new { ProductId = ProductId, Quantity = 1 };
+        await ApiService.PostAsync<object, object>($"api/cart/{customerId}/items", body);
+        
+        // Notify cart changed to update badge
+        CartStateService.NotifyCartChanged();
+        
+        // Show success toast and stay on page
+        ToastService.ShowSuccess($"Đã thêm {product?.ProductName} vào giỏ hàng!", "Thêm vào giỏ hàng");
+    }
+    catch (Exception ex)
+    {
+        ToastService.ShowError($"Không thể thêm sản phẩm: {ex.Message}", "Lỗi");
+    }
+}
+
+private async Task HandleBuyNow()
+{
+    if (!await AuthService.IsAuthenticatedAsync())
+    {
+        Navigation.NavigateTo($"/login?returnUrl=/products/{ProductId}", true);
+        return;
+    }
+
+    var currentUser = await AuthService.GetCurrentUserAsync();
+    if (currentUser == null) return;
+
+    int customerId = currentUser.CustomerId;
+
+    try
+    {
+        var body = new { ProductId = ProductId, Quantity = 1, IsSelected = true };
+        await ApiService.PostAsync<object, object>($"api/cart/{customerId}/items", body);
+        
+        // Navigate to cart with selected product
+        Navigation.NavigateTo($"/cart?selected={ProductId}");
+    }
+    catch (Exception ex)
+    {
+        ToastService.ShowError($"Không thể thêm sản phẩm: {ex.Message}", "Lỗi");
+    }
+}
+
+
+    private string GetProductCode(int productId)
+    {
+        return $"SP{productId:D6}";
+    }
+
+    private void NavigateToProduct(int productId)
+    {
+        Navigation.NavigateTo($"/products/{productId}", forceLoad: true);
+    }
+}

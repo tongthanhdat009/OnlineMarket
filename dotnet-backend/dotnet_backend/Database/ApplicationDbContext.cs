@@ -600,26 +600,7 @@ public partial class ApplicationDbContext : DbContext
                 .HasConstraintName("fk_refunds_users");
         });
 
-        modelBuilder.Entity<Role>().HasData(new Role
-        {
-            RoleId = 1,
-            RoleName = "Admin",
-            Description = "Local development administrator"
-        });
-
-        modelBuilder.Entity<Permission>().HasData(new Permission
-        {
-            PermissionId = 1,
-            PermissionName = "View dashboard",
-            ActionKey = "dashboard_view",
-            Description = "View dashboard statistics"
-        });
-
-        modelBuilder.Entity<RolePermission>().HasData(new RolePermission
-        {
-            RoleId = 1,
-            PermissionId = 1
-        });
+        modelBuilder.ApplySeedData();
 
         OnModelCreatingPartial(modelBuilder);
     }

@@ -1,0 +1,266 @@
+.inventory-page {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  
+  .search-bar label {
+    font-weight: 600;
+    color: #2c3e50;
+  }
+  
+  .search-bar select,
+  .search-bar input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  
+  .search-bar input {
+    flex: 1;
+  }
+  
+  .inventory-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 20px;
+    border-radius: 8px;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .form-group label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #2c3e50;
+  }
+  
+  .form-group input,
+  .form-group select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+  }
+  
+  button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  button[type="submit"] {
+    background: #27ae60;
+    color: white;
+  }
+  
+  button[type="submit"]:hover {
+    background: #219a52;
+  }
+  
+  button[type="button"] {
+    background: #95a5a6;
+    color: white;
+    margin-left: 10px;
+  }
+  
+  button[type="button"]:hover {
+    background: #7f8c8d;
+  }
+  
+  .loading,
+  .no-data {
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+    font-size: 16px;
+  }
+  
+  .inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background: white;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .inventory-table th,
+  .inventory-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .inventory-table th {
+    background: #2c3e50;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    text-align: center;
+    letter-spacing: 0.5px;
+  }
+  
+  .inventory-table td {
+    color: #2c3e50;
+  }
+  
+  .inventory-table tbody tr {
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .inventory-table tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .inventory-table tbody tr.active {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+  }
+  
+  .inventory-table td button {
+    padding: 6px 12px;
+    margin: 0 2px;
+    font-size: 14px;
+    border-radius: 4px;
+  }
+  
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .pagination button {
+    padding: 4px 10px;
+    border: 1px solid #ccc;
+    background-color: white;
+    cursor: pointer;
+    color: black;
+    font-weight: bold;
+  }
+  
+  .pagination button:disabled {
+    background: #bdc3c7;
+    cursor: not-allowed;
+  }
+  
+  .pagination span {
+    font-weight: 600;
+    color: #2c3e50;
+  }
+  
+  .confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .confirm-box {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 90%;
+  }
+  
+  .confirm-box h3 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+  }
+  
+  .confirm-box p {
+    margin: 0 0 20px 0;
+    color: #7f8c8d;
+    line-height: 1.5;
+  }
+  
+  .confirm-box .actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  
+  .btn-yes {
+    background: #e74c3c;
+    color: white;
+  }
+  
+  .btn-yes:hover {
+    background: #c0392b;
+  }
+  
+  .btn-no {
+    background: #95a5a6;
+    color: white;
+  }
+  
+  .btn-no:hover {
+    background: #7f8c8d;
+  }
+  
+  .error-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #e74c3c;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    max-width: 400px;
+  }
+  
+  .error-message button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 5px 10px;
+    margin-left: 10px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  .error-message button:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }

@@ -118,8 +118,8 @@ dotnet-backend/
     │
     └── Database/                   # Database Layer
         ├── ApplicationDbContext.cs      # EF Core DbContext
-        ├── schema.sql                  # Database schema
-        └── data.sql                    # Seed data
+        ├── ModelSeedData.cs             # EF Core model-managed seed data
+        └── schema.sql                   # Database schema reference
 ```
 
 ## Cơ sở dữ liệu
@@ -128,7 +128,7 @@ dotnet-backend/
 
 - **MySQL/MariaDB 10.4** (via Pomelo.EntityFrameworkCore.MySql)
 - EF Core migrations apply automatically at API startup. `EnsureCreated()` is not used.
-- Initial migration seeds only the minimum Admin role, dashboard permission, and role-permission relationship required by admin authorization.
+- EF Core model-managed seed data supplies the complete local reference dataset.
 
 ### Các bảng chính (16 tables)
 
@@ -228,7 +228,7 @@ dotnet-backend/
 
 ## Local MySQL (Docker)
 
-`docker compose` runs disposable MySQL 8.0 at `127.0.0.1:3307`. The API applies EF Core migrations and seed data at startup; Docker does not execute `schema.sql`/`data.sql`.
+`docker compose` runs disposable MySQL 8.0 at `127.0.0.1:3307`. The API applies EF Core migrations and model-managed seed data at startup; Docker does not execute SQL seed imports.
 
 If `ConnectionStrings__DefaultConnection` is absent, copy the ignored local placeholder, then export it. `.env.example` contains no credentials; keep `.env` uncommitted.
 

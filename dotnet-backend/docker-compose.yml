@@ -5,7 +5,7 @@ services:
       MYSQL_DATABASE: store_management
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes" # Disposable local database only; no credential is committed.
     ports:
-      - "3307:3306"
+      - "127.0.0.1:3307:3306"
     volumes:
       - local-mysql-data:/var/lib/mysql
     healthcheck:
