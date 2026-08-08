@@ -12,9 +12,19 @@ using Amazon.Runtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
+static string? GetSetting(IConfiguration configuration, string key, string fallbackKey)
+{
+    var fallback = configuration[fallbackKey];
+    return string.IsNullOrWhiteSpace(fallback) ? configuration[key] : fallback;
+}
+
 // 1. Lấy chuỗi kết nối từ appsettings.json
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
+}
 
 // 2. Đăng ký DbContext với timeout 600 giây
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -29,7 +39,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // 3. 🔐 Cấu hình JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings["Secret"];
-var key = Encoding.ASCII.GetBytes(secretKey ?? "");
+var issuer = jwtSettings["Issuer"];
+var audience = jwtSettings["Audience"];
+if (string.IsNullOrWhiteSpace(secretKey) || string.IsNullOrWhiteSpace(issuer) || string.IsNullOrWhiteSpace(audience))
+{
+    throw new InvalidOperationException("Jwt:Secret, Jwt:Issuer, and Jwt:Audience are required.");
+}
+
+var key = Encoding.ASCII.GetBytes(secretKey);
 
 // ✅ Tắt auto-mapping claim types để giữ nguyên tên claim "sub"
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -42,9 +59,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ValidateIssuer = true,
-        ValidIssuer = jwtSettings["Issuer"],
+        ValidIssuer = issuer,
         ValidateAudience = true,
-        ValidAudience = jwtSettings["Audience"],
+        ValidAudience = audience,
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero,
         NameClaimType = "sub" // ✅ Chỉ định claim "sub" là NameIdentifier
@@ -90,25 +107,37 @@ builder.Services.AddHttpClient(); // HttpClientFactory cho AiService
 builder.Services.AddScoped<IAiService, AiService>();
 
 // 🔹 Đăng ký AWS S3 Service
-var awsAccessKey = builder.Configuration["AWS:AccessKey"];
-var awsSecretKey = builder.Configuration["AWS:SecretKey"];
-var awsRegion = builder.Configuration["AWS:Region"];
+var awsAccessKey = GetSetting(builder.Configuration, "AWS:AccessKey", "AWS_ACCESS_KEY_ID");
+var awsSecretKey = GetSetting(builder.Configuration, "AWS:SecretKey", "AWS_SECRET_ACCESS_KEY");
+var awsRegion = GetSetting(builder.Configuration, "AWS:Region", "AWS_DEFAULT_REGION") ?? "us-east-1";
+var awsEndpoint = GetSetting(builder.Configuration, "AWS:Endpoint", "AWS_ENDPOINT");
+var awsPathStyle = bool.TryParse(
+    GetSetting(builder.Configuration, "AWS:UsePathStyleEndpoint", "AWS_USE_PATH_STYLE_ENDPOINT"),
+    out var usePathStyleEndpoint) && usePathStyleEndpoint;
+var awsBucket = GetSetting(builder.Configuration, "AWS:BucketName", "AWS_BUCKET");
 
-if (!string.IsNullOrEmpty(awsAccessKey) && !string.IsNullOrEmpty(awsSecretKey))
+if (!string.IsNullOrWhiteSpace(awsAccessKey) && !string.IsNullOrWhiteSpace(awsSecretKey) && !string.IsNullOrWhiteSpace(awsBucket))
 {
     var credentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
     var config = new AmazonS3Config
     {
-        RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(awsRegion)
+        RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(awsRegion),
+        ForcePathStyle = awsPathStyle
     };
-    
+
+    if (Uri.TryCreate(awsEndpoint, UriKind.Absolute, out var endpoint))
+    {
+        config.ServiceURL = endpoint.ToString().TrimEnd('/');
+        config.AuthenticationRegion = awsRegion;
+    }
+
     builder.Services.AddSingleton<IAmazonS3>(new AmazonS3Client(credentials, config));
     builder.Services.AddScoped<IS3Service, S3Service>();
 }
 else
 {
     builder.Services.AddScoped<IS3Service, UnavailableS3Service>();
-    Console.WriteLine("⚠️ AWS credentials not configured. S3 service will not be available.");
+    Console.WriteLine("⚠️ AWS credentials or bucket not configured. S3 service will not be available.");
 }
 
 // ✅ 6. Bật CORS cho phép Vue (localhost:5173), Blazor (localhost:5000, localhost:5001, localhost:5192)
@@ -130,8 +159,9 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // ✅ Áp dụng migrations khi khởi động local/dev
-using (var scope = app.Services.CreateScope())
+if (app.Environment.IsDevelopment())
 {
+    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     dbContext.Database.Migrate();
     Console.WriteLine("✅ Database migrations đã được áp dụng.");

@@ -12,6 +12,9 @@ public sealed class UnavailableS3Service : IS3Service
 
     public string GetFileUrl(string s3Key) => throw NotConfigured();
 
+    public Task<string> GetImageUrlAsync(string s3Key, int expirationMinutes = 60) =>
+        Task.FromException<string>(NotConfigured());
+
     public Task<string> GetPresignedUrlAsync(string s3Key, int expirationMinutes = 60) =>
         Task.FromException<string>(NotConfigured());
 
