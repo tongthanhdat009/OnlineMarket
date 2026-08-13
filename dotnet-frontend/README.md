@@ -202,7 +202,7 @@ npm run preview
 ```
 
 ### Development Server
-- URL: `http://localhost:5173`
+- URL: `http://localhost:5177`
 
 ## Scripts (package.json)
 ```json

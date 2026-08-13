@@ -116,7 +116,7 @@ BlazorApp/
 ## Cấu hình
 
 ### Development URLs
-- HTTP: `http://localhost:5192`
+- HTTP: `http://localhost:5176`
 - HTTPS: `https://localhost:7190`
 
 ### Backend API
