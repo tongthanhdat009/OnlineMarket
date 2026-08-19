@@ -3,3 +3,8 @@
 /.codebase-memory
 /.omc
 /.playwright-mcp
+
+# make dev-bg artifacts
+.make-dev-*.log
+.make-dev-*.pid
+/dotnet-backend/.omc

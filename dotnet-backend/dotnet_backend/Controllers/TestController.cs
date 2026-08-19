@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using dotnet_backend.Database;
+using dotnet_backend.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 
 namespace dotnet_backend.Controllers
@@ -11,10 +12,12 @@ namespace dotnet_backend.Controllers
     public class TestController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IS3Service _s3Service;
 
-        public TestController(ApplicationDbContext context)
+        public TestController(ApplicationDbContext context, IS3Service s3Service)
         {
             _context = context;
+            _s3Service = s3Service;
         }
 
         // Khi truy cập GET /api/test
@@ -105,6 +108,45 @@ namespace dotnet_backend.Controllers
                     timestamp = DateTime.Now
                 });
             }
+        }
+
+        // Test S3 storage - GET /api/test/s3
+        [HttpGet("s3")]
+        public IActionResult TestS3Storage()
+        {
+            // Test public image: 0.png (default product image)
+            var publicKey = "public/0.png";
+            var publicUrl = _s3Service.GetFileUrl(publicKey);
+            var publicImageUrl = _s3Service.GetImageUrlAsync(publicKey).GetAwaiter().GetResult();
+
+            return Ok(new
+            {
+                success = true,
+                message = "S3 storage test",
+                public_key = publicKey,
+                public_unsigned_url = publicUrl,
+                public_get_image_url = publicImageUrl,
+                note = "public_get_image_url should be same as unsigned URL (no presign for public)"
+            });
+        }
+
+        // Test presigned URL for private file - GET /api/test/s3/presign
+        [HttpGet("s3/presign")]
+        public IActionResult TestPresignedUrl([FromQuery] string? key = null, [FromQuery] int expiry = 60)
+        {
+            var targetKey = string.IsNullOrWhiteSpace(key) ? "private/_test.txt" : key;
+            var presignedUrl = _s3Service.GetImageUrlAsync(targetKey, expiry).GetAwaiter().GetResult();
+            var isManaged = _s3Service.IsManagedProductImageKey(targetKey);
+
+            return Ok(new
+            {
+                success = true,
+                key = targetKey,
+                is_managed = isManaged,
+                presigned_url = presignedUrl,
+                expiry_minutes = expiry,
+                note = isManaged ? "Key is managed - presigned URL generated" : "Key not managed - returned empty"
+            });
         }
     }
 }

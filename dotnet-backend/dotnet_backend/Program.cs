@@ -9,6 +9,10 @@ using dotnet_backend.Services.Interface;
 using dotnet_backend.Models;
 using Amazon.S3;
 using Amazon.Runtime;
+using DotNetEnv;
+
+// Load .env file before configuration is read
+Env.Load(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
 
