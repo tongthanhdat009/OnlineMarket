@@ -1,32 +1,29 @@
 <!-- Parent: ../AGENTS.md -->
-<!-- Generated: 2026-07-28 | Updated: 2026-07-28 -->
+<!-- Generated: 2026-07-28 | Updated: 2026-08-20 -->
 
 # Models
 
-## Purpose
-EF Core entity models for the store-management relational domain.
+EF Core entity domain — relational store-management core.
 
 ## Key Files
+
 | File | Description |
 |---|---|
-| `Product.cs` | Product entity and relations. |
-| `Order.cs` | Order entity and lifecycle data. |
-| `Customer.cs` | Customer entity. |
-| `Inventory.cs` | Stock entity. |
-| `RolePermission.cs` | Role-permission join entity. |
+| `Product.cs`, `Category.cs`, `Supplier.cs` | Catalog entities |
+| `Order.cs`, `OrderItem.cs`, `CartItem.cs` | Order/cart entities |
+| `Customer.cs`, `User.cs` | Actors |
+| `Role.cs`, `Permission.cs`, `RolePermission.cs` | RBAC join |
+| `Inventory.cs`, `Promotion.cs` | Stock & discounts |
+| `Bill.cs`, `Payment.cs`, `RefundRequest.cs` | Billing/payments |
 
 ## For AI Agents
 
-### Working In This Directory
-- Preserve `partial` entities, nullable foreign keys, and virtual navigation properties.
-- Coordinate entity changes with `../Database/ApplicationDbContext.cs`, SQL schema, DTOs, and services.
+- Preserve `partial` class, nullable FKs (`int?`/`Guid?`), and `virtual` navigation props — generation/mapping depends on them.
+- Every entity change → `Database/ApplicationDbContext.cs` + `Migrations/` + `Dtos/` + `Services/` together.
+- Don't rename columns/tables without a migration; don't hand-edit the snapshot.
 
-### Testing Requirements
-- Build `../dotnet_backend.sln`; validate schema compatibility locally before data changes.
+## Testing Requirements
 
-## Dependencies
-
-### Internal
-- `../Database/` configures entity mappings.
+- `dotnet build dotnet_backend.sln`; for schema change run `dotnet ef migrations add <Name>` + verify against disposable DB (`make db-reset`).
 
 <!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->

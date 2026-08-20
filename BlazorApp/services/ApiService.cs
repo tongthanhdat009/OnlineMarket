@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 using BlazorApp.Dto;
 
 namespace BlazorApp.Services
@@ -8,6 +10,7 @@ namespace BlazorApp.Services
     {
         Task<T?> GetAsync<T>(string url);
         Task<TResponse?> PostAsync<TRequest, TResponse>(string url, TRequest data);
+        IAsyncEnumerable<TResponse> PostStreamAsync<TRequest, TResponse>(string url, TRequest data, CancellationToken cancellationToken = default);
         Task<TResponse?> PutAsync<TRequest, TResponse>(string url, TRequest data);
         Task<bool> DeleteAsync(string url);
     }
@@ -65,6 +68,34 @@ namespace BlazorApp.Services
             {
                 Console.WriteLine($"POST error: {ex.Message}");
                 return default;
+            }
+        }
+
+        public async IAsyncEnumerable<TResponse> PostStreamAsync<TRequest, TResponse>(
+            string url, TRequest data,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            await SetAuthorizationHeaderAsync();
+            using var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = JsonContent.Create(data)
+            };
+            using var response = await _httpClient.SendAsync(
+                request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            response.EnsureSuccessStatusCode();
+            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using var reader = new StreamReader(stream);
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var line = await reader.ReadLineAsync(cancellationToken);
+                if (line == null) yield break;
+                if (string.IsNullOrWhiteSpace(line) || !line.StartsWith("data:", StringComparison.OrdinalIgnoreCase)) continue;
+                var json = line[5..].Trim();
+                if (json == "[DONE]") yield break;
+                TResponse? item;
+                try { item = JsonSerializer.Deserialize<TResponse>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }); }
+                catch (JsonException) { continue; }
+                if (item != null) yield return item;
             }
         }
 

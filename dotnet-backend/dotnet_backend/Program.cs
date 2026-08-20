@@ -106,8 +106,22 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<PromotionService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 
-// 🤖 AI Service
-builder.Services.AddHttpClient(); // HttpClientFactory cho AiService
+// 🤖 AI Service — OpenAI-compatible (OpenClaw gateway)
+// Timeout lấy từ OpenAI__TimeoutSeconds / OPENAI_TIMEOUT_SECONDS (mặc định 1200s)
+var openAiTimeoutSeconds = 1200;
+{
+    var raw = builder.Configuration["OpenAI:TimeoutSeconds"]
+        ?? builder.Configuration["OpenAI__TimeoutSeconds"]
+        ?? builder.Configuration["OPENAI_TIMEOUT_SECONDS"]
+        ?? Environment.GetEnvironmentVariable("OPENAI_TIMEOUT_SECONDS")
+        ?? Environment.GetEnvironmentVariable("OpenAI__TimeoutSeconds");
+    if (int.TryParse(raw, out var parsed) && parsed > 0) openAiTimeoutSeconds = parsed;
+}
+builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("openai", client =>
+{
+    client.Timeout = Timeout.InfiniteTimeSpan;
+});
 builder.Services.AddScoped<IAiService, AiService>();
 
 // 🔹 Đăng ký AWS S3 Service

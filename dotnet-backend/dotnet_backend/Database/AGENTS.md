@@ -1,30 +1,28 @@
 <!-- Parent: ../AGENTS.md -->
-<!-- Generated: 2026-07-28 | Updated: 2026-07-28 -->
+<!-- Generated: 2026-07-28 | Updated: 2026-08-20 -->
 
 # Database
 
-## Purpose
-
-EF Core DbContext mappings plus MySQL/MariaDB schema and seed data.
+EF Core `DbContext` + model-managed seed; MariaDB 10.4 via Pomelo.
 
 ## Key Files
 
-| File                      | Description                        |
-| ------------------------- | ---------------------------------- |
-| `ApplicationDbContext.cs` | DbSets and fluent entity mappings. |
-| `ModelSeedData.cs`        | EF Core model-managed seed data.   |
-| `schema.sql`              | Database schema definition.        |
+| File | Description |
+|---|---|
+| `ApplicationDbContext.cs` | `DbSet<>`s + fluent mappings (keys, constraints, relations) |
+| `ApplicationDbContextFactory.cs` | Design-time factory for `dotnet ef` tooling |
+| `ModelSeedData.cs` | `HasData` seed invoked from `OnModelCreating` |
+| `schema.sql` *(if present)* | Legacy/reference DDL — not applied at runtime |
 
 ## For AI Agents
 
-### Working In This Directory
+- Keep `HasData` keys stable; changing seed IDs requires a migration.
+- Preserve FK constraints/indices; test against disposable DB (`make db-reset` then `dotnet ef database update` or app auto-migration).
+- Never commit credentials; `DefaultConnection` comes from `appsettings.json` → `.env`.
+- Factory must stay in sync with `Program.cs` `UseMySql` version (`MariaDB 10.4`).
 
-- Coordinate entity/schema changes with `../Models/`, services, and DTOs.
-- Preserve constraints, keys, and production data compatibility.
-- Do not add credentials to SQL or configuration.
+## Testing Requirements
 
-### Testing Requirements
-
-- Build `../dotnet_backend.sln`; apply schema changes only against a disposable local database.
+- `dotnet build dotnet_backend.sln`; for seed/schema change: `make db-up && make db-wait` then verify migration applies cleanly.
 
 <!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->

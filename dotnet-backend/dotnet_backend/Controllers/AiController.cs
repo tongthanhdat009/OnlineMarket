@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using dotnet_backend.Dtos;
 using dotnet_backend.Services.Interface;
 
@@ -65,6 +66,53 @@ namespace dotnet_backend.Controllers
         }
 
         /// <summary>
+        /// Stream chat text/tool events qua Server-Sent Events.
+        /// </summary>
+        [HttpPost("chat/stream")]
+        [AllowAnonymous]
+        public async Task ChatStream([FromBody] AiChatRequestDto request, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(request.Message))
+            {
+                Response.StatusCode = StatusCodes.Status400BadRequest;
+                await Response.WriteAsJsonAsync(new { message = "Tin nhắn không được để trống" }, cancellationToken);
+                return;
+            }
+
+            Response.ContentType = "text/event-stream";
+            Response.Headers.CacheControl = "no-cache";
+            Response.Headers.Connection = "keep-alive";
+            Response.StatusCode = StatusCodes.Status200OK;
+            await Response.StartAsync(cancellationToken);
+
+            try
+            {
+                await foreach (var evt in _aiService.StreamChatAsync(request, GetCustomerId(), cancellationToken))
+                {
+                    await Response.WriteAsync($"data: {System.Text.Json.JsonSerializer.Serialize(evt)}\n\n", cancellationToken);
+                    await Response.Body.FlushAsync(cancellationToken);
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogDebug("AI chat stream cancelled by client");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in AI chat stream");
+                if (Response.HasStarted)
+                {
+                    await Response.WriteAsync($"data: {System.Text.Json.JsonSerializer.Serialize(new AiChatStreamEventDto { Type = "error", Error = "AI đang quá tải hoặc hết quota. Vui lòng thử lại sau." })}\n\n", CancellationToken.None);
+                    await Response.Body.FlushAsync(CancellationToken.None);
+                }
+                else
+                {
+                    Response.StatusCode = StatusCodes.Status500InternalServerError;
+                }
+            }
+        }
+
+        /// <summary>
         /// Thêm sản phẩm được AI gợi ý vào giỏ hàng
         /// POST: api/customer/ai/add-to-cart
         /// Body: { "products": [{ "productId": 1, "quantity": 2 }] }
@@ -126,24 +174,5 @@ namespace dotnet_backend.Controllers
             }
         }
 
-        /// <summary>
-        /// Refresh product embeddings (admin only, dùng khi update catalog)
-        /// POST: api/customer/ai/refresh-embeddings
-        /// </summary>
-        [HttpPost("refresh-embeddings")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> RefreshEmbeddings()
-        {
-            try
-            {
-                await _aiService.RefreshProductEmbeddingsAsync();
-                return Ok(new { message = "Đã cập nhật embeddings thành công" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error refreshing embeddings");
-                return StatusCode(500, new { message = "Lỗi khi cập nhật embeddings" });
-            }
-        }
     }
 }

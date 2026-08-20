@@ -11,6 +11,7 @@ namespace BlazorApp.Services
         /// Gửi tin nhắn đến AI và nhận response
         /// </summary>
         Task<AiChatResponseDto?> SendMessageAsync(AiChatRequestDto request);
+        IAsyncEnumerable<AiChatStreamEventDto> SendMessageStreamAsync(AiChatRequestDto request, CancellationToken cancellationToken = default);
         
         /// <summary>
         /// Thêm sản phẩm được gợi ý vào giỏ hàng
@@ -47,6 +48,13 @@ namespace BlazorApp.Services
                     HasProductSuggestion = false
                 };
             }
+        }
+
+        public IAsyncEnumerable<AiChatStreamEventDto> SendMessageStreamAsync(
+            AiChatRequestDto request, CancellationToken cancellationToken = default)
+        {
+            return _apiService.PostStreamAsync<AiChatRequestDto, AiChatStreamEventDto>(
+                "api/customer/ai/chat/stream", request, cancellationToken);
         }
 
         public async Task<AddToCartResponseDto?> AddSuggestedProductsToCartAsync(List<AddProductItem> products)

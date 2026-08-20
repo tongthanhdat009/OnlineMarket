@@ -11,9 +11,12 @@ namespace BlazorApp.Dto
         public string Message { get; set; } = string.Empty;
         
         /// <summary>
-        /// Lịch sử hội thoại (tùy chọn)
+        /// Toàn bộ lịch sử hội thoại sau compact phía client.
         /// </summary>
         public List<ChatMessageDto>? History { get; set; }
+
+        public string? Summary { get; set; }
+        public int SummaryMessageCount { get; set; }
     }
 
     /// <summary>
@@ -56,6 +59,20 @@ namespace BlazorApp.Dto
         /// Nguồn ngữ cảnh từ RAG
         /// </summary>
         public List<ContextSourceDto>? ContextSources { get; set; }
+    }
+
+    public class AiChatStreamEventDto
+    {
+        public string Type { get; set; } = string.Empty;
+        public string? Text { get; set; }
+        public string? ToolName { get; set; }
+        public string? ToolArguments { get; set; }
+        public string? Summary { get; set; }
+        public int SummaryMessageCount { get; set; }
+        public bool HasProductSuggestion { get; set; }
+        public List<ProductSuggestionDto>? SuggestedProducts { get; set; }
+        public List<ContextSourceDto>? ContextSources { get; set; }
+        public string? Error { get; set; }
     }
 
     /// <summary>

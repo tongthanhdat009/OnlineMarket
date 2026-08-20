@@ -237,6 +237,9 @@
     private bool isLoading = false;
     private bool showContextSources = true;
     private List<ChatMessage> messages = new();
+    private readonly List<ChatMessageDto> conversationHistory = new();
+    private string? conversationSummary;
+    private int conversationSummaryMessageCount;
     private ElementReference messagesContainer;
 
     private class ChatMessage
@@ -278,75 +281,72 @@
 
         var userMessage = inputMessage.Trim();
         inputMessage = "";
-
-        // Thêm tin nhắn user
-        messages.Add(new ChatMessage
-        {
-            Content = userMessage,
-            IsUser = true
-        });
-
+        messages.Add(new ChatMessage { Content = userMessage, IsUser = true });
+        var assistantMessage = new ChatMessage { IsUser = false };
+        messages.Add(assistantMessage);
         isLoading = true;
         StateHasChanged();
 
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(20));
         try
         {
-            // Chuẩn bị history
-            var history = messages
-                .Where(m => !m.IsUser || messages.IndexOf(m) < messages.Count - 1)
-                .TakeLast(6)
-                .Select(m => new ChatMessageDto
-                {
-                    Role = m.IsUser ? "user" : "assistant",
-                    Content = m.Content
-                })
-                .ToList();
-
-            // Gọi AI
             var request = new AiChatRequestDto
             {
                 Message = userMessage,
-                History = history
+                History = conversationHistory.ToList(),
+                Summary = conversationSummary,
+                SummaryMessageCount = conversationSummaryMessageCount
             };
 
-            var response = await AiChatService.SendMessageAsync(request);
-
-            if (response != null)
+            await foreach (var evt in AiChatService.SendMessageStreamAsync(request, cancellation.Token))
             {
-                // Load ảnh sản phẩm qua S3ImageService
-                if (response.SuggestedProducts != null)
+                switch (evt.Type)
                 {
-                    foreach (var product in response.SuggestedProducts)
-                    {
-                        product.ImageUrl = await S3ImageService.GetImageUrlAsync(product.ImageUrl);
-                    }
+                    case "text":
+                        assistantMessage.Content += evt.Text;
+                        StateHasChanged();
+                        break;
+                    case "summary":
+                        conversationSummary = evt.Summary;
+                        conversationSummaryMessageCount = evt.SummaryMessageCount;
+                        if (conversationHistory.Count > 4)
+                        {
+                            conversationHistory.RemoveRange(0, conversationHistory.Count - 4);
+                        }
+                        break;
+                    case "done":
+                        assistantMessage.SuggestedProducts = evt.SuggestedProducts;
+                        assistantMessage.ContextSources = evt.ContextSources;
+                        conversationSummary = evt.Summary ?? conversationSummary;
+                        conversationSummaryMessageCount = evt.SummaryMessageCount > 0
+                            ? evt.SummaryMessageCount : conversationSummaryMessageCount;
+                        if (assistantMessage.SuggestedProducts != null)
+                        {
+                            foreach (var product in assistantMessage.SuggestedProducts)
+                                product.ImageUrl = await S3ImageService.GetImageUrlAsync(product.ImageUrl);
+                        }
+                        break;
+                    case "error":
+                        assistantMessage.Content = evt.Error ?? "Đã xảy ra lỗi. Vui lòng thử lại sau.";
+                        break;
                 }
+                await InvokeAsync(StateHasChanged);
+            }
 
-                messages.Add(new ChatMessage
-                {
-                    Content = response.Message,
-                    IsUser = false,
-                    SuggestedProducts = response.SuggestedProducts,
-                    ContextSources = response.ContextSources
-                });
-            }
-            else
-            {
-                messages.Add(new ChatMessage
-                {
-                    Content = "Xin lỗi, tôi không thể xử lý yêu cầu này. Vui lòng thử lại.",
-                    IsUser = false
-                });
-            }
+            if (string.IsNullOrWhiteSpace(assistantMessage.Content))
+                assistantMessage.Content = "Xin lỗi, tôi không nhận được phản hồi từ AI.";
+
+            conversationHistory.Add(new ChatMessageDto { Role = "user", Content = userMessage });
+            conversationHistory.Add(new ChatMessageDto { Role = "assistant", Content = assistantMessage.Content });
+        }
+        catch (OperationCanceledException)
+        {
+            assistantMessage.Content = "Đã dừng phản hồi.";
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Chat error: {ex.Message}");
-            messages.Add(new ChatMessage
-            {
-                Content = "Đã xảy ra lỗi. Vui lòng thử lại sau.",
-                IsUser = false
-            });
+            Console.WriteLine($"Chat stream error: {ex.Message}");
+            assistantMessage.Content = "Đã xảy ra lỗi. Vui lòng thử lại sau.";
         }
         finally
         {

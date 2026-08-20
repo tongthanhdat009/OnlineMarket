@@ -1,36 +1,66 @@
-<!-- Generated: 2026-07-28 | Updated: 2026-07-28 -->
+<!-- Generated: 2026-07-28 | Updated: 2026-08-20 -->
 
 # OnlineMarket
 
-## Purpose
-Store-management system: ASP.NET Core API, Vue admin SPA, Blazor WebAssembly customer SPA.
+Monorepo store-management: .NET 10 API + MySQL, Vue 3/Vite admin SPA, Blazor WebAssembly customer SPA.
 
-## Key Files
-| File | Description |
+## Structure
+
+| Path | Purpose |
 |---|---|
-| `.gitignore` | Root Git exclusions. |
+| `dotnet-backend/` | ASP.NET Core Web API solution + `docker-compose.yml` MySQL 8.0 (see `dotnet-backend/AGENTS.md`) |
+| `dotnet-frontend/` | Vue 3/Vite admin SPA — not a .NET project (see `dotnet-frontend/AGENTS.md`) |
+| `BlazorApp/` | .NET 10 Blazor WASM customer storefront (see `BlazorApp/AGENTS.md`) |
+| `Makefile` | Canonical dev/build/db orchestration (`make dev`, `make build`, `make static-check`) |
+| `dotnet-backend/.env.example` | Env template; real `dotnet-backend/.env` is gitignored |
 
-## Subdirectories
-| Directory | Purpose |
+## Where to Look
+
+| Task | Start here |
 |---|---|
-| `dotnet-backend/` | ASP.NET Core API solution (see `dotnet-backend/AGENTS.md`). |
-| `dotnet-frontend/` | Vue 3/Vite admin SPA (see `dotnet-frontend/AGENTS.md`). |
-| `BlazorApp/` | Blazor WebAssembly customer SPA (see `BlazorApp/AGENTS.md`). |
+| API endpoint / auth / business rule | `dotnet-backend/dotnet_backend/Controllers/` → `Services/` → `Models/`/`Dtos/` |
+| DB schema / seed / migration | `dotnet-backend/dotnet_backend/Database/` + `Models/` + `Migrations/` |
+| Admin UI page / RBAC / API call | `dotnet-frontend/src/views/` → `src/router/index.js` → `src/api/` |
+| Customer page / cart / checkout | `BlazorApp/Pages/` → `BlazorApp/services/` → `BlazorApp/dto/` |
+| Build failure / port mismatch | `Makefile`, `*/Properties/launchSettings.json`, `*/appsettings.json` |
 
-## For AI Agents
+## Code Map
 
-### Working In This Directory
-- Treat the three applications as separately buildable repositories; do not cross-edit without a contract change.
-- Do not document `.git`, `bin`, `obj`, `node_modules`, `wwwroot/lib`, or generated/cache directories.
+- Request flow: `Controllers/*Controller.cs` → `Services/Interface/I*Service.cs` → `Services/*Service.cs` → `Database/ApplicationDbContext.cs` (Pomelo MySQL) → MySQL/MariaDB
+- Frontend → API: Vue `src/api/apiClient.js` (`BASE_URL=http://localhost:7000`) and Blazor `Program.cs` `HttpClient(BaseAddress=http://localhost:7000/)` — keep in sync
+- Auth: admin `AuthService`/`AuthController` vs customer `CustomerAuthService`/`CustomerAuthController`; JWT `sub` claim via `JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear()` + `NameClaimType="sub"`
+- Payments: `VNPayService` + `S3Service`/`UnavailableS3Service` (graceful when AWS env missing), `InvoicePdfService` (QuestPDF)
 
-### Testing Requirements
-- Backend: `dotnet build dotnet-backend/dotnet_backend/dotnet_backend.sln`.
-- Admin SPA: `npm run build --prefix dotnet-frontend`.
-- Customer SPA: `dotnet build BlazorApp/BlazorApp.csproj`.
+## Conventions
 
-## Dependencies
+- Three apps are separately buildable; don't cross-edit contracts without updating controllers ↔ services ↔ DTOs ↔ entities together.
+- `Makefile` is source of truth for local commands; `dotnet build`/`npm run build` paths in child AGENTS.md mirror it.
 
-### Internal
-- Both frontends consume the backend REST API.
+## Anti-Patterns
+
+- Committing secrets to `appsettings.json`, `wwwroot/appsettings.json`, or `schema.sql`.
+- Adding generated dirs (`bin/`, `obj/`, `node_modules/`, `wwwroot/lib`, `.make-dev-*`) to docs or version control.
+- Changing a `Services/Interface/I*Service` signature without its impl, DI registration in `Program.cs`, and caller.
+
+## Commands
+
+```bash
+make install          # dotnet restore (API+Blazor) + npm install (admin)
+make db-up && make db-wait   # MySQL 127.0.0.1:3308 / store_management
+make dev              # DB + API :7000 + Admin :5177 + Blazor :5192 in parallel
+make build            # build all three
+make static-check     # pre-push gate (== make build)
+# granular:
+dotnet build dotnet-backend/dotnet_backend/dotnet_backend.sln
+npm run build --prefix dotnet-frontend
+dotnet build BlazorApp/BlazorApp.csproj
+```
+
+## Gotchas
+
+- `dotnet-backend/.env` is required before `make dev-api` (`Env.Load` in `Program.cs` + `GetSetting` fallback `AWS_*`/`AWS:*`); copy from `.env.example` and fill `Jwt__Secret` (or `make env` generates it via `openssl rand -hex 32`).
+- Inner `dotnet-backend/dotnet_backend/dotnet_backend.sln` and outer `dotnet-backend/dotnet-backend.sln` both exist — canonical build is `dotnet build dotnet-backend/dotnet_backend/dotnet_backend.sln`.
+- All `.csproj` target `net10.0` (`Nullable=enable`, `ImplicitUsings=enable`); backend `RootNamespace=dotnet_backend`.
+- API JSON keeps CLR casing (`PropertyNamingPolicy=null`, `ReferenceHandler.IgnoreCycles`); don't camelCase DTO payloads.
 
 <!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->

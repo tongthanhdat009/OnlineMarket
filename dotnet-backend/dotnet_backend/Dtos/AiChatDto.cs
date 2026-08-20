@@ -11,9 +11,19 @@ namespace dotnet_backend.Dtos
         public string Message { get; set; } = string.Empty;
         
         /// <summary>
-        /// Lịch sử hội thoại (tùy chọn)
+        /// Toàn bộ lịch sử hội thoại phía client đã biết.
         /// </summary>
         public List<ChatMessageDto>? History { get; set; }
+
+        /// <summary>
+        /// Tóm tắt các tin nhắn đã compact.
+        /// </summary>
+        public string? Summary { get; set; }
+
+        /// <summary>
+        /// Số tin nhắn đã nằm trong Summary.
+        /// </summary>
+        public int SummaryMessageCount { get; set; }
     }
 
     /// <summary>
@@ -108,6 +118,23 @@ namespace dotnet_backend.Dtos
         /// Đoạn trích mô tả
         /// </summary>
         public string Excerpt { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Event SSE trả về trong lúc OpenAI stream.
+    /// </summary>
+    public class AiChatStreamEventDto
+    {
+        public string Type { get; set; } = string.Empty;
+        public string? Text { get; set; }
+        public string? ToolName { get; set; }
+        public string? ToolArguments { get; set; }
+        public string? Summary { get; set; }
+        public int SummaryMessageCount { get; set; }
+        public bool HasProductSuggestion { get; set; }
+        public List<ProductSuggestionDto>? SuggestedProducts { get; set; }
+        public List<ContextSourceDto>? ContextSources { get; set; }
+        public string? Error { get; set; }
     }
 
     /// <summary>

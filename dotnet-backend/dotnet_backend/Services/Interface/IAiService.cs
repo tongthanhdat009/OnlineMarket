@@ -14,10 +14,14 @@ namespace dotnet_backend.Services.Interface
         /// <param name="customerId">ID khách hàng (tùy chọn)</param>
         /// <returns>Response từ AI với gợi ý sản phẩm nếu có</returns>
         Task<AiChatResponseDto> ProcessChatAsync(AiChatRequestDto request, int? customerId = null);
-        
+
         /// <summary>
-        /// Refresh/update embeddings cho products (dùng khi có thay đổi catalog)
+        /// Stream assistant text/tool events.
         /// </summary>
-        Task RefreshProductEmbeddingsAsync();
+        IAsyncEnumerable<AiChatStreamEventDto> StreamChatAsync(
+            AiChatRequestDto request,
+            int? customerId = null,
+            CancellationToken cancellationToken = default);
+
     }
 }

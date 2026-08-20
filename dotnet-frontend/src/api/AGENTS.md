@@ -1,36 +1,33 @@
 <!-- Parent: ../AGENTS.md -->
-<!-- Generated: 2026-07-28 | Updated: 2026-07-28 -->
+<!-- Generated: 2026-07-28 | Updated: 2026-08-20 -->
 
 # api
 
-## Purpose
-Axios clients and resource-specific backend API modules.
+Axios resource modules over `apiClient.js`; parallel to backend `Controllers/` + Blazor `services/`.
 
 ## Key Files
+
 | File | Description |
 |---|---|
-| `apiClient.js` | Generic Axios instance; clears local state and redirects after 401. |
-| `Auth.js` | Login/logout/current-user APIs and refresh-token queue. |
-| `Product.js` | Product operations and image upload API. |
-| `Order.js` | Order operations and statistics API. |
-| `Permission.js` | Permission API operations. |
+| `apiClient.js` | Axios instance `BASE_URL=http://localhost:7000`, `timeout 10000`, request `Bearer accessToken`, 401 clears + `/login` |
+| `Auth.js` | `login`/`logout`/`current-user` + refresh-token queue |
+| `Product.js` | Product CRUD + image upload |
+| `Order.js` | Orders + stats |
+| `Category.js`, `Customer.js`, `Inventory.js`, `Promotion.js`, `Suppliers.js`, `Users.js`, `Role.js`, `Permission.js`, `RolePermission.js` | Remaining resources |
+| `api.js` | Shared re-exports (if used) |
 
 ## For AI Agents
 
-### Working In This Directory
-- Export named async operations per resource module.
-- Preserve the separate roles of `apiClient.js` and `Auth.js`; coordinate changes to token keys, refresh, or 401 handling.
-- Match backend endpoint casing and payload shape exactly.
+- One named `async` export per backend endpoint; keep backend path casing & payload shape exact (`PropertyNamingPolicy=null` on API).
+- `apiClient.js` vs `Auth.js` have distinct roles (generic transport + 401 handling vs token lifecycle/queue) — coordinate changes to token keys, refresh, or redirect.
+- New resource: add `*.js` here + wire callers in `views/`/`router/`; don't centralize everything into `api.js`.
 
-### Testing Requirements
-- Run `npm run build` from `../..`; manually verify changed API calls against local backend.
+## Testing Requirements
+
+- `npm run build --prefix dotnet-frontend` from root; manually hit changed endpoints against `http://localhost:7000` (`make dev-api`).
 
 ## Dependencies
 
-### External
-- Axios.
-
-### Internal
-- `../router/` and `../utils/permissionUtils.js` consume auth/RBAC state.
+- Axios; `../router/index.js` + `../utils/permissionUtils.js` consume auth state.
 
 <!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->
