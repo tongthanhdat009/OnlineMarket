@@ -128,6 +128,8 @@
       </tbody>
     </table>
 
+    <Pagination :page="page" :pageSize="pageSize" :total="total" @update:page="page = $event; loadPromotions()" @update:pageSize="pageSize = $event; page = 1; loadPromotions()" />
+
     <!-- 🎁 Modal Tặng Voucher -->
     <div v-if="showGiftModal" class="confirm-overlay">
       <div class="confirm-box gift-modal">
@@ -198,10 +200,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import Flatpickr from "vue-flatpickr-component";
 import "flatpickr/dist/flatpickr.css";
 import * as PromotionApi from "../api/Promotion";
+import { parsePagedResponse, buildPagedParams } from "../utils/pagination.js";
+import Pagination from "../components/Pagination.vue";
 import { getCustomersBySpending } from "../api/Customer.js";
 
 const promotions = ref([]);
@@ -211,6 +215,9 @@ const editMode = ref(false);
 const viewMode = ref(false);
 const searchText = ref("");
 const filterType = ref("PromoId");
+const page = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 
 // Gift Voucher Modal
 const showGiftModal = ref(false);
@@ -329,15 +336,7 @@ const popupTarget = ref(null);
 const popupTitle = ref("");
 const popupMessage = ref("");
 
-const filteredPromotions = computed(() => {
-  const keyword = searchText.value.toLowerCase().trim();
-  if (!keyword) return promotions.value;
-  return promotions.value.filter(p => {
-    if (filterType.value === "PromoId") return displayId(p.PromoId).toLowerCase().includes(keyword);
-    if (filterType.value === "PromoCode") return p.PromoCode.toLowerCase().includes(keyword);
-    return false;
-  });
-});
+const filteredPromotions = computed(() => promotions.value);
 
 function displayId(id) {
   if (id == null || id === undefined) return "PR000";
@@ -381,14 +380,13 @@ function closePopup() {
 async function savePromotion(isUpdate = false) {
   try {
     if (isUpdate || editMode.value) {
-      const updated = await PromotionApi.updatePromotion(promotion.value.PromoId, promotion.value);
-      const idx = promotions.value.findIndex((p) => p.PromoId === updated.PromoId);
-      if (idx !== -1) promotions.value[idx] = updated;
+      await PromotionApi.updatePromotion(promotion.value.PromoId, promotion.value);
       editMode.value = false;
     } else {
-      const created = await PromotionApi.createPromotion(promotion.value);
-      promotions.value.push(created);
+      await PromotionApi.createPromotion(promotion.value);
+      page.value = 1;
     }
+    await loadPromotions();
     resetForm();
   } catch (err) {
     const msg = err?.response?.data?.message || err.message || "Lỗi khi lưu khuyến mãi";
@@ -439,20 +437,37 @@ function resetForm() {
 resetForm();
 
 // load data
-onMounted(async () => {
+async function loadPromotions() {
   try {
-    promotions.value = await PromotionApi.getPromotions();
+    const params = buildPagedParams({ page: page.value, pageSize: pageSize.value, search: searchText.value, searchField: filterType.value });
+    const data = await PromotionApi.getPromotions(params);
+    const { items, total: t } = parsePagedResponse(data);
+    total.value = t;
+    const arr = Array.isArray(items) ? items : [];
+    if (Array.isArray(data) && arr.length > pageSize.value) {
+      total.value = arr.length;
+      const start = (page.value - 1) * pageSize.value;
+      promotions.value = arr.slice(start, start + pageSize.value);
+    } else {
+      promotions.value = arr;
+    }
   } catch (err) {
     console.error(err);
     alert("Không thể tải danh sách khuyến mãi. Kiểm tra backend.");
   }
+}
+onMounted(loadPromotions);
+let _promoSearchTimer = null;
+watch([searchText, filterType], () => {
+  clearTimeout(_promoSearchTimer);
+  _promoSearchTimer = setTimeout(() => { page.value = 1; loadPromotions(); }, 400);
 });
 
 // delete helper
 async function doDelete(target) {
   try {
     await PromotionApi.deletePromotion(target.PromoId);
-    promotions.value = promotions.value.filter((p) => p.PromoId !== target.PromoId);
+    await loadPromotions();
   } catch (err) {
     const msg = err?.response?.data?.message || err.message || "Lỗi khi xóa";
     alert(msg);

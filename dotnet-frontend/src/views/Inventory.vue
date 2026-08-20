@@ -77,12 +77,7 @@
       </tbody>
     </table>
 
-    <!-- 🔢 Phân trang -->
-    <div v-if="totalPages > 1" class="pagination">
-      <button @click="currentPage--" :disabled="currentPage === 1"><</button>
-      <span>Trang {{ currentPage }} / {{ totalPages }}</span>
-      <button @click="currentPage++" :disabled="currentPage === totalPages">></button>
-    </div>
+    <Pagination :page="page" :pageSize="pageSize" :total="total" @update:page="page = $event; fetchInventories()" @update:pageSize="pageSize = $event; page = 1; fetchInventories()" />
 
     <!-- 🔔 Popup xác nhận -->
     <div v-if="showConfirm" class="confirm-overlay">
@@ -105,9 +100,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { getInventories, updateInventory, getInventoryById } from "../api/Inventory.js";
 import { getProducts } from "../api/Product.js";
+import { parsePagedResponse, buildPagedParams } from "../utils/pagination.js";
+import Pagination from "../components/Pagination.vue";
 
 // ----- Data refs
 const inventories = ref([]);
@@ -125,9 +122,10 @@ const searchText = ref("");
 const filterType = ref("all");
 const errorMessage = ref("");
 
-// ----- Pagination
-const currentPage = ref(1);
-const itemsPerPage = 10;
+// ----- Pagination (server-side)
+const page = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 
 // ----- Confirmation
 const showConfirm = ref(false);
@@ -135,55 +133,27 @@ const confirmTitle = ref("");
 const confirmMessage = ref("");
 let pendingAction = null;
 
-// ----- Computed properties
-const filteredInventories = computed(() => {
-  if (!inventories.value || inventories.value.length === 0) return [];
-
-  const keyword = searchText.value.trim();
-  if (!keyword) return inventories.value;
-
-  return inventories.value.filter((i) => {
-    if (!i) return false;
-
-    if (filterType.value === "all") {
-      return (
-        vietnameseIncludes(i.InventoryId, keyword) ||
-        vietnameseIncludes(i.Product.ProductName, keyword) ||
-        vietnameseIncludes(i.Quantity, keyword)
-      );
-    }
-
-    const fieldValue = i[filterType.value];
-    if (fieldValue == null) return false;
-
-    if (filterType.value === "InventoryId") {
-      const numericKeyword = keyword.replace(/\D/g, "");
-      if (!numericKeyword) return vietnameseIncludes(fieldValue, keyword);
-      return String(i.InventoryId).includes(numericKeyword) || vietnameseIncludes(fieldValue, keyword);
-    }
-
-    if (filterType.value === "Quantity") {
-      return String(fieldValue).includes(keyword);
-    }
-
-    return vietnameseIncludes(fieldValue, keyword);
-  });
-});
-
-const totalPages = computed(() => Math.ceil(filteredInventories.value.length / itemsPerPage));
-
-const paginatedInventories = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  return filteredInventories.value.slice(start, end);
-});
+// ----- Computed properties (server-side pagination)
+const filteredInventories = computed(() => inventories.value);
+const paginatedInventories = computed(() => inventories.value);
+const totalPages = computed(() => Math.ceil(total.value / pageSize.value));
 
 // ----- API Functions
 async function fetchInventories() {
   try {
     loading.value = true;
-    const data = await getInventories();
-    inventories.value = data;
+    const params = buildPagedParams({ page: page.value, pageSize: pageSize.value, search: searchText.value, searchField: filterType.value === "all" ? "" : filterType.value });
+    const data = await getInventories(params);
+    const { items, total: t } = parsePagedResponse(data);
+    total.value = t;
+    const arr = Array.isArray(items) ? items : [];
+    if (Array.isArray(data) && arr.length > pageSize.value) {
+      total.value = arr.length;
+      const start = (page.value - 1) * pageSize.value;
+      inventories.value = arr.slice(start, start + pageSize.value);
+    } else {
+      inventories.value = arr;
+    }
   } catch (err) {
     console.error("Lỗi khi tải tồn kho:", err);
     errorMessage.value = "Không thể tải danh sách tồn kho";
@@ -349,6 +319,11 @@ onMounted(async () => {
     fetchInventories(),
     fetchProducts()
   ]);
+});
+let _invSearchTimer = null;
+watch([searchText, filterType], () => {
+  clearTimeout(_invSearchTimer);
+  _invSearchTimer = setTimeout(() => { page.value = 1; fetchInventories(); }, 400);
 });
 </script>
 

@@ -56,6 +56,8 @@
 
     <!-- Điều hướng sang trang chi tiết order-items thay vì mở modal -->
 
+    <Pagination :page="page" :pageSize="pageSize" :total="total" @update:page="page = $event; load()" @update:pageSize="pageSize = $event; page = 1; load()" />
+
     <!-- Xác nhận huỷ -->
     <div v-if="showConfirm" class="confirm-overlay">
       <div class="confirm-box">
@@ -72,8 +74,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { fetchOrders, cancelOrder, fetchOrderById } from '../api/Order.js';
+import { parsePagedResponse, buildPagedParams } from '../utils/pagination.js';
+import Pagination from '../components/Pagination.vue';
 import { generateInvoicePDF } from '../utils/generateInvoicePDF.js';
 
 const orders = ref([]);
@@ -82,6 +86,9 @@ const error = ref('');
 
 const searchText = ref('');
 const filterType = ref('id');
+const page = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 
 
 const showConfirm = ref(false);
@@ -90,16 +97,7 @@ const canceling = ref(false);
 const cancelError = ref('');
 const generatingId = ref(null);
 
-const filtered = computed(() => {
-  const kw = (searchText.value || '').toLowerCase().trim();
-  if (!kw) return orders.value;
-  return orders.value.filter(o => {
-    if (filterType.value === 'id') return String(o.OrderId).includes(kw) || displayId(o.OrderId).toLowerCase().includes(kw);
-    if (filterType.value === 'customer') return (o.Customer?.Name || '').toLowerCase().includes(kw);
-    if (filterType.value === 'phone') return (o.Customer?.Phone || '').toLowerCase().includes(kw);
-    return false;
-  });
-});
+const filtered = computed(() => orders.value);
 
 function displayId(id) { return `O${String(id).padStart(3,'0')}`; }
 function formatDate(d) { try { return new Date(d).toLocaleString('vi-VN'); } catch { return d; } }
@@ -108,8 +106,33 @@ function formatCurrency(v) { return new Intl.NumberFormat('vi-VN', { style: 'cur
 async function load() {
   loading.value = true; error.value='';
   try {
-    const data = await fetchOrders();
-    orders.value = Array.isArray(data) ? data : (data?.data || []);
+    const sfMap = { id: 'OrderId', customer: 'Customer', phone: 'Phone' };
+    const sf = sfMap[filterType.value] || filterType.value;
+    const params = buildPagedParams({ page: page.value, pageSize: pageSize.value, search: searchText.value, searchField: sf });
+    const data = await fetchOrders(params);
+    const { items, total: t } = parsePagedResponse(data);
+    total.value = t;
+    const arr = Array.isArray(items) ? items : (Array.isArray(data) ? data : []);
+    // fallback client pagination if backend ignored paging
+    if (Array.isArray(data) && arr.length > pageSize.value && total.value === arr.length) {
+      const kw = (searchText.value||'').toLowerCase().trim();
+      let filteredArr = arr;
+      if (kw) {
+        filteredArr = arr.filter(o => {
+          if (filterType.value === 'id') return String(o.OrderId).includes(kw) || displayId(o.OrderId).toLowerCase().includes(kw);
+          if (filterType.value === 'customer') return (o.Customer?.Name || '').toLowerCase().includes(kw);
+          if (filterType.value === 'phone') return (o.Customer?.Phone || '').toLowerCase().includes(kw);
+          return false;
+        });
+        total.value = filteredArr.length;
+      }
+      const start = (page.value-1)*pageSize.value;
+      orders.value = filteredArr.slice(start, start+pageSize.value);
+    } else {
+      orders.value = arr.length ? arr : (Array.isArray(data) ? data : []);
+      // when paged, total already set
+      if (!total.value && Array.isArray(orders.value)) total.value = orders.value.length;
+    }
   } catch (e) {
     error.value = e?.response?.data?.message || e?.message || 'Không thể tải danh sách đơn hàng.';
   } finally {
@@ -148,6 +171,7 @@ async function doCancel() {
         PayStatus: orders.value[idx].PayStatus === 'pending' ? 'canceled' : 'refunded'
       };
     }
+    await load();
     closeConfirm();
   } catch (e) {
     cancelError.value = e?.response?.data?.message || e?.message || 'Hủy đơn thất bại.';
@@ -157,6 +181,11 @@ async function doCancel() {
 }
 
 onMounted(load);
+let _orderSearchTimer = null;
+watch([searchText, filterType], () => {
+  clearTimeout(_orderSearchTimer);
+  _orderSearchTimer = setTimeout(() => { page.value = 1; load(); }, 400);
+});
 </script>
 
 <style scoped>

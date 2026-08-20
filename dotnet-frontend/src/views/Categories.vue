@@ -66,6 +66,8 @@
       </tbody>
     </table>
 
+    <Pagination :page="page" :pageSize="pageSize" :total="total" @update:page="page = $event; fetchCategories()" @update:pageSize="pageSize = $event; page = 1; fetchCategories()" />
+
     <!-- ✅ Hộp xác nhận -->
     <div v-if="showConfirm" class="confirm-overlay">
       <div class="confirm-box">
@@ -81,13 +83,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import {
   getCategories,
   addCategory,
   updateCategory,
   deleteCategory as deleteCategoryAPI,
 } from "../api/Category.js";
+import { parsePagedResponse, buildPagedParams } from "../utils/pagination.js";
+import Pagination from "../components/Pagination.vue";
 
 // 🧩 Dữ liệu
 const categories = ref([]);
@@ -99,15 +103,12 @@ const viewMode = ref(false);
 
 const searchText = ref("");
 const filterType = ref("id");
+const page = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 
-// 🔍 Lọc danh mục
-const filteredCategories = computed(() => {
-  const keyword = searchText.value.toLowerCase().trim();
-  if (!keyword) return categories.value;
-  return categories.value.filter((c) =>
-    c[filterType.value]?.toLowerCase().includes(keyword)
-  );
-});
+// Server-side pagination: displayed list is already paged
+const filteredCategories = computed(() => categories.value);
 
 // ✅ Biến xác nhận
 const showConfirm = ref(false);
@@ -115,15 +116,38 @@ const confirmTitle = ref("");
 const confirmMessage = ref("");
 let confirmAction = null;
 
-// ⚡ Lấy danh mục từ backend
+// ⚡ Lấy danh mục từ backend (server-side pagination)
 async function fetchCategories() {
   try {
-    const data = await getCategories();
-    // Chuyển đổi key từ PascalCase sang camelCase nếu backend trả PascalCase
-    categories.value = data.map((item) => ({
-      id: item.CategoryId ?? item.id,
-      name: item.CategoryName ?? item.name,
+    loading.value = true;
+    const params = buildPagedParams({ page: page.value, pageSize: pageSize.value, search: searchText.value, searchField: filterType.value });
+    const data = await getCategories(params);
+    const { items, total: t } = parsePagedResponse(data);
+    total.value = t;
+    const arr = Array.isArray(items) ? items : [];
+    // fallback client slice if backend returned full array
+    if (Array.isArray(data) && arr.length > pageSize.value && total.value === arr.length) {
+      const kw = (searchText.value || "").toLowerCase().trim();
+      let filtered = arr;
+      if (kw) filtered = arr.filter((c) => String((c[filterType.value] ?? c[filterType.value === "id" ? "CategoryId" : "CategoryName"] ?? "") ).toLowerCase().includes(kw));
+      // but we already mapped? handle raw later: just map then filter
+      // For simplicity if backend returned paged, this branch won't trigger due to length check
+    }
+    categories.value = arr.map((item) => ({
+      id: item.CategoryId ?? item.id ?? item.categoryId,
+      name: item.CategoryName ?? item.name ?? item.categoryName,
     }));
+    // Client fallback when paged response not supported (total == array length but we got full array)
+    // If total is actually full length and items == full array, do client paging fallback
+    // Detect by: data was array (not paged) -> parsePagedResponse gave total=length, items=full array
+    // Then we already paged via backend? No. Slice locally if needed and adjust total already correct.
+    // If backend supports paging, items length <= pageSize, so no slice needed.
+    // If backend ignores paging, items length may be > pageSize -> slice
+    if (Array.isArray(data) && categories.value.length > pageSize.value) {
+      total.value = categories.value.length;
+      const start = (page.value - 1) * pageSize.value;
+      categories.value = categories.value.slice(start, start + pageSize.value);
+    }
   } catch (err) {
     console.error("Lỗi khi tải danh mục:", err);
   } finally {
@@ -155,6 +179,11 @@ async function saveCategory() {
 
     // ✅ Sau khi thêm hoặc cập nhật, tải lại danh sách
     await fetchCategories();
+let _searchTimer2 = null;
+watch([searchText, filterType], () => {
+  clearTimeout(_searchTimer2);
+  _searchTimer2 = setTimeout(() => { page.value = 1; fetchCategories(); }, 400);
+});
 
     // ✅ Reset form về rỗng
     editMode.value = false;
@@ -193,6 +222,11 @@ async function deleteCategory(id) {
   try {
     await deleteCategoryAPI(id);
     await fetchCategories();
+let _searchTimer2 = null;
+watch([searchText, filterType], () => {
+  clearTimeout(_searchTimer2);
+  _searchTimer2 = setTimeout(() => { page.value = 1; fetchCategories(); }, 400);
+});
   } catch (err) {
     console.error("Lỗi khi xóa danh mục:", err);
   }
@@ -232,6 +266,11 @@ function resetForm() {
 }
 
 fetchCategories();
+let _searchTimer2 = null;
+watch([searchText, filterType], () => {
+  clearTimeout(_searchTimer2);
+  _searchTimer2 = setTimeout(() => { page.value = 1; fetchCategories(); }, 400);
+});
 </script>
 
 <style scoped>

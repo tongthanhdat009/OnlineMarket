@@ -182,12 +182,7 @@
       </tbody>
     </table>
 
-    <!-- 🔢 Phân trang -->
-    <div v-if="totalPages > 1" class="pagination">
-      <button @click="currentPage--" :disabled="currentPage === 1"><</button>
-      <span>Trang {{ currentPage }} / {{ totalPages }}</span>
-      <button @click="currentPage++" :disabled="currentPage === totalPages">></button>
-    </div>
+    <Pagination :page="page" :pageSize="pageSize" :total="total" @update:page="page = $event; fetchProducts()" @update:pageSize="pageSize = $event; page = 1; fetchProducts()" />
 
     <!-- 🔔 Popup xác nhận -->
     <div v-if="showConfirm" class="confirm-overlay">
@@ -216,8 +211,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { getProducts, addProduct, updateProduct, deleteProduct as deleteProductAPI, uploadProductImage } from "../api/Product.js";
+import { parsePagedResponse, buildPagedParams } from "../utils/pagination.js";
+import Pagination from "../components/Pagination.vue";
 import { getCategories } from "../api/Category.js";
 import { getSuppliers } from "../api/Suppliers.js";
 import { usePermissions } from "../composables/usePermissions.js";
@@ -255,64 +252,13 @@ const searchText = ref("");
 const filterType = ref("ProductId");
 const errorMessage = ref("");
 
-// ----- Pagination
-const currentPage = ref(1);
-const itemsPerPage = 10;
-const filteredProducts = computed(() => {
-  if (!products.value || products.value.length === 0) return [];
-
-  const keyword = searchText.value.trim();
-  if (!keyword) return products.value;
-
-  return products.value.filter((p) => {
-    if (!p) return false;
-
-    if (filterType.value === "all") {
-      // Tìm kiếm trong tất cả các trường có trong bảng
-      return (
-        vietnameseIncludes(p.ProductId, keyword) ||
-        vietnameseIncludes(p.ProductName, keyword) ||
-        vietnameseIncludes(p?.Category?.CategoryName, keyword) ||
-        vietnameseIncludes(p?.Supplier?.Name, keyword) ||
-        vietnameseIncludes(p.Barcode, keyword) ||
-        vietnameseIncludes(p.Price, keyword) ||
-        vietnameseIncludes(p.Unit, keyword)
-      );
-    }
-
-    // Support searching nested fields (CategoryName / SupplierName)
-    let fieldValue = null;
-    if (filterType.value === 'CategoryName') fieldValue = p?.Category?.CategoryName;
-    else if (filterType.value === 'SupplierName') fieldValue = p?.Supplier?.Name;
-    else fieldValue = p[filterType.value];
-    if (fieldValue == null) return false;
-
-    // 🔍 Nếu lọc theo ID
-    if (filterType.value === "ProductId") {
-      // Cho phép gõ kiểu "p1", "P001", hoặc chỉ "1"
-      const numericKeyword = keyword.replace(/\D/g, ""); // bỏ hết ký tự không phải số
-      if (!numericKeyword) return vietnameseIncludes(fieldValue, keyword); // nếu chỉ gõ chữ, tìm theo tên
-      return String(p.ProductId).includes(numericKeyword) || vietnameseIncludes(fieldValue, keyword);
-    }
-
-    // 🔍 Tìm kiếm theo giá - hỗ trợ tìm một phần của số
-    if (filterType.value === "Price") {
-      const priceStr = String(fieldValue);
-      const formattedPrice = formatPrice(fieldValue);
-      return priceStr.includes(keyword) || formattedPrice.includes(keyword);
-    }
-
-    // 🔍 Các trường khác - sử dụng tìm kiếm tiếng Việt
-    return vietnameseIncludes(fieldValue, keyword);
-  });
-});
-
-const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage));
-const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  return filteredProducts.value.slice(start, end);
-});
+// ----- Pagination (server-side)
+const page = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
+const filteredProducts = computed(() => products.value);
+const paginatedProducts = computed(() => products.value);
+const totalPages = computed(() => Math.ceil(total.value / pageSize.value));
 
 // ----- Popup
 const showConfirm = ref(false);
@@ -345,9 +291,19 @@ async function fetchSuppliers() {
 async function fetchProducts() {
   try {
     loading.value = true;
-    const data = await getProducts();
-    console.log("Data from backend:", data);
-    products.value = data; // Backend đã trả về đúng format
+    const sf = filterType.value === "all" ? "" : filterType.value;
+    const params = buildPagedParams({ page: page.value, pageSize: pageSize.value, search: searchText.value, searchField: sf });
+    const data = await getProducts(params);
+    const { items, total: t } = parsePagedResponse(data);
+    total.value = t;
+    const arr = Array.isArray(items) ? items : [];
+    if (Array.isArray(data) && arr.length > pageSize.value) {
+      total.value = arr.length;
+      const start = (page.value - 1) * pageSize.value;
+      products.value = arr.slice(start, start + pageSize.value);
+    } else {
+      products.value = arr;
+    }
   } catch (err) {
     console.error("Lỗi khi tải sản phẩm:", err);
     errorMessage.value = "Không thể tải danh sách sản phẩm";
@@ -636,6 +592,11 @@ onMounted(async () => {
     fetchCategories(),
     fetchSuppliers()
   ]);
+});
+let _prodSearchTimer = null;
+watch([searchText, filterType], () => {
+  clearTimeout(_prodSearchTimer);
+  _prodSearchTimer = setTimeout(() => { page.value = 1; fetchProducts(); }, 400);
 });
 </script>
 

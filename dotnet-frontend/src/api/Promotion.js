@@ -2,8 +2,11 @@ import apiClient from "./apiClient";
 
 const BASE = "/api/promotion";
 
-export async function getPromotions() {
-  const res = await apiClient.get(`${BASE}`);
+export async function getPromotions(params) {
+  const hasPaged = params && params.page != null;
+  const res = hasPaged
+    ? await apiClient.get(`${BASE}`, { params })
+    : await apiClient.get(`${BASE}`);
   return res.data;
 }
 

@@ -59,28 +59,27 @@
         </tr>
       </tbody>
     </table>
+    <Pagination :page="page" :pageSize="pageSize" :total="total" @update:page="page = $event; load()" @update:pageSize="pageSize = $event; page = 1; load()" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { fetchRefundRequests, fetchOrderById, confirmRefund as apiConfirmRefund } from '../api/Order.js';
+import { parsePagedResponse, buildPagedParams } from '../utils/pagination.js';
+import Pagination from '../components/Pagination.vue';
 import { generateInvoicePDF } from '../utils/generateInvoicePDF.js';
 
 const refunds = ref([]);
 const loading = ref(true);
 const error = ref('');
 const searchText = ref('');
+const page = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 const generatingId = ref(null);
 
-const filtered = computed(() => {
-  const kw = (searchText.value || '').toLowerCase().trim();
-  if (!kw) return refunds.value;
-  return refunds.value.filter(r => 
-    String(r.OrderId).includes(kw) || 
-    String(r.RefundId).includes(kw)
-  );
-});
+const filtered = computed(() => refunds.value);
 
 function displayId(id) { return `O${String(id).padStart(3,'0')}`; }
 function formatDate(d) { try { return new Date(d).toLocaleString('vi-VN'); } catch { return d; } }
@@ -89,8 +88,22 @@ function formatCurrency(v) { return new Intl.NumberFormat('vi-VN', { style: 'cur
 async function load() {
   loading.value = true; error.value='';
   try {
-    const data = await fetchRefundRequests();
-    refunds.value = Array.isArray(data) ? data : (data?.data || []);
+    const params = buildPagedParams({ page: page.value, pageSize: pageSize.value, search: searchText.value, searchField: 'OrderId' });
+    const data = await fetchRefundRequests(params);
+    const { items, total: t } = parsePagedResponse(data);
+    total.value = t;
+    const arr = Array.isArray(items) ? items : (Array.isArray(data) ? data : []);
+    if (Array.isArray(data) && arr.length > pageSize.value && total.value === arr.length) {
+      const kw = (searchText.value||'').toLowerCase().trim();
+      let filteredArr = arr;
+      if (kw) filteredArr = arr.filter(r => String(r.OrderId).includes(kw) || String(r.RefundId).includes(kw));
+      total.value = filteredArr.length;
+      const start = (page.value-1)*pageSize.value;
+      refunds.value = filteredArr.slice(start, start+pageSize.value);
+    } else {
+      refunds.value = arr.length ? arr : (Array.isArray(data) ? data : []);
+      if (!total.value && Array.isArray(refunds.value)) total.value = refunds.value.length;
+    }
   } catch (e) {
     error.value = e?.response?.data?.message || e?.message || 'Không thể tải danh sách hoàn tiền.';
   } finally {
@@ -127,6 +140,11 @@ async function confirmRefund(refund) {
 }
 
 onMounted(load);
+let _refundSearchTimer = null;
+watch(searchText, () => {
+  clearTimeout(_refundSearchTimer);
+  _refundSearchTimer = setTimeout(() => { page.value = 1; load(); }, 400);
+});
 </script>
 
 <style scoped>

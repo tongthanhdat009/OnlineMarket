@@ -101,6 +101,8 @@
       </tbody>
     </table>
 
+    <Pagination :page="page" :pageSize="pageSize" :total="total" @update:page="page = $event; fetchSuppliers()" @update:pageSize="pageSize = $event; page = 1; fetchSuppliers()" />
+
     <!-- ⚡ Popup xác nhận -->
     <div v-if="showConfirm" class="confirm-overlay">
       <div class="confirm-box">
@@ -116,13 +118,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import {
   getSuppliers,
   addSupplier,
   updateSupplier,
   deleteSupplier,
 } from "../api/Suppliers.js";
+import { parsePagedResponse, buildPagedParams } from "../utils/pagination.js";
+import Pagination from "../components/Pagination.vue";
 
 const suppliers = ref([]);
 const supplier = ref({ id: "", name: "", phone: "", email: "", address: "" });
@@ -132,30 +136,35 @@ const viewMode = ref(false);
 
 const searchText = ref("");
 const filterType = ref("id");
+const page = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 
-// 🔍 Lọc danh sách
-const filteredSuppliers = computed(() => {
-  const keyword = searchText.value.toLowerCase().trim();
-  if (!keyword) return suppliers.value;
-  return suppliers.value.filter((s) => {
-    const field = s[filterType.value];
-    if (!field) return false;
-    return String(field).toLowerCase().includes(keyword);
-  });
-});
+// Server-side pagination: direct display
+const filteredSuppliers = computed(() => suppliers.value);
 
-// ⚙️ Tải dữ liệu từ backend
+// ⚙️ Tải dữ liệu từ backend (server-side pagination)
 async function fetchSuppliers() {
   try {
     loading.value = true;
-    const data = await getSuppliers();
-    suppliers.value = data.map((s) => ({
-      id: s.SupplierId,
-      name: s.Name,
-      phone: s.Phone,
-      email: s.Email,
-      address: s.Address,
+    const params = buildPagedParams({ page: page.value, pageSize: pageSize.value, search: searchText.value, searchField: filterType.value });
+    const data = await getSuppliers(params);
+    const { items, total: t } = parsePagedResponse(data);
+    total.value = t;
+    const arr = Array.isArray(items) ? items : [];
+    let mapped = arr.map((s) => ({
+      id: s.SupplierId ?? s.supplierId ?? s.id,
+      name: s.Name ?? s.name ?? s.SupplierName,
+      phone: s.Phone ?? s.phone,
+      email: s.Email ?? s.email,
+      address: s.Address ?? s.address,
     }));
+    if (Array.isArray(data) && mapped.length > pageSize.value) {
+      total.value = mapped.length;
+      const start = (page.value - 1) * pageSize.value;
+      mapped = mapped.slice(start, start + pageSize.value);
+    }
+    suppliers.value = mapped;
   } catch (err) {
     console.error("Lỗi khi tải nhà cung cấp:", err);
   } finally {
@@ -188,6 +197,11 @@ async function saveSupplier() {
       supplier.value.id = created.supplierId ?? created.id;
     }
     await fetchSuppliers();
+let _searchTimer3 = null;
+watch([searchText, filterType], () => {
+  clearTimeout(_searchTimer3);
+  _searchTimer3 = setTimeout(() => { page.value = 1; fetchSuppliers(); }, 400);
+});
     resetForm();
   } catch (err) {
     console.error("Lỗi khi lưu nhà cung cấp:", err);
@@ -220,6 +234,11 @@ async function deleteSupplierById(id) {
   try {
     await deleteSupplier(id);
     await fetchSuppliers();
+let _searchTimer3 = null;
+watch([searchText, filterType], () => {
+  clearTimeout(_searchTimer3);
+  _searchTimer3 = setTimeout(() => { page.value = 1; fetchSuppliers(); }, 400);
+});
     resetForm();
   } catch (err) {
     console.error("Lỗi khi xóa:", err);
@@ -258,6 +277,11 @@ function resetForm() {
 }
 
 fetchSuppliers();
+let _searchTimer3 = null;
+watch([searchText, filterType], () => {
+  clearTimeout(_searchTimer3);
+  _searchTimer3 = setTimeout(() => { page.value = 1; fetchSuppliers(); }, 400);
+});
 </script>
 
 <style scoped>

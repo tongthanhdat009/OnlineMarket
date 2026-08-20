@@ -69,6 +69,7 @@
           </tr>
         </tbody>
       </table>
+      <Pagination :page="rolePage" :pageSize="rolePageSize" :total="roleTotal" @update:page="rolePage = $event; fetchRoles()" @update:pageSize="rolePageSize = $event; rolePage = 1; fetchRoles()" />
     </div>
 
     <!-- ========== PERMISSIONS ========== -->
@@ -153,6 +154,7 @@
           </tr>
         </tbody>
       </table>
+      <Pagination :page="permPage" :pageSize="permPageSize" :total="permTotal" @update:page="permPage = $event; fetchPermissions()" @update:pageSize="permPageSize = $event; permPage = 1; fetchPermissions()" />
     </div>
 
     <!-- ⚡ Popup xác nhận -->
@@ -170,8 +172,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { toRaw } from 'vue';
+import { parsePagedResponse, buildPagedParams } from "../utils/pagination.js";
+import Pagination from "../components/Pagination.vue";
 
 // ====== DỮ LIỆU GIẢ ======
 import { getAllRoles, createRole, updateRole ,deleteRole } from "../api/Role.js";
@@ -179,18 +183,33 @@ import { getAllRoles, createRole, updateRole ,deleteRole } from "../api/Role.js"
 const roles = ref([]);
 async function fetchRoles() {
   try {
-    const data = await getAllRoles();
-    roles.value = data.map((s) => ({
-      role_id: s.RoleId,
-      role_name: s.RoleName,
-      description: s.Description,
+    const params = buildPagedParams({ page: rolePage.value, pageSize: rolePageSize.value, search: roleSearch.value, searchField: roleFilterType.value });
+    const data = await getAllRoles(params);
+    const { items, total: t } = parsePagedResponse(data);
+    roleTotal.value = t;
+    const arr = Array.isArray(items) ? items : (Array.isArray(data) ? data : []);
+    let mapped = arr.map((s) => ({
+      role_id: s.RoleId ?? s.roleId ?? s.role_id,
+      role_name: s.RoleName ?? s.roleName ?? s.role_name,
+      description: s.Description ?? s.description,
     }));
+    if (Array.isArray(data) && mapped.length > rolePageSize.value) {
+      roleTotal.value = mapped.length;
+      const start = (rolePage.value - 1) * rolePageSize.value;
+      mapped = mapped.slice(start, start + rolePageSize.value);
+    }
+    roles.value = mapped;
     console.log("Fetched roles:", toRaw(roles.value));
   } catch (err) {
     console.error("Lỗi khi fetch roles:", err);
   }
 }
 fetchRoles();
+let _roleSearchTimer = null;
+watch([roleSearch, roleFilterType], () => {
+  clearTimeout(_roleSearchTimer);
+  _roleSearchTimer = setTimeout(() => { rolePage.value = 1; fetchRoles(); }, 400);
+});
 
 const permissions = ref([]);
 
@@ -201,6 +220,9 @@ const role = ref({ role_id: "", role_name: "", description: "" });
 const editRoleMode = ref(false);
 const roleSearch = ref("");
 const roleFilterType = ref("role_name");
+const rolePage = ref(1);
+const rolePageSize = ref(10);
+const roleTotal = ref(0);
 const selectedRoleId = ref(null);
 const selectedRoleName = computed(() => {
   const r = roles.value.find((r) => r.role_id === selectedRoleId.value);
@@ -234,10 +256,7 @@ async function saveRole() {
   }
 }
 
-const filteredRoles = computed(() => {
-  const kw = roleSearch.value.toLowerCase().trim();
-  return roles.value.filter((r) => r[roleFilterType.value].toString().toLowerCase().includes(kw));
-});
+const filteredRoles = computed(() => roles.value);
 
 function viewRoleDetails(r) {
   selectedRoleId.value = r.role_id;
@@ -290,26 +309,41 @@ const permission = ref({ permission_id: "", permission_name: "", action_key: "",
 const editPermMode = ref(false);
 const permSearch = ref("");  
 const permFilterType = ref("permission_name");
-const filteredPermissions = computed(() => {
-  const kw = permSearch.value.toLowerCase().trim();
-  return permissions.value.filter((p) => p[permFilterType.value].toString().toLowerCase().includes(kw));
-});
+const permPage = ref(1);
+const permPageSize = ref(10);
+const permTotal = ref(0);
+const filteredPermissions = computed(() => permissions.value);
 
 async function fetchPermissions() {
   try {
-    const data = await getAllPermissions();
-    permissions.value = data.map((p) => ({
-      permission_id: p.PermissionId,
-      permission_name: p.PermissionName,
-      action_key: p.ActionKey,
-      description: p.Description,
+    const params = buildPagedParams({ page: permPage.value, pageSize: permPageSize.value, search: permSearch.value, searchField: permFilterType.value });
+    const data = await getAllPermissions(params);
+    const { items, total: t } = parsePagedResponse(data);
+    permTotal.value = t;
+    const arr = Array.isArray(items) ? items : (Array.isArray(data) ? data : []);
+    let mapped = arr.map((p) => ({
+      permission_id: p.PermissionId ?? p.permissionId ?? p.permission_id,
+      permission_name: p.PermissionName ?? p.permissionName ?? p.permission_name,
+      action_key: p.ActionKey ?? p.actionKey ?? p.action_key,
+      description: p.Description ?? p.description,
     }));
+    if (Array.isArray(data) && mapped.length > permPageSize.value) {
+      permTotal.value = mapped.length;
+      const start = (permPage.value - 1) * permPageSize.value;
+      mapped = mapped.slice(start, start + permPageSize.value);
+    }
+    permissions.value = mapped;
     console.log("Fetched permissions:", toRaw(permissions.value));
   } catch (err) {
     console.error("Lỗi khi fetch permissions:", err);
   }
 }
 fetchPermissions();
+let _permSearchTimer = null;
+watch([permSearch, permFilterType], () => {
+  clearTimeout(_permSearchTimer);
+  _permSearchTimer = setTimeout(() => { permPage.value = 1; fetchPermissions(); }, 400);
+});
 
 function viewPermissionDetails(p) {
   permission.value = { ...p }; // chỉ xem chi tiết

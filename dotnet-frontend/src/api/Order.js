@@ -39,9 +39,12 @@ export const fetchOrderById = async (orderId) => {
 };
 
 // Get all offline orders
-export const fetchOrders = async () => {
+export const fetchOrders = async (params) => {
   try {
-    const res = await apiClient.get(`${API_URL}/order/offline`);
+    const hasPaged = params && params.page != null;
+    const res = hasPaged
+      ? await apiClient.get(`${API_URL}/order/offline`, { params })
+      : await apiClient.get(`${API_URL}/order/offline`);
     return res.data;
   } catch (error) {
     console.error("Failed to fetch orders:", error);
@@ -50,9 +53,12 @@ export const fetchOrders = async () => {
 };
 
 // Get all online orders
-export const fetchOrdersOnline = async () => {
+export const fetchOrdersOnline = async (params) => {
   try {
-    const res = await apiClient.get(`${API_URL}/order/online`);
+    const hasPaged = params && params.page != null;
+    const res = hasPaged
+      ? await apiClient.get(`${API_URL}/order/online`, { params })
+      : await apiClient.get(`${API_URL}/order/online`);
     return res.data;
   } catch (error) {
     console.error("Failed to fetch online orders:", error);
@@ -136,9 +142,12 @@ export const updateOrderStatus = async (orderId, status) => {
   }
 };
 
-export const fetchRefundRequests = async () => {
+export const fetchRefundRequests = async (params) => {
   try {
-    const res = await apiClient.get(`${API_URL}/order/refund-requests`);
+    const hasPaged = params && params.page != null;
+    const res = hasPaged
+      ? await apiClient.get(`${API_URL}/order/refund-requests`, { params })
+      : await apiClient.get(`${API_URL}/order/refund-requests`);
     return res.data;
   } catch (error) {
     console.error("Failed to fetch refund requests:", error);

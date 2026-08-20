@@ -1,10 +1,13 @@
 import apiClient from "./apiClient.js";
 
 // Named exports
-export async function getUsers() {
+export async function getUsers(params) {
   try {
     console.log("📞 Calling GET /api/users");
-    const res = await apiClient.get("/api/users");
+    const hasPaged = params && params.page != null;
+    const res = hasPaged
+      ? await apiClient.get("/api/users", { params })
+      : await apiClient.get("/api/users");
     console.log("✅ getUsers success:", res.data);
     return res.data;
   } catch (error) {

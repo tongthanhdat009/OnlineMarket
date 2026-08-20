@@ -3,8 +3,11 @@ import apiClient from "./apiClient";
 const CUSTOMER_API_URL = "/api/customer";
 
 // Fetch list of customers from backend
-export async function fetchCustomers() {
-  const res = await apiClient.get(CUSTOMER_API_URL);
+export async function fetchCustomers(params) {
+  const hasPaged = params && params.page != null;
+  const res = hasPaged
+    ? await apiClient.get(CUSTOMER_API_URL, { params })
+    : await apiClient.get(CUSTOMER_API_URL);
   return res.data;
 }
 

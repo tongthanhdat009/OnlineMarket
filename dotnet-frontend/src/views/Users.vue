@@ -109,6 +109,8 @@
       </tbody>
     </table>
 
+    <Pagination :page="page" :pageSize="pageSize" :total="total" @update:page="page = $event; loadUsers()" @update:pageSize="pageSize = $event; page = 1; loadUsers()" />
+
     <!-- ⚡ Popup xác nhận -->
     <div v-if="showConfirm" class="confirm-overlay">
       <div class="confirm-box">
@@ -124,8 +126,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { getUsers, addUser, updateUser, deleteUser } from "../api/Users.js";
+import { parsePagedResponse, buildPagedParams } from "../utils/pagination.js";
+import Pagination from "../components/Pagination.vue";
 
 // ===== State =====
 const users = ref([]); // danh sách hiển thị (UI model)
@@ -135,6 +139,9 @@ const editMode = ref(false);
 const viewMode = ref(false);
 const searchText = ref("");
 const filterType = ref("id");
+const page = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
 
 const loading = ref(true);
 const errorMessage = ref("");
@@ -165,13 +172,28 @@ function toDto(u) {
   };
 }
 
-// ===== Fetch =====
+// ===== Fetch (server-side pagination) =====
 async function loadUsers() {
   try {
     loading.value = true;
     errorMessage.value = "";
-    const data = await getUsers();
-    users.value = Array.isArray(data) ? data.map(toUi) : [];
+    const params = buildPagedParams({ page: page.value, pageSize: pageSize.value, search: searchText.value, searchField: filterType.value });
+    const data = await getUsers(params);
+    const { items, total: t } = parsePagedResponse(data);
+    total.value = t;
+    // items are DTOs -> map to UI
+    const arr = Array.isArray(items) ? items : [];
+    // fallback: if backend returned full array despite paged params, slice client-side
+    if (Array.isArray(data) && arr.length > pageSize.value) {
+      const kw = (searchText.value || "").toLowerCase().trim();
+      let filtered = arr.map(toUi);
+      if (kw) filtered = filtered.filter((u) => String(u[filterType.value] ?? "").toLowerCase().includes(kw));
+      total.value = filtered.length;
+      const start = (page.value - 1) * pageSize.value;
+      users.value = filtered.slice(start, start + pageSize.value);
+    } else {
+      users.value = arr.map(toUi);
+    }
     // sau khi nạp xong -> set gợi ý ID cho form
     setSuggestedId();
   } catch (err) {
@@ -183,6 +205,12 @@ async function loadUsers() {
 }
 
 onMounted(loadUsers);
+
+let _searchTimer = null;
+watch([searchText, filterType], () => {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(() => { page.value = 1; loadUsers(); }, 400);
+});
 
 // ===== Gợi ý ID: max(UserId) + 1 =====
 function getNextIdSuggestion() {
@@ -200,17 +228,8 @@ function setSuggestedId() {
   user.value.id = getNextIdSuggestion(); // readonly, chỉ hiển thị
 }
 
-// ===== Filter =====
-const filteredUsers = computed(() => {
-  const list = Array.isArray(users.value) ? users.value : [];
-  const kw = searchText.value.toLowerCase().trim();
-  if (!kw) return list;
-
-  return list.filter((u) => {
-    const val = String(u[filterType.value] ?? "").toLowerCase();
-    return val.includes(kw);
-  });
-});
+// ===== Server-side pagination: search is done on backend =====
+const filteredUsers = computed(() => users.value);
 
 // ===== Popup xác nhận =====
 const showConfirm = ref(false);
@@ -250,6 +269,7 @@ async function saveUser() {
 
       // ✅ RELOAD lại danh sách từ backend thay vì update local
       console.log("✅ Thêm user thành công! Đang tải lại danh sách...");
+      page.value = 1;
       await loadUsers();
 
       // reset form & gợi ý id mới

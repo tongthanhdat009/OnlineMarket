@@ -3,9 +3,12 @@ import apiClient from "./apiClient";
 const API_URL = "/api/inventory";
 
 // Lấy danh sách tất cả inventory
-export const getInventories = async () => {
+export const getInventories = async (params) => {
   try {
-    const response = await apiClient.get(API_URL);
+    const hasPaged = params && params.page != null;
+    const response = hasPaged
+      ? await apiClient.get(API_URL, { params })
+      : await apiClient.get(API_URL);
     return response.data;
   } catch (error) {
     console.error("Error fetching inventories:", error);

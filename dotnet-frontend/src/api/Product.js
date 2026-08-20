@@ -3,8 +3,11 @@ import apiClient from "./apiClient";
 const API_URL = "/api/products";
 
 // Named exports
-export async function getProducts() {
-  const res = await apiClient.get(API_URL);
+export async function getProducts(params) {
+  const hasPaged = params && params.page != null;
+  const res = hasPaged
+    ? await apiClient.get(API_URL, { params })
+    : await apiClient.get(API_URL);
   return res.data;
 }
 

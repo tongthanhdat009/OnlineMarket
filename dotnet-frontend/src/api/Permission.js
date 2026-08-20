@@ -2,8 +2,11 @@ import apiClient from "./apiClient";
 
 const API_URL = "/api/permissions";
 
-export async function getAllPermissions() {
-  const response = await apiClient.get(API_URL);
+export async function getAllPermissions(params) {
+  const hasPaged = params && params.page != null;
+  const response = hasPaged
+    ? await apiClient.get(API_URL, { params })
+    : await apiClient.get(API_URL);
   return response.data;
 }
 

@@ -147,22 +147,7 @@
 
     <!-- invoice detail UI removed -->
 
-    <!-- �🔢 Phân trang -->
-    <div class="pagination" v-if="filteredCustomers.length > pageSize">
-      <button :disabled="currentPage === 1" @click="currentPage = currentPage - 1">Prev</button>
-
-      <button
-        v-for="p in pageNumbers"
-        :key="p"
-        :class="{ active: p === currentPage }"
-        @click="currentPage = p"
-      >
-        {{ p }}
-      </button>
-
-      <button :disabled="currentPage >= totalPages" @click="currentPage = currentPage + 1">Next</button>
-      <span class="page-info">Trang {{ currentPage }} / {{ totalPages }}</span>
-    </div>
+    <Pagination :page="page" :pageSize="pageSize" :total="total" @update:page="page = $event; loadCustomers()" @update:pageSize="pageSize = $event; page = 1; loadCustomers()" />
 
     <!-- ✅ Hộp xác nhận -->
     <div v-if="showConfirm" class="confirm-overlay">
@@ -181,6 +166,8 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import { fetchCustomers, addCustomer, updateCustomer, deleteCustomer as deleteCustomerApi, getCustomerOrders } from "@/api/Customer";
+import { parsePagedResponse, buildPagedParams } from "@/utils/pagination.js";
+import Pagination from "@/components/Pagination.vue";
 import { fetchOrderById } from "@/api/Order";
 import { generateInvoicePDF } from "@/utils/generateInvoicePDF";
 
@@ -197,9 +184,12 @@ const viewMode = ref(false); // ✅ thêm biến xem chi tiết
 
 const searchText = ref("");
 const filterType = ref("id");
-// Phân trang
-const currentPage = ref(1);
-const pageSize = 10; // 1 trang 10 khách
+// Phân trang (server-side)
+const page = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
+const currentPage = page;
+
 
 // ✅ Popup xác nhận
 const showConfirm = ref(false);
@@ -225,31 +215,20 @@ function formatCurrency(v) {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
 }
 
-// 🔍 Lọc khách hàng
-const filteredCustomers = computed(() => {
-  const keyword = searchText.value.toLowerCase().trim();
-  if (!keyword) return customers.value;
-  return customers.value.filter((c) => {
-    const val = String(c[filterType.value] ?? "").toLowerCase();
-    return val.includes(keyword);
-  });
-});
-
-// Danh sách sau khi phân trang
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredCustomers.value.length / pageSize)));
-
-const paginatedCustomers = computed(() => {
-  const start = (currentPage.value - 1) * pageSize;
-  return filteredCustomers.value.slice(start, start + pageSize);
-});
-
+// Server-side pagination: display is already paged
+const filteredCustomers = computed(() => customers.value);
+const paginatedCustomers = computed(() => customers.value);
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)));
 const pageNumbers = computed(() => {
-  return Array.from({ length: totalPages.value }, (_, i) => i + 1);
+  const tp = totalPages.value;
+  return Array.from({ length: Math.min(tp, 5) }, (_, i) => i + 1);
 });
 
-// Khi tìm kiếm/lọc thay đổi, quay lại trang 1
-watch([searchText, filterType, customers], () => {
-  currentPage.value = 1;
+// Server-side search debounce (watch searchText/filterType)
+let _custSearchTimer = null;
+watch([searchText, filterType], () => {
+  clearTimeout(_custSearchTimer);
+  _custSearchTimer = setTimeout(() => { page.value = 1; loadCustomers(); }, 400);
 });
 
 // 🆕 Sinh ID mới
@@ -288,10 +267,8 @@ async function saveCustomer() {
         email: String(result?.Email ?? result?.email ?? customer.value.email ?? ""),
         address: String(result?.Address ?? result?.address ?? customer.value.address ?? ""),
       };
-      const index = customers.value.findIndex((c) => c.id === customer.value.id);
-      if (index !== -1) customers.value[index] = norm;
       editMode.value = false;
-      resetForm();
+      await loadCustomers();
       return;
     } catch (err) {
       console.error("Failed to update customer", err);
@@ -324,8 +301,8 @@ async function saveCustomer() {
       email: String(result?.Email ?? result?.email ?? customer.value.email ?? ""),
       address: String(result?.Address ?? result?.address ?? customer.value.address ?? ""),
     };
-    customers.value.push(norm);
-    resetForm();
+    page.value = 1;
+    await loadCustomers();
   } catch (err) {
     console.error("Failed to add customer", err);
     const serverMsg = err?.response?.data?.message;
@@ -390,9 +367,7 @@ async function deleteCustomer(id) {
     console.log("deleteCustomer response:", resp);
     // If server returns wrapper { message, data } or message only
     const serverMsg = resp?.message ?? resp;
-    // Remove from local list
-    customers.value = customers.value.filter((c) => c.id !== id);
-    resetForm();
+    await loadCustomers();
     // optionally show server message in formError (or use a toast). Here we set briefly.
     formError.value = typeof serverMsg === "string" ? serverMsg : "Xóa thành công.";
     // clear message after short time
@@ -480,19 +455,24 @@ async function loadCustomers() {
   loading.value = true;
   loadError.value = "";
   try {
-    const data = await fetchCustomers();
-    // Debug: raw GET response from API
-    console.log("fetchCustomers raw:", data);
-    const arr = Array.isArray(data) ? data : [];
-    // Chuẩn hóa dữ liệu: đảm bảo các trường tồn tại và là string
-      customers.value = arr.map((it) => ({
-      id: String(it?.CustomerId ?? ""),
-      name: String(it?.Name ?? ""),
-      phone: String(it?.Phone ?? ""),
-      email: String(it?.Email ?? ""),
-      address: String(it?.Address ?? ""),
+    const params = buildPagedParams({ page: page.value, pageSize: pageSize.value, search: searchText.value, searchField: filterType.value });
+    const data = await fetchCustomers(params);
+    const { items, total: t } = parsePagedResponse(data);
+    total.value = t;
+    const arr = Array.isArray(items) ? items : [];
+    let mapped = arr.map((it) => ({
+      id: String(it?.CustomerId ?? it?.customerId ?? it?.id ?? ""),
+      name: String(it?.Name ?? it?.name ?? ""),
+      phone: String(it?.Phone ?? it?.phone ?? ""),
+      email: String(it?.Email ?? it?.email ?? ""),
+      address: String(it?.Address ?? it?.address ?? ""),
     }));
-    // Nếu đang xem chi tiết hoặc chỉnh sửa mà danh sách đổi, reset form
+    if (Array.isArray(data) && mapped.length > pageSize.value) {
+      total.value = mapped.length;
+      const start = (page.value - 1) * pageSize.value;
+      mapped = mapped.slice(start, start + pageSize.value);
+    }
+    customers.value = mapped;
     resetForm();
   } catch (err) {
     console.error("Failed to load customers", err);
