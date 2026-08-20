@@ -18,8 +18,13 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetProducts()
+    public async Task<IActionResult> GetProducts([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? search, [FromQuery] string? searchField)
     {
+        if (page.HasValue && pageSize.HasValue)
+        {
+            var paged = await _productService.GetPagedAsync(page.Value, pageSize.Value, search, searchField);
+            return Ok(paged);
+        }
         var products = await _productService.GetAllProductsAsync();
         return Ok(products);
     }

@@ -22,15 +22,25 @@ public class OrderController : ControllerBase
     }
 
     [HttpGet("offline")]
-    public async Task<IActionResult> GetOrdersOffline()
+    public async Task<IActionResult> GetOrdersOffline([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? search, [FromQuery] string? searchField)
     {
+        if (page.HasValue && pageSize.HasValue)
+        {
+            var paged = await _orderService.GetOrdersOfflinePagedAsync(page.Value, pageSize.Value, search, searchField);
+            return Ok(paged);
+        }
         var orders = await _orderService.GetOrdersOfflineAsync();
         return Ok(orders);
     }
 
     [HttpGet("online")]
-    public async Task<IActionResult> GetOrdersOnline()
+    public async Task<IActionResult> GetOrdersOnline([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? search, [FromQuery] string? searchField)
     {
+        if (page.HasValue && pageSize.HasValue)
+        {
+            var paged = await _orderService.GetOrdersOnlinePagedAsync(page.Value, pageSize.Value, search, searchField);
+            return Ok(paged);
+        }
         var orders = await _orderService.GetOrdersOnlineAsync();
         return Ok(orders);
     }
@@ -211,8 +221,13 @@ public class OrderController : ControllerBase
     }
 
     [HttpGet("refund-requests")]
-    public async Task<IActionResult> GetRefundRequests()
+    public async Task<IActionResult> GetRefundRequests([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? search, [FromQuery] string? searchField)
     {
+        if (page.HasValue && pageSize.HasValue)
+        {
+            var paged = await _orderService.GetRefundRequestsPagedAsync(page.Value, pageSize.Value, search, searchField);
+            return Ok(paged);
+        }
         var requests = await _orderService.GetRefundRequestsAsync();
         return Ok(requests);
     }

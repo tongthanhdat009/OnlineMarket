@@ -174,4 +174,26 @@ public class UserService : IUserService
     {
         return await _context.Users.CountAsync();
     }
+
+
+    public async Task<PagedResultDto<UserDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var q = search?.Trim().ToLower();
+        var query = _context.Users.AsQueryable();
+        if (!string.IsNullOrEmpty(q))
+        {
+            query = query.Where(u =>
+                u.Username.ToLower().Contains(q) ||
+                (u.FullName != null && u.FullName.ToLower().Contains(q)) ||
+                u.UserId.ToString().Contains(q));
+        }
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(u => u.UserId)
+            .Skip((page - 1) * pageSize).Take(pageSize)
+            .Select(u => new UserDto { UserId = u.UserId, Username = u.Username, Password = u.Password, FullName = u.FullName, Role = u.Role })
+            .ToListAsync();
+        return new PagedResultDto<UserDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+    }
 }

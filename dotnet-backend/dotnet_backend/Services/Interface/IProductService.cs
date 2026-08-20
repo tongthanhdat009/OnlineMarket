@@ -1,3 +1,4 @@
+using dotnet_backend.Dtos;
 using dotnet_backend.Services;
 
 namespace dotnet_backend.Services.Interface;
@@ -13,4 +14,5 @@ public interface IProductService
     Task<ProductDto?> UpdateProductAsync(int id, ProductDto productDto);
     Task<bool> DeleteProductAsync(int id);
     Task<string> UploadProductImageAsync(int productId, Microsoft.AspNetCore.Http.IFormFile imageFile);
+    Task<PagedResultDto<ProductDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField);
 }

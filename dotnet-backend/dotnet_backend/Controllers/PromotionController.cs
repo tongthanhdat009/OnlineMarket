@@ -21,8 +21,13 @@ public class PromotionController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? search, [FromQuery] string? searchField)
     {
+        if (page.HasValue && pageSize.HasValue)
+        {
+            var paged = await _promotionService.GetPagedAsync(page.Value, pageSize.Value, search, searchField);
+            return Ok(paged);
+        }
         var list = await _promotionService.GetAllPromotionsAsync();
         return Ok(list);
     }

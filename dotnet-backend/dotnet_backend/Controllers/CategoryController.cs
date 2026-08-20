@@ -18,8 +18,13 @@ namespace dotnet_backend.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCategories()
+        public async Task<IActionResult> GetCategories([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? search, [FromQuery] string? searchField)
         {
+            if (page.HasValue && pageSize.HasValue)
+            {
+                var paged = await _categoryService.GetPagedAsync(page.Value, pageSize.Value, search, searchField);
+                return Ok(paged);
+            }
             var categories = await _categoryService.GetAllCategoriesAsync();
             return Ok(categories);
         }

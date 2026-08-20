@@ -471,4 +471,20 @@ public class PromotionService : IPromotionService
             }
         }
     }
+
+
+    public async Task<PagedResultDto<PromotionDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var q = search?.Trim().ToLower();
+        var query = _context.Promotions.AsQueryable();
+        if (!string.IsNullOrEmpty(q))
+            query = query.Where(p => p.PromoCode.ToLower().Contains(q) || (p.Description != null && p.Description.ToLower().Contains(q)));
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(p => p.PromoId).Skip((page - 1) * pageSize).Take(pageSize)
+            .Select(p => new PromotionDto { PromoId = p.PromoId, PromoCode = p.PromoCode, Description = p.Description, DiscountType = p.DiscountType, DiscountValue = p.DiscountValue, StartDate = p.StartDate, EndDate = p.EndDate, MinOrderAmount = p.MinOrderAmount, UsageLimit = p.UsageLimit, UsedCount = p.UsedCount, Status = p.Status })
+            .ToListAsync();
+        return new PagedResultDto<PromotionDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+    }
 }

@@ -11,4 +11,5 @@ public interface IRoleService
     Task<RoleDto> CreateRoleAsync(RoleDto role);
     Task<RoleDto?> UpdateRoleAsync(int RoleId, RoleDto role);
     Task<bool> DeleteRoleAsync(int id);
+    Task<PagedResultDto<RoleDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField);
 }

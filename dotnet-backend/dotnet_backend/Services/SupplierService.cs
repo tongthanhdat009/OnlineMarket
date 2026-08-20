@@ -87,5 +87,20 @@ namespace dotnet_backend.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+    public async Task<PagedResultDto<SupplierDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var q = search?.Trim().ToLower();
+        var query = _context.Suppliers.AsQueryable();
+        if (!string.IsNullOrEmpty(q))
+            query = query.Where(s => s.Name.ToLower().Contains(q) || (s.Phone != null && s.Phone.ToLower().Contains(q)) || (s.Email != null && s.Email.ToLower().Contains(q)));
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(s => s.SupplierId).Skip((page - 1) * pageSize).Take(pageSize)
+            .Select(s => new SupplierDto { SupplierId = s.SupplierId, Name = s.Name, Phone = s.Phone, Email = s.Email, Address = s.Address })
+            .ToListAsync();
+        return new PagedResultDto<SupplierDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+    }
     }
 }

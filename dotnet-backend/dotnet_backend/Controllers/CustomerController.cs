@@ -18,8 +18,13 @@ public class CustomerController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetCustomers()
+    public async Task<IActionResult> GetCustomers([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? search, [FromQuery] string? searchField)
     {
+        if (page.HasValue && pageSize.HasValue)
+        {
+            var paged = await _customerService.GetPagedAsync(page.Value, pageSize.Value, search, searchField);
+            return Ok(paged);
+        }
         var customers = await _customerService.GetAllCustomersAsync();
         return Ok(customers);
     }

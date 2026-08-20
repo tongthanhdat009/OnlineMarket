@@ -84,5 +84,20 @@ namespace dotnet_backend.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+    public async Task<PagedResultDto<RoleDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var q = search?.Trim().ToLower();
+        var query = _context.Roles.AsQueryable();
+        if (!string.IsNullOrEmpty(q))
+            query = query.Where(r => r.RoleName.ToLower().Contains(q) || (r.Description != null && r.Description.ToLower().Contains(q)));
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(r => r.RoleId).Skip((page - 1) * pageSize).Take(pageSize)
+            .Select(r => new RoleDto { RoleId = r.RoleId, RoleName = r.RoleName, Description = r.Description })
+            .ToListAsync();
+        return new PagedResultDto<RoleDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+    }
     }
 }

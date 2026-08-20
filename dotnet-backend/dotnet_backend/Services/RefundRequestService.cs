@@ -205,4 +205,19 @@ public class RefundRequestService : IRefundRequestService
             CustomerEmail = refund.Order?.Email
         };
     }
+
+
+    public async Task<PagedResultDto<RefundRequestDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var q = search?.Trim().ToLower();
+        var query = _context.RefundRequests.Include(r => r.Order).Include(r => r.ProcessedByUser).AsQueryable();
+        if (!string.IsNullOrEmpty(q))
+            query = query.Where(r => r.RefundId.ToString().Contains(q) || r.OrderId.ToString().Contains(q) || (r.Reason != null && r.Reason.ToLower().Contains(q)) || (r.Order != null && r.Order.Name != null && r.Order.Name.ToLower().Contains(q)) || (r.Order != null && r.Order.Phone != null && r.Order.Phone.ToLower().Contains(q)));
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(r => r.RefundId).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        var dtos = items.Select(MapToDto).ToList();
+        return new PagedResultDto<RefundRequestDto> { Items = dtos, TotalCount = total, Page = page, PageSize = pageSize };
+    }
 }

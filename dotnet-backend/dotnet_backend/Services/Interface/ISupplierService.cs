@@ -20,5 +20,6 @@ namespace dotnet_backend.Services.Interface
 
         // 🔹 Xóa nhà cung cấp
         Task<bool> DeleteSupplierAsync(int id);
-    }
+        Task<PagedResultDto<SupplierDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField);
+}
 }

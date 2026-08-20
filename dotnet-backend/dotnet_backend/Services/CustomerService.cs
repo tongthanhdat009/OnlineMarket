@@ -196,4 +196,31 @@ public class CustomerService : ICustomerService
         await _context.SaveChangesAsync();
         return true;
     }
+
+
+    public async Task<PagedResultDto<CustomerDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var q = search?.Trim().ToLower();
+        var sf = searchField?.Trim().ToLower();
+        var query = _context.Customers.AsQueryable();
+        if (!string.IsNullOrEmpty(q))
+        {
+            query = sf switch
+            {
+                "name" => query.Where(c => c.Name.ToLower().Contains(q)),
+                "phone" => query.Where(c => c.Phone != null && c.Phone.ToLower().Contains(q)),
+                "email" => query.Where(c => c.Email != null && c.Email.ToLower().Contains(q)),
+                "address" => query.Where(c => c.Address != null && c.Address.ToLower().Contains(q)),
+                "id" => query.Where(c => c.CustomerId.ToString().Contains(q)),
+                _ => query.Where(c => c.Name.ToLower().Contains(q) || (c.Phone != null && c.Phone.ToLower().Contains(q)) || (c.Email != null && c.Email.ToLower().Contains(q)) || (c.Address != null && c.Address.ToLower().Contains(q)) || c.CustomerId.ToString().Contains(q))
+            };
+        }
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(c => c.CustomerId).Skip((page - 1) * pageSize).Take(pageSize)
+            .Select(c => new CustomerDto { CustomerId = c.CustomerId, Name = c.Name, Email = c.Email, Phone = c.Phone, Address = c.Address, CreatedAt = c.CreatedAt })
+            .ToListAsync();
+        return new PagedResultDto<CustomerDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+    }
 }

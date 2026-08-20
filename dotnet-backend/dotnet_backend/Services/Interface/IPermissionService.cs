@@ -10,4 +10,5 @@ public interface IPermissionService
     Task<PermissionDto> CreatePermissionAsync(PermissionDto permission);
     Task<PermissionDto?> UpdatePermissionAsync(int PermissionId,PermissionDto permission);
     Task<bool> DeletePermissionAsync(int id);
+    Task<PagedResultDto<PermissionDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField);
 }

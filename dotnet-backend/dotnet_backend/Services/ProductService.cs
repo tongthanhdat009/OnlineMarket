@@ -499,4 +499,35 @@ public class ProductService : IProductService
     }
 
     private readonly record struct ImageType(string Extension, string ContentType);
+
+
+    public async Task<PagedResultDto<ProductDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var q = search?.Trim().ToLower();
+        var query = _context.Products.Where(p => !p.Deleted).Include(p => p.Category).Include(p => p.Supplier).Include(p => p.Inventories).AsQueryable();
+        if (!string.IsNullOrEmpty(q))
+            query = query.Where(p => p.ProductName.ToLower().Contains(q) || (p.Barcode != null && p.Barcode.ToLower().Contains(q)) || (p.Category != null && p.Category.CategoryName.ToLower().Contains(q)) || (p.Supplier != null && p.Supplier.Name.ToLower().Contains(q)) || (p.Unit != null && p.Unit.ToLower().Contains(q)) || p.Price.ToString().Contains(q));
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(p => p.ProductId).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        var dtos = items.Select(p => new ProductDto
+        {
+            ProductId = p.ProductId,
+            ProductName = p.ProductName,
+            Price = p.Price,
+            Barcode = p.Barcode,
+            Unit = p.Unit,
+            ImageUrl = p.ImageUrl,
+            CategoryId = p.CategoryId,
+            SupplierId = p.SupplierId,
+            Deleted = p.Deleted,
+            Quantity = p.Inventories.Select(i => i.Quantity).FirstOrDefault() ?? 0,
+            Category = p.Category != null ? new CategoryDto { CategoryId = p.Category.CategoryId, CategoryName = p.Category.CategoryName } : null,
+            Supplier = p.Supplier != null ? new SupplierDto { SupplierId = p.Supplier.SupplierId, Name = p.Supplier.Name, Phone = p.Supplier.Phone, Email = p.Supplier.Email, Address = p.Supplier.Address } : null
+        }).ToList();
+        foreach (var dto in dtos)
+            if (!string.IsNullOrEmpty(dto.ImageUrl)) dto.ImageUrl = await _s3Service.GetImageUrlAsync(dto.ImageUrl);
+        return new PagedResultDto<ProductDto> { Items = dtos, TotalCount = total, Page = page, PageSize = pageSize };
+    }
 }

@@ -1589,4 +1589,55 @@ public class OrderService : IOrderService
         await _context.SaveChangesAsync();
         return true;
     }
+
+
+    private static IQueryable<Order> ApplyOrderSearch(IQueryable<Order> query, string? search)
+    {
+        var q = search?.Trim().ToLower();
+        if (string.IsNullOrEmpty(q)) return query;
+        return query.Where(o => o.OrderId.ToString().Contains(q) || (o.Name != null && o.Name.ToLower().Contains(q)) || (o.Phone != null && o.Phone.ToLower().Contains(q)) || (o.Customer != null && o.Customer.Name.ToLower().Contains(q)) || (o.Customer != null && o.Customer.Phone != null && o.Customer.Phone.ToLower().Contains(q)));
+    }
+    public async Task<PagedResultDto<OrderDto>> GetOrdersOfflinePagedAsync(int page, int pageSize, string? search, string? searchField)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var query = ApplyOrderSearch(_context.Orders.Where(o => o.OrderType == "offline"), search);
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(o => o.OrderId).Skip((page - 1) * pageSize).Take(pageSize)
+            .Include(o => o.Customer).Include(o => o.Payments).Include(o => o.User)
+            .Select(o => new OrderDto { OrderId = o.OrderId, CustomerId = o.CustomerId, UserId = o.UserId, PromoId = o.PromoId, OrderDate = o.OrderDate, TotalAmount = o.TotalAmount, DiscountAmount = o.DiscountAmount, PayStatus = o.PayStatus, OrderStatus = o.OrderStatus, OrderType = o.OrderType, Name = o.Name, Address = o.Address, Phone = o.Phone, Email = o.Email,
+                Customer = o.Customer == null ? null : new CustomerDto { CustomerId = o.Customer.CustomerId, Name = o.Customer.Name, Email = o.Customer.Email, Phone = o.Customer.Phone, Address = o.Customer.Address, CreatedAt = o.Customer.CreatedAt },
+                Payments = o.Payments.Select(p => new PaymentDto { PaymentId = p.PaymentId, OrderId = p.OrderId, Amount = p.Amount, PaymentMethod = p.PaymentMethod ?? "", PaymentDate = p.PaymentDate ?? DateTime.MinValue }).ToList(),
+                User = o.User == null ? null : new UserDto { UserId = o.User.UserId, Username = o.User.Username, Password = "", FullName = o.User.FullName, Role = o.User.Role, CreatedAt = o.User.CreatedAt } })
+            .ToListAsync();
+        return new PagedResultDto<OrderDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+    }
+    public async Task<PagedResultDto<OrderDto>> GetOrdersOnlinePagedAsync(int page, int pageSize, string? search, string? searchField)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var query = ApplyOrderSearch(_context.Orders.Where(o => o.OrderType == "online" && !o.RefundRequests.Any(r => r.Status == "pending")), search);
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(o => o.OrderId).Skip((page - 1) * pageSize).Take(pageSize)
+            .Include(o => o.Customer).Include(o => o.Payments).Include(o => o.User)
+            .Select(o => new OrderDto { OrderId = o.OrderId, CustomerId = o.CustomerId, UserId = o.UserId, PromoId = o.PromoId, OrderDate = o.OrderDate, TotalAmount = o.TotalAmount, DiscountAmount = o.DiscountAmount, PayStatus = o.PayStatus, OrderStatus = o.OrderStatus, OrderType = o.OrderType, Name = o.Name, Address = o.Address, Phone = o.Phone, Email = o.Email,
+                Customer = o.Customer == null ? null : new CustomerDto { CustomerId = o.Customer.CustomerId, Name = o.Customer.Name, Email = o.Customer.Email, Phone = o.Customer.Phone, Address = o.Customer.Address, CreatedAt = o.Customer.CreatedAt },
+                Payments = o.Payments.Select(p => new PaymentDto { PaymentId = p.PaymentId, OrderId = p.OrderId, Amount = p.Amount, PaymentMethod = p.PaymentMethod ?? "", PaymentDate = p.PaymentDate ?? DateTime.MinValue }).ToList(),
+                User = o.User == null ? null : new UserDto { UserId = o.User.UserId, Username = o.User.Username, Password = "", FullName = o.User.FullName, Role = o.User.Role, CreatedAt = o.User.CreatedAt } })
+            .ToListAsync();
+        return new PagedResultDto<OrderDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+    }
+    public async Task<PagedResultDto<RefundRequestDto>> GetRefundRequestsPagedAsync(int page, int pageSize, string? search, string? searchField)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var q = search?.Trim().ToLower();
+        var query = _context.RefundRequests.Include(r => r.Order).ThenInclude(o => o.Customer).Include(r => r.ProcessedByUser).AsQueryable();
+        if (!string.IsNullOrEmpty(q))
+            query = query.Where(r => r.RefundId.ToString().Contains(q) || r.OrderId.ToString().Contains(q) || (r.Order != null && r.Order.Name != null && r.Order.Name.ToLower().Contains(q)) || (r.Order != null && r.Order.Phone != null && r.Order.Phone.ToLower().Contains(q)) || (r.Order != null && r.Order.Customer != null && r.Order.Customer.Name.ToLower().Contains(q)) || (r.Order != null && r.Order.Customer != null && r.Order.Customer.Phone != null && r.Order.Customer.Phone.ToLower().Contains(q)));
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(r => r.RefundId).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        var dtos = items.Select(r => new RefundRequestDto { RefundId = r.RefundId, OrderId = r.OrderId, RefundAmount = r.RefundAmount, Reason = r.Reason, CustomerBankName = r.CustomerBankName, CustomerBankAccount = r.CustomerBankAccount, CustomerAccountHolder = r.CustomerAccountHolder, Status = r.Status, ProcessedBy = r.ProcessedBy, ProcessedByName = r.ProcessedByUser?.FullName, AdminNote = r.AdminNote, GatewayRefundId = r.GatewayRefundId, CreatedAt = r.CreatedAt, UpdatedAt = r.UpdatedAt, CustomerName = r.Order?.Name, CustomerPhone = r.Order?.Phone, CustomerEmail = r.Order?.Email }).ToList();
+        return new PagedResultDto<RefundRequestDto> { Items = dtos, TotalCount = total, Page = page, PageSize = pageSize };
+    }
 }

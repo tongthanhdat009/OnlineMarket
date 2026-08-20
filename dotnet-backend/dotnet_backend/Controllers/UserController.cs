@@ -19,8 +19,13 @@ namespace dotnet_backend.Controllers
 
         // GET: api/users - Ai đã login cũng xem được
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
+        public async Task<IActionResult> GetUsers([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? search, [FromQuery] string? searchField)
         {
+            if (page.HasValue && pageSize.HasValue)
+            {
+                var paged = await _userService.GetPagedAsync(page.Value, pageSize.Value, search, searchField);
+                return Ok(paged);
+            }
             var users = await _userService.GetAllUsersAsync();
             return Ok(users);
         }

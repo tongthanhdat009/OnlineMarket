@@ -208,4 +208,36 @@ public class InventoryService : IInventoryService
 
         return response;
     }
+
+
+    public async Task<PagedResultDto<InventoryDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var q = search?.Trim().ToLower();
+        var query = _context.Inventories.Include(i => i.Product).ThenInclude(p => p.Category).Include(i => i.Product).ThenInclude(p => p.Supplier).AsQueryable();
+        if (!string.IsNullOrEmpty(q))
+            query = query.Where(i => i.Product.ProductName.ToLower().Contains(q) || i.Quantity.ToString().Contains(q) || i.InventoryId.ToString().Contains(q));
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(i => i.InventoryId).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        var dtos = items.Select(i => new InventoryDto
+        {
+            InventoryId = i.InventoryId,
+            ProductId = i.ProductId,
+            Quantity = i.Quantity,
+            UpdatedAt = i.UpdatedAt,
+            Product = new ProductDto
+            {
+                ProductId = i.Product.ProductId,
+                CategoryId = i.Product.CategoryId,
+                SupplierId = i.Product.SupplierId,
+                ProductName = i.Product.ProductName,
+                Barcode = i.Product.Barcode,
+                Price = i.Product.Price,
+                Unit = i.Product.Unit,
+                CreatedAt = i.Product.CreatedAt
+            }
+        }).ToList();
+        return new PagedResultDto<InventoryDto> { Items = dtos, TotalCount = total, Page = page, PageSize = pageSize };
+    }
 }

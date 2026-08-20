@@ -19,8 +19,13 @@ namespace dotnet_backend.Controllers
 
         // 🔹 Lấy danh sách nhà cung cấp
         [HttpGet]
-        public async Task<IActionResult> GetSuppliers()
+        public async Task<IActionResult> GetSuppliers([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? search, [FromQuery] string? searchField)
         {
+            if (page.HasValue && pageSize.HasValue)
+            {
+                var paged = await _supplierService.GetPagedAsync(page.Value, pageSize.Value, search, searchField);
+                return Ok(paged);
+            }
             var suppliers = await _supplierService.GetAllSuppliersAsync();
             return Ok(suppliers);
         }

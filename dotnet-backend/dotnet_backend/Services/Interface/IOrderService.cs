@@ -35,4 +35,7 @@ public interface IOrderService
     Task<DashboardStatsDto> GetDashboardStatsAsync();
     Task<IEnumerable<OrderByMonthDto>> GetCompletedOrdersByYearAsync(int year);
     Task<IEnumerable<SalesByMonthDto>> GetCompletedSalesByYearAsync(int year);
+    Task<PagedResultDto<OrderDto>> GetOrdersOfflinePagedAsync(int page, int pageSize, string? search, string? searchField);
+    Task<PagedResultDto<OrderDto>> GetOrdersOnlinePagedAsync(int page, int pageSize, string? search, string? searchField);
+    Task<PagedResultDto<RefundRequestDto>> GetRefundRequestsPagedAsync(int page, int pageSize, string? search, string? searchField);
 }

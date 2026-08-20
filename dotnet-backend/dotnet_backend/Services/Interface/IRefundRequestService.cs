@@ -13,4 +13,5 @@ public interface IRefundRequestService
     Task<RefundRequestDto?> ProcessRefundRequestAsync(int refundId, int processedBy, ProcessRefundRequestDto dto);
     Task<bool> DeleteRefundRequestAsync(int refundId);
     Task<int> GetPendingRefundCountAsync();
+    Task<PagedResultDto<RefundRequestDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField);
 }

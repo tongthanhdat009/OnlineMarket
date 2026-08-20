@@ -18,8 +18,13 @@ namespace dotnet_backend.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? search, [FromQuery] string? searchField)
         {
+            if (page.HasValue && pageSize.HasValue)
+            {
+                var paged = await _permissionService.GetPagedAsync(page.Value, pageSize.Value, search, searchField);
+                return Ok(paged);
+            }
             var permissions = await _permissionService.GetAllPermissionsAsync();
             return Ok(permissions);
         }

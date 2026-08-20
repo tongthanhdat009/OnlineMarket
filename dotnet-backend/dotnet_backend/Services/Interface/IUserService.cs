@@ -11,4 +11,5 @@ public interface IUserService
     Task<UserDto> CreateUserAsync(UserDto userDto);
     Task<UserDto?> UpdateUserAsync(int id, UserDto userDto);
     Task<bool> DeleteUserAsync(int id);
+    Task<PagedResultDto<UserDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField);
 }

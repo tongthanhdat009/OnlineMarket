@@ -19,10 +19,15 @@ public class InventoryController : ControllerBase
 
     /// Lấy danh sách tất cả inventory
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<InventoryDto>>> GetAllInventories()
+    public async Task<ActionResult<IEnumerable<InventoryDto>>> GetAllInventories([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? search, [FromQuery] string? searchField)
     {
         try
         {
+            if (page.HasValue && pageSize.HasValue)
+            {
+                var paged = await _inventoryService.GetPagedAsync(page.Value, pageSize.Value, search, searchField);
+                return Ok(paged);
+            }
             var inventories = await _inventoryService.GetAllInventoriesAsync();
             return Ok(inventories);
         }

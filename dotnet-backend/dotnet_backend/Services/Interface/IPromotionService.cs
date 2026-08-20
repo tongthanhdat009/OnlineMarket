@@ -12,4 +12,5 @@ public interface IPromotionService
     Task<ApplyPromoResponseDto> ApplyPromotionAsync(ApplyPromoRequestDto request);
     Task<ApplyPromoResponseDto> ValidatePromoByCodeAsync(string promoCode, decimal orderTotal);
     Task GiftVoucherAsync(GiftVoucherDto dto);
+    Task<PagedResultDto<PromotionDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField);
 }

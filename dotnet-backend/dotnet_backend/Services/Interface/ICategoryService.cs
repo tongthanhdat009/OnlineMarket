@@ -12,5 +12,6 @@ namespace dotnet_backend.Services.Interface
         Task<CategoryDto> AddCategoryAsync(CategoryDto dto);
         Task<CategoryDto?> UpdateCategoryAsync(int id, CategoryDto dto);
         Task<bool> DeleteCategoryAsync(int id);
-    }
+        Task<PagedResultDto<CategoryDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField);
+}
 }

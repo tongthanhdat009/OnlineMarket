@@ -92,5 +92,20 @@ namespace dotnet_backend.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+    public async Task<PagedResultDto<PermissionDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var q = search?.Trim().ToLower();
+        var query = _context.Permissions.AsQueryable();
+        if (!string.IsNullOrEmpty(q))
+            query = query.Where(p => p.PermissionName.ToLower().Contains(q) || p.ActionKey.ToLower().Contains(q));
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(p => p.PermissionId).Skip((page - 1) * pageSize).Take(pageSize)
+            .Select(p => new PermissionDto { PermissionId = p.PermissionId, PermissionName = p.PermissionName, ActionKey = p.ActionKey, Description = p.Description })
+            .ToListAsync();
+        return new PagedResultDto<PermissionDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+    }
     }
 }

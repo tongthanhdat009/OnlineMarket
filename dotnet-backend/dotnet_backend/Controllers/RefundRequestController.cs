@@ -22,8 +22,13 @@ public class RefundRequestController : ControllerBase
     /// </summary>
     [HttpGet]
     [Authorize]
-    public async Task<ActionResult<IEnumerable<RefundRequestDto>>> GetAllRefundRequests()
+    public async Task<ActionResult<IEnumerable<RefundRequestDto>>> GetAllRefundRequests([FromQuery] int? page, [FromQuery] int? pageSize, [FromQuery] string? search, [FromQuery] string? searchField)
     {
+        if (page.HasValue && pageSize.HasValue)
+        {
+            var paged = await _refundRequestService.GetPagedAsync(page.Value, pageSize.Value, search, searchField);
+            return Ok(paged);
+        }
         var refunds = await _refundRequestService.GetAllRefundRequestsAsync();
         return Ok(refunds);
     }

@@ -76,6 +76,21 @@ namespace dotnet_backend.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+    public async Task<PagedResultDto<CategoryDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+        var q = search?.Trim().ToLower();
+        var query = _context.Categories.AsQueryable();
+        if (!string.IsNullOrEmpty(q))
+            query = query.Where(c => c.CategoryName.ToLower().Contains(q));
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(c => c.CategoryId).Skip((page - 1) * pageSize).Take(pageSize)
+            .Select(c => new CategoryDto { CategoryId = c.CategoryId, CategoryName = c.CategoryName })
+            .ToListAsync();
+        return new PagedResultDto<CategoryDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+    }
     }
 }
                                                                                                         

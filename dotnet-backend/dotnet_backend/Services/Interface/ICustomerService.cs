@@ -11,4 +11,5 @@ public interface ICustomerService
     Task<CustomerDto> CreateCustomerAsync(CustomerDto customerDto);
     Task<CustomerDto> UpdateCustomerAsync(int id, CustomerDto customerDto);
     Task<bool> DeleteCustomerAsync(int id);
+    Task<PagedResultDto<CustomerDto>> GetPagedAsync(int page, int pageSize, string? search, string? searchField);
 }
