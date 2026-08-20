@@ -4,6 +4,7 @@
 @using BlazorApp.Dto
 @using BlazorApp.Services.Interface
 @using Microsoft.JSInterop
+@inject IAuthService AuthService
 @inject IOrderService OrderService
 @inject IS3ImageService S3ImageService
 @inject NavigationManager Navigation
@@ -25,50 +26,19 @@
                     @onkeyup="OnSearchKeyup" />
             </div>
             <div class="category-section">
-                <button class="filter-btn @(string.IsNullOrEmpty(selectedCategoryName) ? "active" : "")" 
-                    @onclick='() => FilterByCategory(null)'>
-                    Tất cả
-                </button>
-
-                <button class="filter-btn @(selectedCategoryName == "pending" ? "active" : "")"
-                    @onclick='() => FilterByCategory("pending")'>
-                    Chờ xác nhận
-                </button>
-
-                <button class="filter-btn @(selectedCategoryName == "approved" ? "active" : "")"
-                    @onclick='() => FilterByCategory("approved")'>
-                    Đã duyệt
-                </button>
-
-                <button class="filter-btn @(selectedCategoryName == "processing" ? "active" : "")"
-                    @onclick='() => FilterByCategory("processing")'>
-                    Đang xử lý
-                </button>
-
-                <button class="filter-btn @(selectedCategoryName == "shipping" ? "active" : "")"
-                    @onclick='() => FilterByCategory("shipping")'>
-                    Đang giao hàng
-                </button>
-
-                <button class="filter-btn @(selectedCategoryName == "delivered" ? "active" : "")"
-                    @onclick='() => FilterByCategory("delivered")'>
-                    Đã giao hàng
-                </button>
-
-                <button class="filter-btn @(selectedCategoryName == "completed" ? "active" : "")"
-                    @onclick='() => FilterByCategory("completed")'>
-                    Hoàn thành
-                </button>
-
-                <button class="filter-btn @(selectedCategoryName == "canceled" ? "active" : "")"
-                    @onclick='() => FilterByCategory("canceled")'>
-                    Đã hủy
-                </button>
-
-                <button class="filter-btn @(selectedCategoryName == "refund" ? "active" : "")"
-                    @onclick='() => FilterByCategory("refund")'>
-                    Đang chờ hoàn tiền
-                </button>
+                <label for="order-status-filter" class="visually-hidden">Lọc trạng thái đơn hàng</label>
+                <select id="order-status-filter" class="form-select status-filter"
+                        value="@selectedCategoryName" @onchange="OnStatusChanged">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="pending">Chờ xác nhận</option>
+                    <option value="approved">Đã duyệt</option>
+                    <option value="processing">Đang xử lý</option>
+                    <option value="shipping">Đang giao hàng</option>
+                    <option value="delivered">Đã giao hàng</option>
+                    <option value="completed">Hoàn thành</option>
+                    <option value="canceled">Đã hủy</option>
+                    <option value="refund">Đang chờ hoàn tiền</option>
+                </select>
             </div>
         </div>
     </div>
@@ -279,6 +249,21 @@
         </div>
     }
 
+    @if (totalCount > 0)
+    {
+        <nav class="orders-pagination" aria-label="Phân trang đơn hàng">
+            <button class="page-btn" disabled="@(currentPage == 1 || isLoading)"
+                    @onclick="() => GoToPage(currentPage - 1)">
+                Trước
+            </button>
+            <span>Trang @currentPage / @TotalPages</span>
+            <button class="page-btn" disabled="@(currentPage >= TotalPages || isLoading)"
+                    @onclick="() => GoToPage(currentPage + 1)">
+                Sau
+            </button>
+        </nav>
+    }
+
     <!-- MODAL XEM CHI TIẾT ĐƠN HÀNG -->
     @if (isShowDetailModal && selectedOrder != null)
     {
@@ -385,7 +370,7 @@
                         @{
                             int stt = 1;
                         }
-                        @foreach (var item in selectedOrder.OrderItems)
+                        @foreach (var item in selectedOrder!.OrderItems)
                         {
                             <tr>
                                 <td>@stt</td>
@@ -725,6 +710,36 @@
         background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
         color: white;
         border-color: #27ae60;
+    }
+
+    .status-filter {
+        max-width: 320px;
+        padding: 0.875rem 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        font-weight: 600;
+    }
+
+    .orders-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .orders-pagination .page-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid #27ae60;
+        border-radius: 8px;
+        background: white;
+        color: #27ae60;
+        font-weight: 600;
+    }
+
+    .orders-pagination .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 
     .orders-body .orders-item {
@@ -1136,15 +1151,25 @@
     // LOGIC MAIN
     private List<OrderWithDetailsDto> orders = new();
     private List<OrderWithDetailsDto> filteredOrders = new();
-    private List<OrderWithDetailsDto> paginatedOrders = new();
     private Dictionary<int, string> productImageUrls = new();
     private bool isLoading = true;
-    private string? selectedCategoryName = null;
+    private string? selectedCategoryName;
     private string searchKeyword = "";
     private System.Threading.Timer? searchTimer;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalCount;
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(totalCount / (double)pageSize));
 
     protected override async Task OnInitializedAsync()
     {
+        if (await AuthService.GetCurrentUserAsync() == null)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
         await LoadData();
     }
 
@@ -1153,96 +1178,34 @@
         isLoading = true;
         try
         {
-            var ordersDto = await OrderService.GetOnlineOrdersByCustomerIdAsync();
-            orders = ordersDto.Select(o => new OrderWithDetailsDto
-            {
-                OrderId = o.OrderId,
-                CustomerId = o.CustomerId,
-                UserId = o.UserId,
-                PromoId = o.PromoId,
-                OrderDate = o.OrderDate,
-                PayStatus = o.PayStatus,
-                OrderStatus = o.OrderStatus,
-                TotalAmount = o.TotalAmount,
-                DiscountAmount = o.DiscountAmount,
-                OrderType = o.OrderType,
-                PaymentMethod = o.PaymentMethod,
-                Name = o.Name,
-                Address = o.Address,
-                Phone = o.Phone,
-                Email = o.Email,
-                OrderItems = new List<OrderItemWithProductDto>()
-            }).ToList();
-            
+            var result = await OrderService.GetMyOrdersPagedAsync(
+                currentPage, pageSize, selectedCategoryName, searchKeyword);
+
+            totalCount = result?.TotalCount ?? 0;
+            orders = result?.Items.Select(MapOrder).ToList() ?? new();
+            filteredOrders = orders;
+
             foreach (var order in orders)
             {
-                // Gắn chi tiết sản phẩm vào order theo order_id
-                order.OrderItems = (await OrderService
-                    .GetOrderItemWithProductAsync(order.OrderId))
-                    .ToList();
-                
-                // Preload S3 images for order items
+                order.OrderItems = (await OrderService.GetOrderItemWithProductAsync(order.OrderId)).ToList();
                 foreach (var item in order.OrderItems)
                 {
-                    if (item.ProductId.HasValue && !productImageUrls.ContainsKey(item.ProductId.Value))
+                    if (item.ProductId.HasValue && !productImageUrls.ContainsKey(item.ProductId.Value)
+                        && !string.IsNullOrWhiteSpace(item.ImageUrl))
                     {
-                        if (!string.IsNullOrEmpty(item.ImageUrl))
-                        {
-                            var imageUrl = await S3ImageService.GetImageUrlAsync(item.ImageUrl);
-                            productImageUrls[item.ProductId.Value] = imageUrl;
-                        }
+                        productImageUrls[item.ProductId.Value] = await S3ImageService.GetImageUrlAsync(item.ImageUrl);
                     }
                 }
-                
-                // Kiểm tra refund request cho đơn hàng đã hủy
-                if (order.OrderStatus?.ToLower() == "canceled")
-                {
-                    var paymentMethod = order.PaymentMethod?.ToLower();
-                    bool isVNPay = paymentMethod == "bank_transfer" || paymentMethod == "vnpay";
-                    
-                    // Chỉ kiểm tra refund cho đơn VNPAY hoặc đơn có pay_status = pending (đang chờ xử lý)
-                    if (isVNPay || order.PayStatus?.ToLower() == "pending")
-                    {
-                        try
-                        {
-                            var refunds = await OrderService.GetRefundRequestsByOrderIdAsync(order.OrderId);
-                            var pendingRefund = refunds.FirstOrDefault(r => r.Status?.ToLower() == "pending");
-                            
-                            if (pendingRefund != null)
-                            {
-                                order.HasPendingRefund = true;
-                                order.RefundStatus = "pending";
-                            }
-                            else
-                            {
-                                var approvedRefund = refunds.FirstOrDefault(r => r.Status?.ToLower() == "approved");
-                                if (approvedRefund != null)
-                                {
-                                    order.HasPendingRefund = true;
-                                    order.RefundStatus = "approved";
-                                }
-                                else
-                                {
-                                    var completedRefund = refunds.FirstOrDefault(r => r.Status?.ToLower() == "completed");
-                                    if (completedRefund != null)
-                                    {
-                                        order.RefundStatus = "completed";
-                                    }
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Error loading refund for order {order.OrderId}: {ex.Message}");
-                        }
-                    }
-                }
+
+                if (order.OrderStatus?.Equals("canceled", StringComparison.OrdinalIgnoreCase) == true)
+                    await LoadRefundStatus(order);
             }
-            filteredOrders = orders;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading orders: {ex.Message}");
+            totalCount = 0;
+            filteredOrders = new();
         }
         finally
         {
@@ -1250,61 +1213,69 @@
         }
     }
 
-    private void FilterByCategory(string? categoryName)
+    private static OrderWithDetailsDto MapOrder(OrderDto o) => new()
     {
-        selectedCategoryName = categoryName;
-        ApplyFilters();
+        OrderId = o.OrderId,
+        CustomerId = o.CustomerId,
+        UserId = o.UserId,
+        PromoId = o.PromoId,
+        OrderDate = o.OrderDate,
+        PayStatus = o.PayStatus,
+        OrderStatus = o.OrderStatus,
+        TotalAmount = o.TotalAmount,
+        DiscountAmount = o.DiscountAmount,
+        OrderType = o.OrderType,
+        PaymentMethod = o.PaymentMethod,
+        Name = o.Name,
+        Address = o.Address,
+        Phone = o.Phone,
+        Email = o.Email
+    };
+
+    private async Task LoadRefundStatus(OrderWithDetailsDto order)
+    {
+        var paymentMethod = order.PaymentMethod?.ToLowerInvariant();
+        if (paymentMethod != "bank_transfer" && paymentMethod != "vnpay"
+            && order.PayStatus?.ToLowerInvariant() != "pending") return;
+
+        try
+        {
+            var refunds = await OrderService.GetRefundRequestsByOrderIdAsync(order.OrderId);
+            var refund = refunds.FirstOrDefault(r => r.Status?.Equals("pending", StringComparison.OrdinalIgnoreCase) == true)
+                ?? refunds.FirstOrDefault(r => r.Status?.Equals("approved", StringComparison.OrdinalIgnoreCase) == true)
+                ?? refunds.FirstOrDefault(r => r.Status?.Equals("completed", StringComparison.OrdinalIgnoreCase) == true);
+            order.RefundStatus = refund?.Status?.ToLowerInvariant();
+            order.HasPendingRefund = order.RefundStatus is "pending" or "approved";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading refund for order {order.OrderId}: {ex.Message}");
+        }
+    }
+
+    private async Task OnStatusChanged(ChangeEventArgs args)
+    {
+        selectedCategoryName = args.Value?.ToString();
+        currentPage = 1;
+        await LoadData();
     }
 
     private void OnSearchKeyup()
     {
         searchTimer?.Dispose();
-        searchTimer = new System.Threading.Timer(_ =>
+        searchTimer = new System.Threading.Timer(_ => InvokeAsync(async () =>
         {
-            InvokeAsync(() =>
-            {
-                ApplyFilters();
-                StateHasChanged();
-            });
-        }, null, 300, Timeout.Infinite);
+            currentPage = 1;
+            await LoadData();
+            StateHasChanged();
+        }), null, 300, Timeout.Infinite);
     }
 
-    private void ApplyFilters()
+    private async Task GoToPage(int page)
     {
-        filteredOrders = orders;
-        
-
-        // Filter by category name (OrderStatus)
-        if (!string.IsNullOrEmpty(selectedCategoryName))
-        {
-            if (selectedCategoryName == "refund")
-            {
-                // Lọc các đơn đang chờ hoàn tiền
-                filteredOrders = filteredOrders
-                    .Where(o => o.HasPendingRefund || o.RefundStatus == "pending" || o.RefundStatus == "approved")
-                    .ToList();
-            }
-            else
-            {
-                filteredOrders = filteredOrders
-                    .Where(o => o.OrderStatus?.ToLower() == selectedCategoryName.ToLower())
-                    .ToList();
-            }
-        }
-
-        // Filter by search keyword
-        if (!string.IsNullOrWhiteSpace(searchKeyword))
-        {
-            var keyword = searchKeyword.ToLower();
-            filteredOrders = filteredOrders
-                .Where(o => 
-                    (int.TryParse(keyword, out int id) && o.OrderId == id) ||
-                    (o.PayStatus?.ToLower().Contains(keyword) ?? false) ||
-                    (o.OrderStatus?.ToLower().Contains(keyword) ?? false)
-                )
-                .ToList();
-        }
-
+        if (page < 1 || page > TotalPages || page == currentPage) return;
+        currentPage = page;
+        await LoadData();
     }
 
     // LOGIC "XEM THÊM" KHI CÓ NHIỀU ITEM 

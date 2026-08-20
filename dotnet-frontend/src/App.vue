@@ -151,7 +151,6 @@ watch(() => route.path, (newPath, oldPath) => {
 /* Nội dung */
 .content {
   flex: 1;
-  padding: 20px;
   background: #f4f6f8;
   overflow-y: auto;
 }

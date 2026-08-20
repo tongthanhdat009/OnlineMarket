@@ -158,13 +158,14 @@ else
     Console.WriteLine("⚠️ AWS credentials or bucket not configured. S3 service will not be available.");
 }
 
-// ✅ 6. Bật CORS cho phép Vue (localhost:5173), Blazor (localhost:5000, localhost:5001, localhost:5192)
+// ✅ 6. Bật CORS cho phép Vue admin (5173/5177), Blazor (5000/5001/5192)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVueApp",
         policy => policy
             .WithOrigins(
-                "http://localhost:5173",  // Vue app
+                "http://localhost:5173",  // Vue admin (vite default / cũ)
+                "http://localhost:5177",  // Vue admin (vite port thực tế)
                 "https://localhost:5001", // Blazor HTTPS
                 "http://localhost:5000",  // Blazor HTTP
                 "http://localhost:5192"   // Blazor HTTP (port thực tế)

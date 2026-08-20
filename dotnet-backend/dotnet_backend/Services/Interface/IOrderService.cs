@@ -9,6 +9,8 @@ public interface IOrderService
     Task<IEnumerable<OrderDto>> GetOrdersOfflineAsync();
     Task<IEnumerable<OrderDto>> GetOrdersOnlineAsync();
     Task<OrderDto> GetOrderByIdAsync(int id);
+    Task<PagedResultDto<OrderDto>> GetOnlineOrdersByCustomerPagedAsync(
+        int customerId, int page, int pageSize, string? status = null, string? keyword = null);
     Task<IEnumerable<OrderDto>> GetOrdersByCustomerIdAsync(int customerId);
     Task<int> GetTotalOrdersAsync();
     Task<int> UpdateOrderAndBillStatusAsync(int orderId, string statusOrder, string statusBill);

@@ -9,6 +9,7 @@ namespace BlazorApp.Services
     public interface IOrderService
     {
         Task<List<OrderDto>> GetOnlineOrdersByCustomerIdAsync();
+        Task<PagedResultDto<OrderDto>?> GetMyOrdersPagedAsync(int page, int pageSize, string? status, string? keyword);
         Task<List<OrderItemWithProductDto>> GetOrderItemWithProductAsync(int orderId);
         Task<bool> UpdateOrderAndBillStatusAsync(int orderId, string statusOrder, string statusBill);
         Task<byte[]?> DownloadInvoicePdfAsync(int orderId);
@@ -80,6 +81,15 @@ namespace BlazorApp.Services
                 Console.WriteLine($"Error loading products: {ex.Message}");
                 return new List<OrderDto>();
             }
+        }
+
+        public async Task<PagedResultDto<OrderDto>?> GetMyOrdersPagedAsync(
+            int page, int pageSize, string? status, string? keyword)
+        {
+            var query = $"api/customer/orders/paged?page={page}&pageSize={pageSize}";
+            if (!string.IsNullOrWhiteSpace(status)) query += $"&status={Uri.EscapeDataString(status)}";
+            if (!string.IsNullOrWhiteSpace(keyword)) query += $"&keyword={Uri.EscapeDataString(keyword)}";
+            return await _apiService.GetAsync<PagedResultDto<OrderDto>>(query);
         }
 
         public async Task<bool> UpdateOrderAndBillStatusAsync(int orderId, string statusOrder, string statusBill)

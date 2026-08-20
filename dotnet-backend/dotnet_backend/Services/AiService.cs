@@ -22,14 +22,16 @@ namespace dotnet_backend.Services
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
+        private readonly IS3Service _s3Service;
         private readonly ILogger<AiService> _logger;
 
         public AiService(ApplicationDbContext context, IConfiguration configuration,
-            IHttpClientFactory httpClientFactory, ILogger<AiService> logger)
+            IHttpClientFactory httpClientFactory, IS3Service s3Service, ILogger<AiService> logger)
         {
             _context = context;
             _configuration = configuration;
             _httpClient = httpClientFactory.CreateClient("openai");
+            _s3Service = s3Service;
             _logger = logger;
         }
 
@@ -210,7 +212,7 @@ namespace dotnet_backend.Services
                 tools = new[] { new { type = "function", function = SearchProductsDeclaration } },
                 tool_choice = "auto",
                 temperature = 0.7,
-                max_tokens = 1000,
+                max_tokens = 2048,
                 stream = true
             };
 
@@ -275,16 +277,29 @@ namespace dotnet_backend.Services
                 productsQuery = productsQuery.Where(p => terms.Any(term => p.ProductName.Contains(term) || (p.Category != null && p.Category.CategoryName.Contains(term))));
 
             var rows = await productsQuery.Take(Math.Clamp(args.MaxResults, 1, 20)).ToListAsync(cancellationToken);
-            return new ToolResult
+            var products = new List<ProductSearchData>();
+            foreach (var product in rows)
             {
-                Products = rows.Select(p => new ProductSearchData
+                var imageUrl = string.Empty;
+                if (!string.IsNullOrWhiteSpace(product.ImageUrl))
                 {
-                    ProductId = p.ProductId, ProductName = p.ProductName,
-                    CategoryName = p.Category?.CategoryName ?? string.Empty, Price = p.Price,
-                    Unit = p.Unit ?? "cái", ImageUrl = p.ImageUrl,
-                    StockQuantity = p.Inventories.Sum(i => i.Quantity ?? 0)
-                }).ToList()
-            };
+                    try { imageUrl = await _s3Service.GetImageUrlAsync(product.ImageUrl); }
+                    catch (InvalidOperationException) { }
+                }
+
+                products.Add(new ProductSearchData
+                {
+                    ProductId = product.ProductId,
+                    ProductName = product.ProductName,
+                    CategoryName = product.Category?.CategoryName ?? string.Empty,
+                    Price = product.Price,
+                    Unit = product.Unit ?? "cái",
+                    ImageUrl = string.IsNullOrWhiteSpace(imageUrl) ? product.ImageUrl : imageUrl,
+                    StockQuantity = product.Inventories.Sum(i => i.Quantity ?? 0)
+                });
+            }
+
+            return new ToolResult { Products = products };
         }
 
         private static List<OpenAiMessageDto> BuildMessages(List<ChatMessageDto> history, string? summary, string message)
@@ -315,7 +330,7 @@ namespace dotnet_backend.Services
                 model,
                 messages = new[] { new { role = "user", content = prompt } },
                 temperature = 0.1,
-                max_tokens = 600
+                max_tokens = 1024
             };
             using var req = new HttpRequestMessage(HttpMethod.Post, url) { Content = new StringContent(JsonSerializer.Serialize(body, JsonOptions), Encoding.UTF8, "application/json") };
             req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);

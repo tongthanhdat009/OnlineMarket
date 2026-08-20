@@ -165,6 +165,25 @@ namespace dotnet_backend.Controllers
         /// Lấy chi tiết đơn hàng
         /// GET: api/customer/orders/{orderId}
         /// </summary>
+        [HttpGet("paged")]
+        public async Task<IActionResult> GetMyOrdersPaged(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? status = null,
+            [FromQuery] string? keyword = null)
+        {
+            try
+            {
+                var result = await _orderService.GetOnlineOrdersByCustomerPagedAsync(
+                    GetCustomerId(), page, pageSize, status, keyword);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+        }
+
         [HttpGet("{orderId}")]
         public async Task<IActionResult> GetOrderById(int orderId)
         {

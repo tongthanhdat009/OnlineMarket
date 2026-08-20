@@ -165,6 +165,75 @@ public class OrderService : IOrderService
         return Enumerable.Empty<OrderDto>();
     }
 
+    public async Task<PagedResultDto<OrderDto>> GetOnlineOrdersByCustomerPagedAsync(
+        int customerId, int page, int pageSize, string? status = null, string? keyword = null)
+    {
+        page = Math.Max(page, 1);
+        pageSize = Math.Clamp(pageSize, 1, 50);
+
+        var query = _context.Orders
+            .AsNoTracking()
+            .Where(o => o.CustomerId == customerId && o.OrderType == "online");
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            if (status.Equals("refund", StringComparison.OrdinalIgnoreCase))
+                query = query.Where(o => o.RefundRequests.Any(r => r.Status == "pending" || r.Status == "approved"));
+            else
+                query = query.Where(o => o.OrderStatus == status);
+        }
+
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            var normalized = keyword.Trim();
+            if (int.TryParse(normalized, out var orderId))
+            {
+                query = query.Where(o => o.OrderId == orderId ||
+                    (o.PayStatus != null && o.PayStatus.Contains(normalized)) ||
+                    (o.OrderStatus != null && o.OrderStatus.Contains(normalized)));
+            }
+            else
+            {
+                query = query.Where(o =>
+                    (o.PayStatus != null && o.PayStatus.Contains(normalized)) ||
+                    (o.OrderStatus != null && o.OrderStatus.Contains(normalized)));
+            }
+        }
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(o => o.OrderDate)
+            .Select(o => new OrderDto
+            {
+                OrderId = o.OrderId,
+                CustomerId = o.CustomerId,
+                UserId = o.UserId,
+                PromoId = o.PromoId,
+                OrderDate = o.OrderDate,
+                TotalAmount = o.TotalAmount,
+                DiscountAmount = o.DiscountAmount,
+                PayStatus = o.PayStatus,
+                OrderStatus = o.OrderStatus,
+                OrderType = o.OrderType,
+                PaymentMethod = o.Payments.Select(p => p.PaymentMethod).FirstOrDefault(),
+                Name = o.Name,
+                Address = o.Address,
+                Phone = o.Phone,
+                Email = o.Email
+            })
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResultDto<OrderDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
     public async Task<IEnumerable<OrderDto>> GetOrdersByCustomerIdAsync(int customerId)
     {
         // Return summary order info for a customer (no OrderItems/detail)
