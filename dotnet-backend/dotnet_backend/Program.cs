@@ -123,6 +123,7 @@ builder.Services.AddHttpClient("openai", client =>
     client.Timeout = Timeout.InfiniteTimeSpan;
 });
 builder.Services.AddScoped<IAiService, AiService>();
+builder.Services.AddScoped<IAdminAiService, AdminAiService>();
 
 // 🔹 Đăng ký AWS S3 Service
 var awsAccessKey = GetSetting(builder.Configuration, "AWS:AccessKey", "AWS_ACCESS_KEY_ID");
