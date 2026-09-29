@@ -16,8 +16,9 @@ namespace dotnet_backend.Services
     /// </summary>
     public class AiService : IAiService
     {
-        private const int CompactThreshold = 20;
+        private const int CompactThreshold = 30;
         private const int CompactKeepMessages = 4;
+        private const int MaxSummaryLength = 6000;
         private const int MaxToolRounds = 3;
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
@@ -75,16 +76,17 @@ namespace dotnet_backend.Services
 
             var baseUrl = GetSetting("BaseUrl", "OPENAI_BASE_URL");
             var apiKey = GetSetting("ApiKey", "OPENAI_API_KEY");
-            var model = GetSetting("Model", "OPENAI_MODEL") ?? "openclaw/default";
-            if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey))
+            var model = AiModelSettings.ResolveModel(_configuration);
+            if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(model))
             {
-                yield return new AiChatStreamEventDto { Type = "error", Error = "OpenAI API key/base URL chưa được cấu hình" };
+                yield return new AiChatStreamEventDto { Type = "error", Error = "OpenAI API key/base URL/model chưa được cấu hình" };
                 yield break;
             }
 
             var history = request.History?.Where(IsValidMessage).ToList() ?? new List<ChatMessageDto>();
-            var summary = request.Summary;
-            var summaryCount = request.SummaryMessageCount;
+            var summary = request.Summary?.Trim();
+            if (summary?.Length > MaxSummaryLength) summary = summary[..MaxSummaryLength];
+            var summaryCount = Math.Max(0, request.SummaryMessageCount);
 
             if (history.Count >= CompactThreshold)
             {
@@ -212,7 +214,6 @@ namespace dotnet_backend.Services
                 tools = new[] { new { type = "function", function = SearchProductsDeclaration } },
                 tool_choice = "auto",
                 temperature = 0.7,
-                max_tokens = 2048,
                 stream = true
             };
 
@@ -329,8 +330,7 @@ namespace dotnet_backend.Services
             {
                 model,
                 messages = new[] { new { role = "user", content = prompt } },
-                temperature = 0.1,
-                max_tokens = 1024
+                temperature = 0.1
             };
             using var req = new HttpRequestMessage(HttpMethod.Post, url) { Content = new StringContent(JsonSerializer.Serialize(body, JsonOptions), Encoding.UTF8, "application/json") };
             req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
@@ -338,8 +338,10 @@ namespace dotnet_backend.Services
             if (!res.IsSuccessStatusCode) return null;
             var json = await res.Content.ReadAsStringAsync(cancellationToken);
             var parsed = JsonSerializer.Deserialize<OpenAiCompactResponse>(json, JsonOptions);
-            var text = parsed?.Choices?.FirstOrDefault()?.Message?.Content;
-            return string.IsNullOrWhiteSpace(text) ? null : (text, oldSummaryCount + compact.Count, history.Skip(history.Count - CompactKeepMessages).ToList());
+            var text = parsed?.Choices?.FirstOrDefault()?.Message?.Content?.Trim();
+            if (string.IsNullOrWhiteSpace(text)) return null;
+            text = text[..Math.Min(text.Length, MaxSummaryLength)];
+            return (text, Math.Max(0, oldSummaryCount) + compact.Count, history.Skip(history.Count - CompactKeepMessages).ToList());
         }
 
         private static bool IsValidMessage(ChatMessageDto message) =>

@@ -124,6 +124,12 @@ builder.Services.AddHttpClient("openai", client =>
 });
 builder.Services.AddScoped<IAiService, AiService>();
 builder.Services.AddScoped<IAdminAiService, AdminAiService>();
+builder.Services.AddScoped<IAdminChatSessionService, AdminChatSessionService>();
+builder.Services.AddScoped<dotnet_backend.Services.Reporting.ISalesReportService, SalesReportService>();
+builder.Services.AddSingleton<IAgentActivityBroadcaster, AgentActivityBroadcaster>();
+builder.Services.AddScoped<IAgentRuntime, AgentRuntime>();
+builder.Services.AddScoped<IAgentOperationsService, AgentOperationsService>();
+builder.Services.AddScoped<IAgentReportService, AgentReportService>();
 
 // 🔹 Đăng ký AWS S3 Service
 var awsAccessKey = GetSetting(builder.Configuration, "AWS:AccessKey", "AWS_ACCESS_KEY_ID");
@@ -159,19 +165,19 @@ else
     Console.WriteLine("⚠️ AWS credentials or bucket not configured. S3 service will not be available.");
 }
 
-// ✅ 6. Bật CORS cho Blazor storefront (5000/5001/5192)
+// ✅ 6. Bật CORS cho các frontend (React admin 5173, React customer 5193)
 // Ghi rõ cả localhost và 127.0.0.1: trình duyệt coi chúng là origin khác
 // nhau, và CORS khớp theo scheme+host+port chính xác. Thiếu alias loopback
 // khiến POST /api/Auth/login bị chặn và màn hình đăng nhập "không hoạt động".
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowBlazorApp",
+    options.AddPolicy("AllowFrontendApps",
         policy => policy
             .WithOrigins(
-                "https://localhost:5001", // Blazor HTTPS
-                "http://localhost:5000",  // Blazor HTTP
-                "http://localhost:5192",  // Blazor HTTP (port thực tế)
-                "http://127.0.0.1:5192"   // Blazor HTTP - loopback alias của localhost
+                "http://localhost:5173", // React admin
+                "http://127.0.0.1:5173",
+                "http://localhost:5193", // React customer
+                "http://127.0.0.1:5193"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -190,7 +196,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // ✅ 7. Kích hoạt CORS
-app.UseCors("AllowBlazorApp");
+app.UseCors("AllowFrontendApps");
 
 // ✅ 8. 🔐 Kích hoạt Authentication và Authorization
 app.UseAuthentication();

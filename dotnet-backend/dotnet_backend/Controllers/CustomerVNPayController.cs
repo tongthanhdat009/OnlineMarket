@@ -97,30 +97,34 @@ namespace dotnet_backend.Controllers
                 // Xử lý callback
                 var result = await _vnpayService.ProcessCallbackAsync(vnpayData);
 
-                // Redirect về trang kết quả trong Blazor app
-                var blazorAppUrl = _configuration.GetSection("VNPay")["BlazorAppUrl"] ?? "http://localhost:5192";
-                var blazorUrl = $"{blazorAppUrl}/payment-result?" +
+                // Redirect về trang kết quả trong React customer app.
+                var customerAppUrl = GetCustomerAppUrl();
+                var customerUrl = $"{customerAppUrl}/payment-result?" +
                     $"success={result.Success}&" +
                     $"message={Uri.EscapeDataString(result.Message ?? "")}&" +
                     $"orderId={result.OrderId}&" +
                     $"transactionId={result.TransactionId}&" +
                     $"amount={result.Amount}";
 
-                return Redirect(blazorUrl);
+                return Redirect(customerUrl);
             }
             catch (Exception ex)
             {
-                var blazorAppUrl = _configuration.GetSection("VNPay")["BlazorAppUrl"] ?? "http://localhost:5192";
-                var blazorUrl = $"{blazorAppUrl}/payment-result?" +
+                var customerAppUrl = GetCustomerAppUrl();
+                var customerUrl = $"{customerAppUrl}/payment-result?" +
                     $"success=false&" +
                     $"message={Uri.EscapeDataString($"Lỗi: {ex.Message}")}";
 
-                return Redirect(blazorUrl);
+                return Redirect(customerUrl);
             }
         }
 
+        private string GetCustomerAppUrl() =>
+            (_configuration.GetSection("VNPay")["CustomerAppUrl"]
+                ?? "http://localhost:5193").TrimEnd('/');
+
         /// <summary>
-        /// API để lấy thông tin callback (cho Blazor app gọi)
+        /// API để kiểm tra chữ ký callback từ customer app
         /// </summary>
         [HttpGet("verify-payment")]
         [AllowAnonymous]

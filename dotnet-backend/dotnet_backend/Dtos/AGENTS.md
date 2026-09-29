@@ -22,7 +22,7 @@
 
 - Keep DTOs independent from EF entities; map explicitly — never expose entities directly.
 - PascalCase properties are wire-contract (`Program.cs` `PropertyNamingPolicy=null`); don't camelCase.
-- Additions here require updates in `Services/` mapping + `Controllers/` + callers (`BlazorApp/dto`).
+- Additions here require updates in `Services/` mapping + `Controllers/` + callers (`frontend-customer/src/types`).
 
 ## Testing Requirements
 

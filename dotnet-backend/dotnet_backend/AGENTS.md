@@ -9,7 +9,7 @@
 
 | File | Description |
 |---|---|
-| `Program.cs` | Composition root: `Env.Load`, EF Core `ApplicationDbContext`, JWT (`sub` claim), CORS `AllowBlazorApp`, all `I*Service` bindings, S3 fallback to `UnavailableS3Service`, `HttpClientFactory` for AI |
+| `Program.cs` | Composition root: `Env.Load`, EF Core `ApplicationDbContext`, JWT (`sub` claim), CORS `AllowFrontendApps`, all `I*Service` bindings, S3 fallback to `UnavailableS3Service`, `HttpClientFactory` for AI |
 | `dotnet-backend.csproj` | `net10.0`, `Nullable=enable`, `ImplicitUsings=enable`; deps: Pomelo MySQL, JWT Bearer, BCrypt, AWSSDK.S3, QuestPDF, DotNetEnv |
 | `appsettings.json` | Placeholder config (empty `ConnectionStrings`, `Jwt`, `OpenRouter`, `VNPay`, `AWS`); secrets come from `.env` |
 | `appsettings.Development.json` | Dev logging overrides |
@@ -33,7 +33,7 @@
 - Keep `nullable` + `implicitUsings`; don't add secrets to `appsettings*.json`.
 - New `I*Service` → register in `Program.cs` (`AddScoped`); new entity → update `ApplicationDbContext` + `Models/` + `Dtos/` together.
 - Duplicate registration exists (`AddScoped<IOrderService>` twice, plus concrete `PromotionService`); preserve until intentional dedupe.
-- CORS policy `AllowBlazorApp` must allow Blazor `:5192`/`:7190`.
+- CORS policy `AllowFrontendApps` must allow React admin `:5173` and React customer `:5193` (localhost and 127.0.0.1).
 
 ## Testing Requirements
 

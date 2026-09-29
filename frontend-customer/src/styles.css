@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Manrope", "DM Sans", ui-sans-serif, sans-serif;
+  --color-leaf: #247448;
+  --color-leaf-dark: #15532f;
+  --color-leaf-soft: #eaf6ef;
+  --color-citrus: #f4b942;
+  --color-cream: #fffaf0;
+  --color-ink: #17231b;
+  --color-muted: #6e7b72;
+  --color-line: #e3ebe5;
+  --color-canvas: #f6f8f5;
+  --color-danger: #c84b45;
+  --color-warning: #b36b1d;
+}
+
+:root { color: var(--color-ink); background: var(--color-canvas); font-synthesis: none; text-rendering: optimizeLegibility; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; background: var(--color-canvas); font-family: var(--font-sans); }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-leaf) 40%, transparent); outline-offset: 3px; }
+::selection { background: #ccebd7; color: #123e25; }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: #c8d5ca; border-radius: 999px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+.skeleton { position: relative; overflow: hidden; background: #e4ebe5; }
+.skeleton::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.7), transparent); animation: shimmer 1.5s infinite; }
+@keyframes float-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.animate-float-in { animation: float-in .35s ease-out both; }
+
+.store-shell { min-height: 100vh; background: var(--color-canvas); }
+.container-store { width: min(100% - 2rem, 1320px); margin-inline: auto; }
+.display { font-family: var(--font-display); letter-spacing: -0.035em; }
+.soft-shadow { box-shadow: 0 14px 35px rgba(32, 62, 42, .08); }
+.card-border { border: 1px solid var(--color-line); }
+.hide-scrollbar { scrollbar-width: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+
+@media (min-width: 768px) { .container-store { width: min(100% - 3rem, 1320px); } }

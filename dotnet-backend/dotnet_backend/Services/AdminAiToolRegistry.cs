@@ -1,6 +1,6 @@
 namespace dotnet_backend.Services;
 
-internal static class AdminAiToolRegistry
+public static class AdminAiToolRegistry
 {
     public const string SearchProducts = "search_products";
     public const string GetStock = "get_stock";
@@ -140,5 +140,13 @@ internal static class AdminAiToolRegistry
         }
     };
 
-    public static bool IsAllowed(string name) => name is SearchProducts or GetStock or SearchInventory or SearchOrders or GetOrder or SalesSummary;
+    public static readonly string[] Names = { SearchProducts, GetStock, SearchInventory, SearchOrders, GetOrder, SalesSummary };
+
+    public static readonly IReadOnlyDictionary<string, AdminAiToolDefinition> Definitions = Names.ToDictionary(
+        name => name,
+        name => new AdminAiToolDefinition(name, name.Replace('_', ' '), name.Contains("order") ? "ORDERS" : name.Contains("stock") || name.Contains("inventory") || name.Contains("product") ? "INVENTORY" : "ANALYTICS", "1.0", "READ_ONLY", 30, true, Declarations[Array.IndexOf(Names, name)]));
+
+    public static bool IsAllowed(string name) => Definitions.TryGetValue(name, out var tool) && tool.Enabled;
 }
+
+public sealed record AdminAiToolDefinition(string Name, string Description, string Category, string Version, string Risk, int TimeoutSeconds, bool Enabled, object Declaration);

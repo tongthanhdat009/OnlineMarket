@@ -135,6 +135,8 @@ namespace dotnet_backend.Dtos
         public List<ProductSuggestionDto>? SuggestedProducts { get; set; }
         public List<ContextSourceDto>? ContextSources { get; set; }
         public string? Error { get; set; }
+        public int? SessionId { get; set; }
+        public long? RunId { get; set; }
     }
 
     /// <summary>

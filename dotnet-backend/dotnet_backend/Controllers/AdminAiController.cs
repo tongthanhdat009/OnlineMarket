@@ -13,7 +13,8 @@ namespace dotnet_backend.Controllers;
 [Route("api/admin/ai")]
 public sealed class AdminAiController : ControllerBase
 {
-    private const string Permission = "admin_ai_chat";
+    private const string Permission = "agent_chat";
+    private const string LegacyPermission = "admin_ai_chat";
     private readonly IAdminAiService _adminAiService;
     private readonly IAdminChatSessionService _sessionService;
     private readonly ILogger<AdminAiController> _logger;
@@ -89,8 +90,6 @@ public sealed class AdminAiController : ControllerBase
             Summary = sessionContext.Summary,
             SummaryMessageCount = sessionContext.SummaryMessageCount
         };
-        sessionContext.History.Add(new ChatMessageDto { Role = "user", Content = serviceRequest.Message });
-
         Response.ContentType = "text/event-stream";
         Response.Headers.CacheControl = "no-cache";
         Response.Headers.Connection = "keep-alive";
@@ -100,7 +99,7 @@ public sealed class AdminAiController : ControllerBase
         var assistantText = new StringBuilder();
         try
         {
-            await foreach (var evt in _adminAiService.StreamChatAsync(serviceRequest, User, cancellationToken))
+            await foreach (var evt in _adminAiService.StreamChatAsync(serviceRequest, User, sessionContext.SessionId, cancellationToken))
             {
                 if (evt.Type == "text") assistantText.Append(evt.Text);
                 if (evt.Type == "summary")
@@ -148,6 +147,7 @@ public sealed class AdminAiController : ControllerBase
     {
         if (User.Claims.Any(claim => claim.Type == "customer_id")) return false;
         var role = User.FindFirst(ClaimTypes.Role)?.Value;
-        return (role == "1" || role == "2") && User.HasClaim("permission", Permission);
+        return (role == "1" || role == "2") &&
+            (User.HasClaim("permission", Permission) || User.HasClaim("permission", LegacyPermission));
     }
 }

@@ -263,7 +263,18 @@ internal static class ModelSeedData
             new { PermissionId = 8, PermissionName = "Quản lý chức năng", ActionKey = "permission_manage", Description = "Tạo và quản lý các chức năng." },
             new { PermissionId = 9, PermissionName = "Quản lý khách hàng", ActionKey = "customer_manage", Description = "Thêm, sửa, xóa, tìm kiếm thông tin khách hàng." },
             new { PermissionId = 10, PermissionName = "Quản lý sản phẩm", ActionKey = "product_manage", Description = "Quản lý thông tin sản phẩm và giá cả." },
-            new { PermissionId = 11, PermissionName = "Quản lý đơn hàng", ActionKey = "order_manage", Description = "Tạo đơn hàng mới, thêm chi tiết hóa đơn và thanh toán." }
+            new { PermissionId = 11, PermissionName = "Quản lý đơn hàng", ActionKey = "order_manage", Description = "Tạo đơn hàng mới, thêm chi tiết hóa đơn và thanh toán." },
+            new { PermissionId = 12, PermissionName = "Admin AI chat (legacy)", ActionKey = "admin_ai_chat", Description = "Compatibility permission for Admin AI chat." },
+            new { PermissionId = 13, PermissionName = "Xem AI Agents", ActionKey = "agent_view", Description = "Xem cấu hình AI Agents." },
+            new { PermissionId = 14, PermissionName = "AI Agent chat", ActionKey = "agent_chat", Description = "Sử dụng AI Agent chat." },
+            new { PermissionId = 15, PermissionName = "Xem Agent runs", ActionKey = "agent_run_view", Description = "Xem lịch sử và chi tiết Agent runs." },
+            new { PermissionId = 16, PermissionName = "Xem Agent logs", ActionKey = "agent_logs_view", Description = "Xem timeline và activity stream." },
+            new { PermissionId = 17, PermissionName = "Xem Agent reports", ActionKey = "agent_report_view", Description = "Xem báo cáo AI đã lưu." },
+            new { PermissionId = 18, PermissionName = "Tạo Agent reports", ActionKey = "agent_report_generate", Description = "Tạo báo cáo AI có kiểm soát." },
+            new { PermissionId = 19, PermissionName = "Xem Agent tools", ActionKey = "agent_tool_view", Description = "Xem registry và usage của tools." },
+            new { PermissionId = 20, PermissionName = "Quản lý Agent tools", ActionKey = "agent_tool_manage", Description = "Gán tools được kiểm soát cho AI Agents." },
+            new { PermissionId = 21, PermissionName = "Quản lý AI Agents", ActionKey = "agent_manage", Description = "Tạo, sửa, bật và tắt AI Agents." },
+            new { PermissionId = 22, PermissionName = "Xem Agent analytics", ActionKey = "agent_analytics_view", Description = "Xem analytics vận hành AI." }
         );
 
         modelBuilder.Entity<Product>().HasData(
@@ -341,7 +352,18 @@ internal static class ModelSeedData
             new { RoleId = 1, PermissionId = 10 },
             new { RoleId = 2, PermissionId = 10 },
             new { RoleId = 1, PermissionId = 11 },
-            new { RoleId = 2, PermissionId = 11 }
+            new { RoleId = 2, PermissionId = 11 },
+            new { RoleId = 1, PermissionId = 12 },
+            new { RoleId = 1, PermissionId = 13 },
+            new { RoleId = 1, PermissionId = 14 },
+            new { RoleId = 1, PermissionId = 15 },
+            new { RoleId = 1, PermissionId = 16 },
+            new { RoleId = 1, PermissionId = 17 },
+            new { RoleId = 1, PermissionId = 18 },
+            new { RoleId = 1, PermissionId = 19 },
+            new { RoleId = 1, PermissionId = 20 },
+            new { RoleId = 1, PermissionId = 22 },
+            new { RoleId = 1, PermissionId = 21 }
         );
 
         modelBuilder.Entity<Role>().HasData(

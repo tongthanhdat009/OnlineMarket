@@ -25,6 +25,6 @@
 - Inject `I*Service` interfaces only; business logic stays in `Services/`.
 - Keep `async` actions, consistent `IActionResult` / typed results, and existing `[Authorize]`/`[AllowAnonymous]` — auth changes need review.
 - Customer controllers are public-scoped; don't leak admin DTOs/roles there.
-- Verify moved/renamed endpoints against `dotnet-backend.http` and the storefront callers (`BlazorApp/services/*`).
+- Verify moved/renamed endpoints against `dotnet-backend.http` and the customer storefront callers (`frontend-customer/src/api/*`).
 
 <!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->

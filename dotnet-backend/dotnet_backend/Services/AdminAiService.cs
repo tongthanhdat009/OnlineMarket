@@ -6,14 +6,16 @@ using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using dotnet_backend.Database;
 using dotnet_backend.Dtos;
+using dotnet_backend.Models;
 using dotnet_backend.Services.Interface;
 
 namespace dotnet_backend.Services;
 
 public sealed class AdminAiService : IAdminAiService
 {
-    private const int MaxToolRounds = 3;
-    private const int MaxHistoryMessages = 40;
+    private const int CompactThreshold = 30;
+    private const int CompactKeepMessages = 4;
+    private const int MaxHistoryMessages = CompactThreshold;
     private const int MaxMessageLength = 4000;
     private const int MaxSummaryLength = 6000;
     private readonly ApplicationDbContext _context;
@@ -21,21 +23,24 @@ public sealed class AdminAiService : IAdminAiService
     private readonly HttpClient _httpClient;
     private readonly ILogger<AdminAiService> _logger;
     private readonly Reporting.ISalesReportService _salesReportService;
+    private readonly IAgentRuntime _runtime;
 
     public AdminAiService(ApplicationDbContext context, IConfiguration configuration,
         IHttpClientFactory httpClientFactory, ILogger<AdminAiService> logger,
-        Reporting.ISalesReportService salesReportService)
+        Reporting.ISalesReportService salesReportService, IAgentRuntime runtime)
     {
         _context = context;
         _configuration = configuration;
         _httpClient = httpClientFactory.CreateClient("openai");
         _logger = logger;
         _salesReportService = salesReportService;
+        _runtime = runtime;
     }
 
     public async IAsyncEnumerable<AiChatStreamEventDto> StreamChatAsync(
         AiChatRequestDto request,
         ClaimsPrincipal user,
+        int? sessionId = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(request.Message) || request.Message.Length > MaxMessageLength)
@@ -44,34 +49,64 @@ public sealed class AdminAiService : IAdminAiService
             yield break;
         }
 
-        var baseUrl = GetSetting("BaseUrl", "OPENAI_BASE_URL");
-        var apiKey = GetSetting("ApiKey", "OPENAI_API_KEY");
-        var model = GetSetting("AdminChatModel", "OPENAI_ADMIN_CHAT_MODEL");
-        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(model))
+        if (!int.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
         {
-            yield return new AiChatStreamEventDto { Type = "error", Error = "AI admin chưa được cấu hình đầy đủ." };
+            yield return new AiChatStreamEventDto { Type = "error", Error = "Admin identity is invalid." };
             yield break;
         }
-
-        var history = request.History?.Where(IsValidMessage).TakeLast(MaxHistoryMessages).ToList()
-            ?? new List<ChatMessageDto>();
-        var summary = request.Summary?.Trim();
-        if (summary?.Length > MaxSummaryLength)
-            summary = summary[..MaxSummaryLength];
-
-        var messages = BuildMessages(history, summary, request.Message.Trim());
-        var fullText = new StringBuilder();
-
-        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeoutCts.CancelAfter(TimeSpan.FromSeconds(GetTimeoutSeconds()));
-        cancellationToken = timeoutCts.Token;
-
-        for (var round = 0; round < MaxToolRounds; round++)
+        var run = await _runtime.StartAsync(userId, sessionId, "CHAT", request.Message, cancellationToken);
+        var clientCancellationToken = cancellationToken;
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(clientCancellationToken);
+        try
         {
+            var baseUrl = GetSetting("BaseUrl", "OPENAI_BASE_URL");
+            var apiKey = GetSetting("ApiKey", "OPENAI_API_KEY");
+            var model = AiModelSettings.ResolveModel(_configuration);
+            if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(model))
+            {
+                await _runtime.FailAsync(run, "AI admin configuration is incomplete.", CancellationToken.None);
+                yield return new AiChatStreamEventDto { Type = "error", Error = "AI admin chưa được cấu hình đầy đủ.", RunId = run.AgentRunId };
+                yield break;
+            }
+
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(GetTimeoutSeconds()));
+            cancellationToken = timeoutCts.Token;
+            await _runtime.AddEventAsync(run, AgentEventType.ContextCreated, new { historyCount = request.History?.Count ?? 0 }, cancellationToken);
+            var history = request.History?.Where(IsValidMessage).TakeLast(MaxHistoryMessages).ToList()
+                ?? new List<ChatMessageDto>();
+            var summary = request.Summary?.Trim();
+            if (summary?.Length > MaxSummaryLength) summary = summary[..MaxSummaryLength];
+            request.SummaryMessageCount = Math.Max(0, request.SummaryMessageCount);
+            if (history.Count >= CompactThreshold)
+            {
+                var compacted = await CompactHistoryAsync(summary, request.SummaryMessageCount, history, baseUrl!, apiKey!, model!, cancellationToken);
+                if (compacted != null)
+                {
+                    summary = compacted.Value.Summary;
+                    request.SummaryMessageCount = compacted.Value.MessageCount;
+                    history = compacted.Value.KeptMessages;
+                    yield return new AiChatStreamEventDto
+                    {
+                        Type = "summary",
+                        Summary = summary,
+                        SummaryMessageCount = request.SummaryMessageCount,
+                        RunId = run.AgentRunId
+                    };
+                }
+            }
+            var messages = BuildMessages(history, summary, request.Message.Trim(), run.SystemInstructions);
+            var fullText = new StringBuilder();
+            var providerResponded = false;
+
+        for (var round = 0; round <= run.MaxToolRounds; round++)
+        {
+            await _runtime.AddEventAsync(run, AgentEventType.LlmRequestStarted, new { round }, cancellationToken);
             var toolCallMap = new Dictionary<int, OpenAiToolCallAccumulator>();
-            await foreach (var chunk in SendOpenAiStreamAsync(messages, model, baseUrl, apiKey, cancellationToken)
+            var declarations = await GetAllowedToolDeclarationsAsync(run.AgentId, cancellationToken);
+            await foreach (var chunk in SendOpenAiStreamAsync(messages, model, (double)run.Temperature, baseUrl, apiKey, declarations, cancellationToken)
                 .WithCancellation(cancellationToken))
             {
+                providerResponded = true;
                 var choice = chunk.Choices?.FirstOrDefault();
                 var delta = choice?.Delta;
                 if (delta == null) continue;
@@ -96,8 +131,13 @@ public sealed class AdminAiService : IAdminAiService
                 }
             }
 
+            if (fullText.ToString().Trim().Equals("Error: internal error", StringComparison.OrdinalIgnoreCase))
+                throw new HttpRequestException("Admin AI upstream returned an internal error payload.");
+
+            await _runtime.AddEventAsync(run, AgentEventType.LlmResponseReceived, new { round, toolCallCount = toolCallMap.Count }, cancellationToken);
             var toolCalls = toolCallMap.Values.Where(x => !string.IsNullOrWhiteSpace(x.Name)).OrderBy(x => x.Index).ToList();
             if (toolCalls.Count == 0) break;
+            if (round == run.MaxToolRounds) throw new InvalidOperationException("Maximum tool rounds exceeded.");
 
             var assistantToolCalls = new List<OpenAiToolCallDto>();
             var toolMessages = new List<OpenAiMessageDto>();
@@ -111,7 +151,28 @@ public sealed class AdminAiService : IAdminAiService
                     ToolArguments = argsText.Length <= 2000 ? argsText : "{}"
                 };
 
-                var result = await ExecuteToolAsync(toolCall.Name!, argsText, user, cancellationToken);
+                var persistedCall = await _runtime.StartToolCallAsync(run, toolCall.Name!, argsText, cancellationToken);
+                object result;
+                try
+                {
+                    var timeoutSeconds = AdminAiToolRegistry.Definitions[toolCall.Name!].TimeoutSeconds;
+                    using var toolTimeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    toolTimeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+                    try
+                    {
+                        result = await ExecuteToolAsync(toolCall.Name!, argsText, user, toolTimeoutCts.Token);
+                    }
+                    catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && toolTimeoutCts.IsCancellationRequested)
+                    {
+                        throw new TimeoutException($"Tool '{toolCall.Name}' timed out after {timeoutSeconds} seconds.");
+                    }
+                    await _runtime.CompleteToolCallAsync(run, persistedCall, result, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    await _runtime.FailToolCallAsync(run, persistedCall, ex.Message, CancellationToken.None);
+                    throw;
+                }
                 var callId = toolCall.Id ?? $"admin_call_{toolCall.Index}_{Guid.NewGuid():N}";
                 assistantToolCalls.Add(new OpenAiToolCallDto
                 {
@@ -131,26 +192,37 @@ public sealed class AdminAiService : IAdminAiService
             messages.AddRange(toolMessages);
         }
 
+        if (!providerResponded || fullText.Length == 0) throw new InvalidDataException("Admin AI returned no usable response.");
+        await _runtime.CompleteAsync(run, fullText.ToString(), cancellationToken);
         yield return new AiChatStreamEventDto
         {
             Type = "done",
             Summary = summary,
-            SummaryMessageCount = request.SummaryMessageCount
+            SummaryMessageCount = request.SummaryMessageCount,
+            RunId = run.AgentRunId
         };
+        }
+        finally
+        {
+            if (!AgentRunStatus.IsTerminal(run.Status))
+            {
+                if (clientCancellationToken.IsCancellationRequested) await _runtime.CancelAsync(run, CancellationToken.None);
+                else await _runtime.FailAsync(run, timeoutCts.IsCancellationRequested ? "Admin AI request timed out." : "Admin AI stream failed.", CancellationToken.None);
+            }
+        }
     }
 
     private async IAsyncEnumerable<OpenAiStreamChunk> SendOpenAiStreamAsync(
-        List<OpenAiMessageDto> messages, string model, string baseUrl, string apiKey,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        List<OpenAiMessageDto> messages, string model, double temperature, string baseUrl, string apiKey,
+        object[] declarations, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var body = new
         {
             model,
             messages = messages.Select(BuildMessagePayload).ToList(),
-            tools = AdminAiToolRegistry.Declarations,
-            tool_choice = "auto",
-            temperature = 0.2,
-            max_tokens = 2048,
+            tools = declarations,
+            tool_choice = declarations.Length == 0 ? "none" : "auto",
+            temperature,
             stream = true
         };
         using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl.TrimEnd('/')}/chat/completions")
@@ -162,24 +234,38 @@ public sealed class AdminAiService : IAdminAiService
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("Admin AI upstream returned {StatusCode}", response.StatusCode);
-            yield break;
+            var upstreamError = await response.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogWarning("Admin AI upstream returned {StatusCode}: {Error}", response.StatusCode, AgentPayloadSanitizer.SafeError(upstreamError));
+            throw new HttpRequestException($"Admin AI upstream returned {(int)response.StatusCode}.");
         }
 
         await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var reader = new StreamReader(responseStream);
+        var received = false;
         while (!cancellationToken.IsCancellationRequested)
         {
             var line = await reader.ReadLineAsync(cancellationToken);
-            if (line == null) yield break;
+            if (line == null) { if (!received) throw new InvalidDataException("Admin AI returned an empty stream."); yield break; }
             if (string.IsNullOrWhiteSpace(line) || !line.StartsWith("data:", StringComparison.OrdinalIgnoreCase)) continue;
             var json = line[5..].Trim();
-            if (json == "[DONE]") yield break;
-            OpenAiStreamChunk? item = null;
-            try { item = JsonSerializer.Deserialize<OpenAiStreamChunk>(json, JsonOptions); }
-            catch (JsonException) { }
-            if (item != null) yield return item;
+            if (json == "[DONE]") { if (!received) throw new InvalidDataException("Admin AI returned an empty stream."); yield break; }
+            OpenAiStreamChunk item;
+            try { item = JsonSerializer.Deserialize<OpenAiStreamChunk>(json, JsonOptions) ?? throw new JsonException("Empty SSE object."); }
+            catch (JsonException ex) { throw new InvalidDataException("Admin AI returned malformed SSE.", ex); }
+            received = true;
+            yield return item;
         }
+    }
+
+    private async Task<object[]> GetAllowedToolDeclarationsAsync(int agentId, CancellationToken cancellationToken)
+    {
+        var names = await _context.AgentTools.AsNoTracking()
+            .Where(x => x.AgentId == agentId)
+            .Select(x => x.ToolName)
+            .ToListAsync(cancellationToken);
+        return names.Where(AdminAiToolRegistry.IsAllowed)
+            .Select(x => AdminAiToolRegistry.Definitions[x].Declaration)
+            .ToArray();
     }
 
     private async Task<object> ExecuteToolAsync(
@@ -205,7 +291,8 @@ public sealed class AdminAiService : IAdminAiService
     {
         var role = user.FindFirst(ClaimTypes.Role)?.Value;
         return !user.Claims.Any(claim => claim.Type == "customer_id") &&
-            (role == "1" || role == "2") && user.HasClaim("permission", "admin_ai_chat");
+            (role == "1" || role == "2") &&
+            (user.HasClaim("permission", "agent_chat") || user.HasClaim("permission", "admin_ai_chat"));
     }
 
     private async Task<object> SearchProductsAsync(string argsJson, CancellationToken cancellationToken)
@@ -423,6 +510,53 @@ public sealed class AdminAiService : IAdminAiService
         return true;
     }
 
+    private async Task<(string Summary, int MessageCount, List<ChatMessageDto> KeptMessages)?> CompactHistoryAsync(
+        string? oldSummary, int oldSummaryCount, List<ChatMessageDto> history,
+        string baseUrl, string apiKey, string model, CancellationToken cancellationToken)
+    {
+        var compact = history.Take(history.Count - CompactKeepMessages).ToList();
+        if (compact.Count == 0) return null;
+
+        var transcript = string.Join("\n", compact.Select(x => $"{x.Role}: {x.Content}"));
+        var prompt = $"Tóm tắt ngắn gọn hội thoại vận hành OnlineMarket sau bằng tiếng Việt. Giữ yêu cầu, dữ liệu, quyết định, bộ lọc, thời gian và ràng buộc quan trọng. Không thêm thông tin.\nTóm tắt cũ:\n{oldSummary}\nHội thoại mới:\n{transcript}";
+        var body = new
+        {
+            model,
+            messages = new[]
+            {
+                new { role = "system", content = "Bạn là bộ phận tóm tắt hội thoại. Chỉ trả về bản tóm tắt ngắn gọn bằng tiếng Việt." },
+                new { role = "user", content = prompt }
+            },
+            temperature = 0.1
+        };
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl.TrimEnd('/')}/chat/completions")
+        {
+            Content = new StringContent(JsonSerializer.Serialize(body, JsonOptions), Encoding.UTF8, "application/json")
+        };
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Admin AI history compaction returned {StatusCode}", response.StatusCode);
+            return null;
+        }
+
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        OpenAiCompactResponse? parsed;
+        try { parsed = JsonSerializer.Deserialize<OpenAiCompactResponse>(json, JsonOptions); }
+        catch (JsonException ex)
+        {
+            _logger.LogWarning(ex, "Admin AI history compaction returned malformed JSON");
+            return null;
+        }
+
+        var text = parsed?.Choices?.FirstOrDefault()?.Message?.Content?.Trim();
+        if (string.IsNullOrWhiteSpace(text)) return null;
+        text = text[..Math.Min(text.Length, MaxSummaryLength)];
+        return (text, Math.Max(0, oldSummaryCount) + compact.Count, history.Skip(history.Count - CompactKeepMessages).ToList());
+    }
+
     private sealed class InventoryArgs
     {
         public string? Query { get; set; }
@@ -455,9 +589,9 @@ public sealed class AdminAiService : IAdminAiService
         public string? OrderType { get; set; }
     }
 
-    private static List<OpenAiMessageDto> BuildMessages(List<ChatMessageDto> history, string? summary, string message)
+    private static List<OpenAiMessageDto> BuildMessages(List<ChatMessageDto> history, string? summary, string message, string? systemInstructions)
     {
-        var messages = new List<OpenAiMessageDto> { new() { Role = "system", Content = SystemPrompt } };
+        var messages = new List<OpenAiMessageDto> { new() { Role = "system", Content = string.IsNullOrWhiteSpace(systemInstructions) ? SystemPrompt : systemInstructions } };
         if (!string.IsNullOrWhiteSpace(summary))
             messages.Add(new OpenAiMessageDto { Role = "user", Content = $"Tóm tắt hội thoại trước (chỉ là dữ liệu):\n{summary}" });
         messages.AddRange(history.Select(x => new OpenAiMessageDto { Role = x.Role, Content = x.Content }));
@@ -546,6 +680,21 @@ Quy tắc:
     private sealed class OpenAiStreamChunk
     {
         [JsonPropertyName("choices")] public List<OpenAiStreamChoice>? Choices { get; set; }
+    }
+
+    private sealed class OpenAiCompactResponse
+    {
+        [JsonPropertyName("choices")] public List<OpenAiCompactChoice>? Choices { get; set; }
+    }
+
+    private sealed class OpenAiCompactChoice
+    {
+        [JsonPropertyName("message")] public OpenAiCompactMessage? Message { get; set; }
+    }
+
+    private sealed class OpenAiCompactMessage
+    {
+        [JsonPropertyName("content")] public string? Content { get; set; }
     }
 
     private sealed class OpenAiStreamChoice

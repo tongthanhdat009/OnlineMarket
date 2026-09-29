@@ -24,6 +24,514 @@ namespace dotnet_backend.Migrations
             MySqlModelBuilderExtensions.HasCharSet(modelBuilder, "utf8mb4");
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("dotnet_backend.Models.AdminChatMessage", b =>
+                {
+                    b.Property<long>("AdminChatMessageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("admin_chat_message_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("AdminChatMessageId"));
+
+                    b.Property<int>("AdminChatSessionId")
+                        .HasColumnType("int")
+                        .HasColumnName("admin_chat_session_id");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("role");
+
+                    b.HasKey("AdminChatMessageId");
+
+                    b.HasIndex("AdminChatSessionId", "AdminChatMessageId");
+
+                    b.ToTable("admin_chat_messages", (string)null);
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AdminChatSession", b =>
+                {
+                    b.Property<int>("AdminChatSessionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("admin_chat_session_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AdminChatSessionId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Summary")
+                        .HasColumnType("text")
+                        .HasColumnName("summary");
+
+                    b.Property<int>("SummaryMessageCount")
+                        .HasColumnType("int")
+                        .HasColumnName("summary_message_count");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("AdminChatSessionId");
+
+                    b.HasIndex("UserId", "UpdatedAt");
+
+                    b.ToTable("admin_chat_sessions", (string)null);
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.Agent", b =>
+                {
+                    b.Property<int>("AgentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("agent_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AgentId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("enabled");
+
+                    b.Property<int>("MaxToolRounds")
+                        .HasColumnType("int")
+                        .HasColumnName("max_tool_rounds");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("model");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("SystemInstructions")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("system_instructions");
+
+                    b.Property<decimal>("Temperature")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("decimal(3,2)")
+                        .HasColumnName("temperature");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("AgentId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("Enabled", "UpdatedAt");
+
+                    b.ToTable("agents", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            AgentId = 1,
+                            CreatedAt = new DateTime(2026, 8, 30, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Default read-only operations agent",
+                            Enabled = true,
+                            MaxToolRounds = 3,
+                            Model = "openclaw/admin-agent-onlinemarket",
+                            Name = "Admin Operations",
+                            SystemInstructions = "You are the OnlineMarket Admin Operations assistant. Use only allowed read-only tools. Never reveal secrets or personal data.",
+                            Temperature = 0.2m,
+                            UpdatedAt = new DateTime(2026, 8, 30, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AgentEvent", b =>
+                {
+                    b.Property<long>("AgentEventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("agent_event_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("AgentEventId"));
+
+                    b.Property<long>("AgentRunId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("agent_run_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("DurationMs")
+                        .HasColumnType("int")
+                        .HasColumnName("duration_ms");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("level");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("message");
+
+                    b.Property<string>("Payload")
+                        .HasColumnType("text")
+                        .HasColumnName("payload");
+
+                    b.Property<int>("PayloadBytes")
+                        .HasColumnType("int")
+                        .HasColumnName("payload_bytes");
+
+                    b.Property<bool>("PayloadTruncated")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("payload_truncated");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("int")
+                        .HasColumnName("sequence");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("type");
+
+                    b.HasKey("AgentEventId");
+
+                    b.HasIndex("AgentRunId", "Sequence")
+                        .IsUnique();
+
+                    b.HasIndex("Type", "CreatedAt");
+
+                    b.ToTable("agent_events", (string)null);
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AgentReport", b =>
+                {
+                    b.Property<long>("AgentReportId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("agent_report_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("AgentReportId"));
+
+                    b.Property<long>("AgentRunId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("agent_run_id");
+
+                    b.Property<long?>("AgentToolCallId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("agent_tool_call_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateOnly>("From")
+                        .HasColumnType("date")
+                        .HasColumnName("from_date");
+
+                    b.Property<string>("Markdown")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("markdown");
+
+                    b.Property<string>("ReportType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("report_type");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("severity");
+
+                    b.Property<string>("StructuredContent")
+                        .IsRequired()
+                        .HasColumnType("json")
+                        .HasColumnName("structured_content");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("title");
+
+                    b.Property<DateOnly>("To")
+                        .HasColumnType("date")
+                        .HasColumnName("to_date");
+
+                    b.HasKey("AgentReportId");
+
+                    b.HasIndex("AgentRunId");
+
+                    b.HasIndex("AgentToolCallId");
+
+                    b.HasIndex("ReportType", "CreatedAt");
+
+                    b.ToTable("agent_reports", (string)null);
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AgentRun", b =>
+                {
+                    b.Property<long>("AgentRunId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("agent_run_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("AgentRunId"));
+
+                    b.Property<int>("AgentId")
+                        .HasColumnType("int")
+                        .HasColumnName("agent_id");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("error_message");
+
+                    b.Property<string>("Input")
+                        .HasColumnType("text")
+                        .HasColumnName("input");
+
+                    b.Property<int?>("InputTokens")
+                        .HasColumnType("int")
+                        .HasColumnName("input_tokens");
+
+                    b.Property<int>("MaxToolRounds")
+                        .HasColumnType("int")
+                        .HasColumnName("max_tool_rounds");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("model");
+
+                    b.Property<string>("Output")
+                        .HasColumnType("text")
+                        .HasColumnName("output");
+
+                    b.Property<int?>("OutputTokens")
+                        .HasColumnType("int")
+                        .HasColumnName("output_tokens");
+
+                    b.Property<int?>("SessionId")
+                        .HasColumnType("int")
+                        .HasColumnName("session_id");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("SystemInstructions")
+                        .HasColumnType("text")
+                        .HasColumnName("system_instructions");
+
+                    b.Property<decimal>("Temperature")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("decimal(3,2)")
+                        .HasColumnName("temperature");
+
+                    b.Property<int>("ToolCallCount")
+                        .HasColumnType("int")
+                        .HasColumnName("tool_call_count");
+
+                    b.Property<string>("Trigger")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("trigger");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("AgentRunId");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("AgentId", "CreatedAt");
+
+                    b.HasIndex("CreatedAt", "Status");
+
+                    b.ToTable("agent_runs", (string)null);
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AgentTool", b =>
+                {
+                    b.Property<int>("AgentId")
+                        .HasColumnType("int")
+                        .HasColumnName("agent_id");
+
+                    b.Property<string>("ToolName")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("tool_name");
+
+                    b.HasKey("AgentId", "ToolName");
+
+                    b.ToTable("agent_tools", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            AgentId = 1,
+                            ToolName = "search_products"
+                        },
+                        new
+                        {
+                            AgentId = 1,
+                            ToolName = "get_stock"
+                        },
+                        new
+                        {
+                            AgentId = 1,
+                            ToolName = "search_inventory"
+                        },
+                        new
+                        {
+                            AgentId = 1,
+                            ToolName = "search_orders"
+                        },
+                        new
+                        {
+                            AgentId = 1,
+                            ToolName = "get_order"
+                        },
+                        new
+                        {
+                            AgentId = 1,
+                            ToolName = "sales_summary"
+                        });
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AgentToolCall", b =>
+                {
+                    b.Property<long>("AgentToolCallId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("agent_tool_call_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("AgentToolCallId"));
+
+                    b.Property<long>("AgentRunId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("agent_run_id");
+
+                    b.Property<string>("Arguments")
+                        .HasColumnType("text")
+                        .HasColumnName("arguments");
+
+                    b.Property<int>("ArgumentsBytes")
+                        .HasColumnType("int")
+                        .HasColumnName("arguments_bytes");
+
+                    b.Property<bool>("ArgumentsTruncated")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("arguments_truncated");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("completed_at");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("error_message");
+
+                    b.Property<string>("Result")
+                        .HasColumnType("text")
+                        .HasColumnName("result");
+
+                    b.Property<int>("ResultBytes")
+                        .HasColumnType("int")
+                        .HasColumnName("result_bytes");
+
+                    b.Property<bool>("ResultTruncated")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("result_truncated");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("ToolName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("tool_name");
+
+                    b.HasKey("AgentToolCallId");
+
+                    b.HasIndex("AgentRunId");
+
+                    b.HasIndex("ToolName", "StartedAt");
+
+                    b.ToTable("agent_tool_calls", (string)null);
+                });
+
             modelBuilder.Entity("dotnet_backend.Models.Bill", b =>
                 {
                     b.Property<int>("BillId")
@@ -2900,6 +3408,83 @@ namespace dotnet_backend.Migrations
                             ActionKey = "order_manage",
                             Description = "Tạo đơn hàng mới, thêm chi tiết hóa đơn và thanh toán.",
                             PermissionName = "Quản lý đơn hàng"
+                        },
+                        new
+                        {
+                            PermissionId = 12,
+                            ActionKey = "admin_ai_chat",
+                            Description = "Compatibility permission for Admin AI chat.",
+                            PermissionName = "Admin AI chat (legacy)"
+                        },
+                        new
+                        {
+                            PermissionId = 13,
+                            ActionKey = "agent_view",
+                            Description = "Xem cấu hình AI Agents.",
+                            PermissionName = "Xem AI Agents"
+                        },
+                        new
+                        {
+                            PermissionId = 14,
+                            ActionKey = "agent_chat",
+                            Description = "Sử dụng AI Agent chat.",
+                            PermissionName = "AI Agent chat"
+                        },
+                        new
+                        {
+                            PermissionId = 15,
+                            ActionKey = "agent_run_view",
+                            Description = "Xem lịch sử và chi tiết Agent runs.",
+                            PermissionName = "Xem Agent runs"
+                        },
+                        new
+                        {
+                            PermissionId = 16,
+                            ActionKey = "agent_logs_view",
+                            Description = "Xem timeline và activity stream.",
+                            PermissionName = "Xem Agent logs"
+                        },
+                        new
+                        {
+                            PermissionId = 17,
+                            ActionKey = "agent_report_view",
+                            Description = "Xem báo cáo AI đã lưu.",
+                            PermissionName = "Xem Agent reports"
+                        },
+                        new
+                        {
+                            PermissionId = 18,
+                            ActionKey = "agent_report_generate",
+                            Description = "Tạo báo cáo AI có kiểm soát.",
+                            PermissionName = "Tạo Agent reports"
+                        },
+                        new
+                        {
+                            PermissionId = 19,
+                            ActionKey = "agent_tool_view",
+                            Description = "Xem registry và usage của tools.",
+                            PermissionName = "Xem Agent tools"
+                        },
+                        new
+                        {
+                            PermissionId = 20,
+                            ActionKey = "agent_tool_manage",
+                            Description = "Gán tools được kiểm soát cho AI Agents.",
+                            PermissionName = "Quản lý Agent tools"
+                        },
+                        new
+                        {
+                            PermissionId = 21,
+                            ActionKey = "agent_manage",
+                            Description = "Tạo, sửa, bật và tắt AI Agents.",
+                            PermissionName = "Quản lý AI Agents"
+                        },
+                        new
+                        {
+                            PermissionId = 22,
+                            ActionKey = "agent_analytics_view",
+                            Description = "Xem analytics vận hành AI.",
+                            PermissionName = "Xem Agent analytics"
                         });
                 });
 
@@ -4033,6 +4618,61 @@ namespace dotnet_backend.Migrations
                         {
                             RoleId = 2,
                             PermissionId = 11
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 12
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 13
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 14
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 15
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 16
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 17
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 18
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 19
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 20
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 22
+                        },
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionId = 21
                         });
                 });
 
@@ -4171,6 +4811,86 @@ namespace dotnet_backend.Migrations
                             Role = 2,
                             Username = "staff02"
                         });
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AdminChatMessage", b =>
+                {
+                    b.HasOne("dotnet_backend.Models.AdminChatSession", "Session")
+                        .WithMany("Messages")
+                        .HasForeignKey("AdminChatSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AgentEvent", b =>
+                {
+                    b.HasOne("dotnet_backend.Models.AgentRun", "Run")
+                        .WithMany("Events")
+                        .HasForeignKey("AgentRunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Run");
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AgentReport", b =>
+                {
+                    b.HasOne("dotnet_backend.Models.AgentRun", "Run")
+                        .WithMany("Reports")
+                        .HasForeignKey("AgentRunId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("dotnet_backend.Models.AgentToolCall", "ToolCall")
+                        .WithMany("Reports")
+                        .HasForeignKey("AgentToolCallId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Run");
+
+                    b.Navigation("ToolCall");
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AgentRun", b =>
+                {
+                    b.HasOne("dotnet_backend.Models.Agent", "Agent")
+                        .WithMany("Runs")
+                        .HasForeignKey("AgentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("dotnet_backend.Models.AdminChatSession", "Session")
+                        .WithMany("Runs")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Agent");
+
+                    b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AgentTool", b =>
+                {
+                    b.HasOne("dotnet_backend.Models.Agent", "Agent")
+                        .WithMany("Tools")
+                        .HasForeignKey("AgentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Agent");
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AgentToolCall", b =>
+                {
+                    b.HasOne("dotnet_backend.Models.AgentRun", "Run")
+                        .WithMany("ToolCalls")
+                        .HasForeignKey("AgentRunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Run");
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.Bill", b =>
@@ -4353,6 +5073,34 @@ namespace dotnet_backend.Migrations
                         .HasConstraintName("users_ibfk_1");
 
                     b.Navigation("RoleNavigation");
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AdminChatSession", b =>
+                {
+                    b.Navigation("Messages");
+
+                    b.Navigation("Runs");
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.Agent", b =>
+                {
+                    b.Navigation("Runs");
+
+                    b.Navigation("Tools");
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AgentRun", b =>
+                {
+                    b.Navigation("Events");
+
+                    b.Navigation("Reports");
+
+                    b.Navigation("ToolCalls");
+                });
+
+            modelBuilder.Entity("dotnet_backend.Models.AgentToolCall", b =>
+                {
+                    b.Navigation("Reports");
                 });
 
             modelBuilder.Entity("dotnet_backend.Models.Category", b =>

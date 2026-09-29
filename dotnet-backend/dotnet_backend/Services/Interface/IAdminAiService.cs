@@ -8,5 +8,6 @@ public interface IAdminAiService
     IAsyncEnumerable<AiChatStreamEventDto> StreamChatAsync(
         AiChatRequestDto request,
         ClaimsPrincipal user,
+        int? sessionId = null,
         CancellationToken cancellationToken = default);
 }
