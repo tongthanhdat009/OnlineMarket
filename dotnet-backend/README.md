@@ -223,7 +223,6 @@ dotnet-backend/
 ### CORS Configuration
 
 - Allowed Origins:
-  - `http://localhost:5173` (Vue app)
   - `https://localhost:5000`, `https://localhost:5001`, `https://localhost:5192` (Blazor)
 
 ## Local MySQL (Docker)

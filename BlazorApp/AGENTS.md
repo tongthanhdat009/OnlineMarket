@@ -12,7 +12,7 @@
 | `Program.cs` | WASM bootstrap: `HttpClient(BaseAddress=http://localhost:7000/)`, DI for `*Service` + `I*Service` contracts, `Blazored.LocalStorage`, `CartStateService` singleton, `S3ImageService` |
 | `App.razor` / `_Imports.razor` | Routing + global Razor imports |
 | `BlazorApp.csproj` | `net10.0`, Blazor WASM SDK; refs: Blazored.LocalStorage, AutoMapper, EF Tools |
-| `Properties/launchSettings.json` | `http` `:5192` / `https` `:7190` (must stay in sync with API CORS + Vue `:5177`) |
+| `Properties/launchSettings.json` | `http` `:5192` / `https` `:7190` (must stay in sync with API CORS) |
 | `wwwroot/appsettings.json` | Public client config (`AWS:BucketName/Region` only — never secrets) |
 | `wwwroot/index.html` | WASM host page + `js/` interop |
 
@@ -33,7 +33,7 @@
 - `CartStateService` is `Singleton` (cart state); new service → register in `Program.cs` with correct lifetime.
 - Razor pages inject services locally; preserve chosen layout (`@layout`) and `@page` routes.
 - `wwwroot/` is public — never put JWT, AWS keys, or VNPay secrets there.
-- Keep `HttpClient.BaseAddress` in sync with `dotnet-frontend/src/api/apiClient.js` + backend port `:7000`.
+- Keep `HttpClient.BaseAddress` in sync with backend port `:7000`.
 
 ## Testing Requirements
 

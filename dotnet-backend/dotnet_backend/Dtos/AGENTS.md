@@ -22,10 +22,10 @@
 
 - Keep DTOs independent from EF entities; map explicitly — never expose entities directly.
 - PascalCase properties are wire-contract (`Program.cs` `PropertyNamingPolicy=null`); don't camelCase.
-- Additions here require updates in `Services/` mapping + `Controllers/` + callers (`dotnet-frontend/src/api`, `BlazorApp/dto`).
+- Additions here require updates in `Services/` mapping + `Controllers/` + callers (`BlazorApp/dto`).
 
 ## Testing Requirements
 
-- `dotnet build dotnet_backend.sln` from parent; verify JSON round-trip against frontends.
+- `dotnet build dotnet_backend.sln` from parent; verify JSON round-trip against the storefront.
 
 <!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->

@@ -159,17 +159,19 @@ else
     Console.WriteLine("⚠️ AWS credentials or bucket not configured. S3 service will not be available.");
 }
 
-// ✅ 6. Bật CORS cho phép Vue admin (5173/5177), Blazor (5000/5001/5192)
+// ✅ 6. Bật CORS cho Blazor storefront (5000/5001/5192)
+// Ghi rõ cả localhost và 127.0.0.1: trình duyệt coi chúng là origin khác
+// nhau, và CORS khớp theo scheme+host+port chính xác. Thiếu alias loopback
+// khiến POST /api/Auth/login bị chặn và màn hình đăng nhập "không hoạt động".
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowVueApp",
+    options.AddPolicy("AllowBlazorApp",
         policy => policy
             .WithOrigins(
-                "http://localhost:5173",  // Vue admin (vite default / cũ)
-                "http://localhost:5177",  // Vue admin (vite port thực tế)
                 "https://localhost:5001", // Blazor HTTPS
                 "http://localhost:5000",  // Blazor HTTP
-                "http://localhost:5192"   // Blazor HTTP (port thực tế)
+                "http://localhost:5192",  // Blazor HTTP (port thực tế)
+                "http://127.0.0.1:5192"   // Blazor HTTP - loopback alias của localhost
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -188,7 +190,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // ✅ 7. Kích hoạt CORS
-app.UseCors("AllowVueApp");
+app.UseCors("AllowBlazorApp");
 
 // ✅ 8. 🔐 Kích hoạt Authentication và Authorization
 app.UseAuthentication();

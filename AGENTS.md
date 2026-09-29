@@ -2,14 +2,13 @@
 
 # OnlineMarket
 
-Monorepo store-management: .NET 10 API + MySQL, Vue 3/Vite admin SPA, Blazor WebAssembly customer SPA.
+Monorepo store-management: .NET 10 API + MySQL, Blazor WebAssembly customer SPA.
 
 ## Structure
 
 | Path | Purpose |
 |---|---|
 | `dotnet-backend/` | ASP.NET Core Web API solution + `docker-compose.yml` MySQL 8.0 (see `dotnet-backend/AGENTS.md`) |
-| `dotnet-frontend/` | Vue 3/Vite admin SPA — not a .NET project (see `dotnet-frontend/AGENTS.md`) |
 | `BlazorApp/` | .NET 10 Blazor WASM customer storefront (see `BlazorApp/AGENTS.md`) |
 | `Makefile` | Canonical dev/build/db orchestration (`make dev`, `make build`, `make static-check`) |
 | `dotnet-backend/.env.example` | Env template; real `dotnet-backend/.env` is gitignored |
@@ -20,20 +19,19 @@ Monorepo store-management: .NET 10 API + MySQL, Vue 3/Vite admin SPA, Blazor Web
 |---|---|
 | API endpoint / auth / business rule | `dotnet-backend/dotnet_backend/Controllers/` → `Services/` → `Models/`/`Dtos/` |
 | DB schema / seed / migration | `dotnet-backend/dotnet_backend/Database/` + `Models/` + `Migrations/` |
-| Admin UI page / RBAC / API call | `dotnet-frontend/src/views/` → `src/router/index.js` → `src/api/` |
 | Customer page / cart / checkout | `BlazorApp/Pages/` → `BlazorApp/services/` → `BlazorApp/dto/` |
 | Build failure / port mismatch | `Makefile`, `*/Properties/launchSettings.json`, `*/appsettings.json` |
 
 ## Code Map
 
 - Request flow: `Controllers/*Controller.cs` → `Services/Interface/I*Service.cs` → `Services/*Service.cs` → `Database/ApplicationDbContext.cs` (Pomelo MySQL) → MySQL/MariaDB
-- Frontend → API: Vue `src/api/apiClient.js` (`BASE_URL=http://localhost:7000`) and Blazor `Program.cs` `HttpClient(BaseAddress=http://localhost:7000/)` — keep in sync
+- Storefront → API: Blazor `Program.cs` `HttpClient(BaseAddress=http://localhost:7000/)`
 - Auth: admin `AuthService`/`AuthController` vs customer `CustomerAuthService`/`CustomerAuthController`; JWT `sub` claim via `JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear()` + `NameClaimType="sub"`
 - Payments: `VNPayService` + `S3Service`/`UnavailableS3Service` (graceful when AWS env missing), `InvoicePdfService` (QuestPDF)
 
 ## Conventions
 
-- Three apps are separately buildable; don't cross-edit contracts without updating controllers ↔ services ↔ DTOs ↔ entities together.
+- API and storefront are separately buildable; don't cross-edit contracts without updating controllers ↔ services ↔ DTOs ↔ entities together.
 - `Makefile` is source of truth for local commands; `dotnet build`/`npm run build` paths in child AGENTS.md mirror it.
 
 ## Anti-Patterns
@@ -47,12 +45,11 @@ Monorepo store-management: .NET 10 API + MySQL, Vue 3/Vite admin SPA, Blazor Web
 ```bash
 make install          # dotnet restore (API+Blazor) + npm install (admin)
 make db-up && make db-wait   # MySQL 127.0.0.1:3308 / store_management
-make dev              # DB + API :7000 + Admin :5177 + Blazor :5192 in parallel
-make build            # build all three
+make dev              # DB + API :7000 + Blazor :5192 in parallel
+make build            # build API + Blazor
 make static-check     # pre-push gate (== make build)
 # granular:
 dotnet build dotnet-backend/dotnet_backend/dotnet_backend.sln
-npm run build --prefix dotnet-frontend
 dotnet build BlazorApp/BlazorApp.csproj
 ```
 
