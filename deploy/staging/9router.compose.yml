@@ -1,0 +1,28 @@
+name: onlinemarket-staging
+
+services:
+  9router:
+    image: 9router:local
+    pull_policy: never
+    container_name: onlinemarket-staging-9router
+    restart: unless-stopped
+    init: true
+    ports:
+      - "127.0.0.1:20129:20128"
+    volumes:
+      - /opt/onlinemarket-staging/shared/9router-data:/app/data
+    env_file:
+      - ./9router.env
+    environment:
+      DATA_DIR: /app/data
+      PORT: "20128"
+      NODE_ENV: production
+      REQUIRE_API_KEY: "true"
+      AUTH_COOKIE_SECURE: "true"
+    mem_limit: 384m
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,0 +1,45 @@
+name: CI
+
+"on":
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            frontend-customer/package-lock.json
+
+      - name: Build backend
+        run: dotnet build dotnet-backend/dotnet_backend/dotnet_backend.sln
+
+      - name: Install admin deps
+        run: npm ci --prefix frontend
+
+      - name: Build admin SPA
+        run: npm run build --prefix frontend
+        env:
+          VITE_API_URL: /api
+
+      - name: Install customer deps
+        run: npm ci --prefix frontend-customer
+
+      - name: Build customer SPA
+        run: npm run build --prefix frontend-customer
+        env:
+          VITE_API_URL: /api
