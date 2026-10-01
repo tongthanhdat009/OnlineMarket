@@ -99,7 +99,7 @@ jobs:
             chmod 755 "$R/releases/$V" "$R/releases/$V/admin" "$R/releases/$V/customer"
             chmod 644 "$R/releases/$V/admin/index.html" "$R/releases/$V/customer/index.html"
             chmod 755 "$R/releases/$V/admin/assets" "$R/releases/$V/customer/assets"
-            chmod 644 "$R/releases/$V/admin/assets/*" "$R/releases/$V/customer/assets/*"
+            chmod -R a+rX "$R/releases/$V/admin" "$R/releases/$V/customer"
             rm -f "/tmp/release-$V.tar.gz"
             cat > "$R/shared/backend.env.new"
             chmod 600 "$R/shared/backend.env.new"
