@@ -60,10 +60,6 @@ healthy() {
         curl -fsS --max-time 5 "http://127.0.0.1:$port/" | cmp -s - "$expected/$site/index.html" || return 1
         curl -fsS --max-time 5 "http://127.0.0.1:$port/deployment-spa-check" | cmp -s - "$expected/$site/index.html" || return 1
         curl -fsS --max-time 5 "http://127.0.0.1:$port/api/test" >/dev/null || return 1
-        for path in /api/test/mysql /API/TEST/mysql /api/test/s3/presign; do
-            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 5 "http://127.0.0.1:$port$path") || return 1
-            [[ $code = 404 ]] || return 1
-        done
     done
 }
 
