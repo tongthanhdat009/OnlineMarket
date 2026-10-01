@@ -45,7 +45,6 @@ jobs:
 
       - name: Build admin SPA
         run: |
-        run: |
           npm ci --prefix frontend
           npm run build --prefix frontend
           mkdir -p release/admin
