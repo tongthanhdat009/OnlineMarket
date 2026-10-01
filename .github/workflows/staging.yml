@@ -96,6 +96,8 @@ jobs:
             V='"$RELEASE"'
             mkdir -p "$R/releases/$V" "$R/shared"
             tar -xzf "/tmp/release-$V.tar.gz" -C "$R/releases/$V"
+            chmod 755 "$R/releases/$V" "$R/releases/$V/admin" "$R/releases/$V/customer"
+            chmod 644 "$R/releases/$V/admin/index.html" "$R/releases/$V/customer/index.html"
             rm -f "/tmp/release-$V.tar.gz"
             cat > "$R/shared/backend.env.new"
             chmod 600 "$R/shared/backend.env.new"
