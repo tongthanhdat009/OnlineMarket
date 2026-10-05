@@ -12,3 +12,6 @@ export * from "./reports.api";
 export * from "./roles.api";
 export * from "./permissions.api";
 export * from "./users.api";
+export * from "./admin-ai.api";
+export * from "./categories.api";
+export * from "./suppliers.api";
