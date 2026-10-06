@@ -144,7 +144,7 @@ export class CustomerApiClient {
       options.baseUrl ?? runtimeEnv?.VITE_API_URL,
     );
     const nativeFetch =
-      typeof window !== "undefined" ? window.fetch.bind(window) : fetch;
+      typeof window !== "undefined" ? window.fetch.bind(window) : typeof globalThis !== "undefined" && typeof globalThis.fetch !== "undefined" ? globalThis.fetch.bind(globalThis) : fetch;
     this.fetcher = options.fetcher ?? nativeFetch;
     this.tokenProvider = options.tokenProvider ?? getStoredToken;
   }
@@ -179,9 +179,7 @@ export class CustomerApiClient {
       if (token) headers.set("Authorization", `Bearer ${token}`);
     }
 
-    const fetchFn = this.fetcher;
-    const response = await fetchFn.call(
-      typeof window !== "undefined" ? window : globalThis,
+    const response = await this.fetcher(
       requestUrl(this.baseUrl, path),
       {
         ...init,

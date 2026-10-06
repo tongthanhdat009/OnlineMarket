@@ -216,7 +216,7 @@ export class ApiClient {
       "",
     );
     const nativeFetch =
-      typeof window !== "undefined" ? window.fetch.bind(window) : fetch;
+      typeof window !== "undefined" ? window.fetch.bind(window) : typeof globalThis !== "undefined" && typeof globalThis.fetch !== "undefined" ? globalThis.fetch.bind(globalThis) : fetch;
     this.fetchImpl = options.fetchImpl ?? nativeFetch;
     this.tokenStore = options.tokenStore ?? new BrowserTokenStore();
     this.onTokensRefreshed = options.onTokensRefreshed;
