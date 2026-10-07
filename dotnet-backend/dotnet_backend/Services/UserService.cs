@@ -26,7 +26,6 @@ public class UserService : IUserService
             {
                 UserId = u.UserId,
                 Username = u.Username,
-                Password = u.Password,
                 FullName = u.FullName,
                 Role = u.Role
             })
@@ -42,7 +41,6 @@ public class UserService : IUserService
             {
                 UserId = u.UserId,
                 Username = u.Username,
-                Password = u.Password,
                 FullName = u.FullName,
                 Role = u.Role
             })
@@ -192,7 +190,7 @@ public class UserService : IUserService
         var total = await query.CountAsync();
         var items = await query.OrderByDescending(u => u.UserId)
             .Skip((page - 1) * pageSize).Take(pageSize)
-            .Select(u => new UserDto { UserId = u.UserId, Username = u.Username, Password = u.Password, FullName = u.FullName, Role = u.Role })
+            .Select(u => new UserDto { UserId = u.UserId, Username = u.Username, FullName = u.FullName, Role = u.Role })
             .ToListAsync();
         return new PagedResultDto<UserDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
     }

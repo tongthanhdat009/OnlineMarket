@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace dotnet_backend.Dtos;
 
 public class UserDto
@@ -6,6 +8,8 @@ public class UserDto
 
     public string Username { get; set; } = null!;
 
+    /// <summary>Never serialized; used internally for create/update and hashing only.</summary>
+    [JsonIgnore]
     public string Password { get; set; } = null!;
 
     public string? FullName { get; set; }
