@@ -1,4 +1,5 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { createBrowserRouter, Navigate, useNavigate } from 'react-router-dom';
 import { AppShell } from './layouts/AppShell';
 import { pages, PlaceholderPage, OrderDetailPage, LoginPage } from './pages/AdminPages';
 import { useAuth } from './auth/AuthContext';
@@ -6,9 +7,16 @@ import { useAuth } from './auth/AuthContext';
 function AuthenticatedShell() {
   const auth = useAuth();
   const user = auth.user;
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!auth.loading && !user) navigate('/login', { replace: true });
+  }, [auth.loading, user, navigate]);
+  if (auth.loading || !user) {
+    return <div className="flex min-h-screen items-center justify-center bg-canvas"><div className="h-9 w-9 animate-spin rounded-full border-2 border-zinc-300 border-t-indigo-600" aria-label="Loading session" /></div>;
+  }
   return <AppShell
     permissions={user?.Permissions}
-    user={user ? { name: user.FullName ?? user.Username, email: user.Username, role: String(user.Role ?? 'Administrator') } : undefined}
+    user={{ name: user.FullName ?? user.Username, email: user.Username, role: String(user.Role ?? 'Administrator') }}
     onSignOut={auth.logout}
   />;
 }

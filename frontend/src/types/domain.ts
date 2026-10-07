@@ -91,15 +91,18 @@ export interface Promotion {
 export interface Bill {
   BillId: number;
   OrderId: number;
-  CustomerId: number;
-  CustomerName?: string | null;
+  CustomerId?: number | null;
   TotalAmount: number;
-  DiscountAmount: number;
+  DiscountAmount?: number | null;
   FinalAmount: number;
   PaymentMethod?: string | null;
-  Status: string;
+  /** Raw entity contract: payment and fulfilment are tracked as two separate statuses. */
+  PayStatus: string;
+  BillStatus: string;
   CreatedAt?: string | null;
   PaidAt?: string | null;
+  Name?: string | null;
+  Customer?: { Name?: string | null; [key: string]: unknown } | null;
   [key: string]: unknown;
 }
 
@@ -115,6 +118,7 @@ export interface RefundRequest {
   AdminNote?: string | null;
   CreatedAt?: string | null;
   UpdatedAt?: string | null;
+  Order?: { Customer?: { Name?: string | null; [key: string]: unknown } | null; [key: string]: unknown } | null;
   CustomerName?: string | null;
   [key: string]: unknown;
 }

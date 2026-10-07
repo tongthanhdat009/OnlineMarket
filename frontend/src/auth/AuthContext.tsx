@@ -18,7 +18,9 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children, initialUser = null }: PropsWithChildren<{ initialUser?: AuthUser | null }>): ReactNode {
   const [user, setUser] = useState<AuthUser | null>(initialUser);
-  const [loading, setLoading] = useState(false);
+  // Start loading when a token exists so the route guard never sees "unauthenticated"
+  // during the /auth/me rehydration round-trip (child effects fire before parent's).
+  const [loading, setLoading] = useState(() => !initialUser && Boolean(getTokenStore().getAccessToken()));
 
   useEffect(() => {
     if (initialUser || !getTokenStore().getAccessToken()) return;
