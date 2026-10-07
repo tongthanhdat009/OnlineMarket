@@ -1,50 +1,560 @@
-import { FormEvent, useState, type ReactNode } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Check, ChevronRight, CreditCard, Download, FileText, MapPin, Package, RefreshCw, ShieldCheck, Truck, XCircle } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../api';
-import { useAuth, useCart, useToast } from '../app/providers';
-import { useOrder, useOrders } from '../hooks';
-import { errorMessage, formatDate, formatDateOnly } from '../lib';
-import type { OrderDto, RefundRequestDto } from '../types';
-import { Button, CartLineRow, EmptyState, ErrorState, Money, ProductImage, QuantityControl, SectionHeading } from '../components/store-ui';
-import { AccountIntro } from './AuthPages';
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useState, FormEvent, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight, Check, CreditCard, ShieldCheck, Truck, XCircle, RefreshCw, ShoppingCart, Trash2 } from "lucide-react";
+import type { ReactNode } from "react";
+import { apiClient } from "../api";
+import { useAuth, useCart, useToast } from "../app/providers";
+import { errorMessage, formatMoney } from "../lib";
+import { useOrders, useOrder } from "../hooks";
+import { productInStock, productName, supplierName } from "../app/types";
+import { useProduct } from "../hooks";
+import { Button, Money, ProductGrid, ProductImage, QuantityControl, SectionHeading, EmptyState, ErrorState, CartLineRow } from "../components/store-ui";
+import { translator } from "../lib/translator";
+
+
+const t = translator;
+
+function ErrorStateWithRetry({ message, onRetry }: { message?: string; onRetry?: () => void }) {
+  return (
+    <div className="rounded-2xl border border-red-100 bg-red-50 p-6 text-center">
+      <p className="font-semibold text-danger">{message ?? t("catalog.loadError")}</p>
+      {onRetry && <Button variant="outline" onClick={onRetry} className="mt-4">{t("common.retry")}</Button>}
+    </div>
+  );
+}
+
+export function ProductDetailPage() {
+  const { id } = useParams() as { id?: string };
+  const productId = Number(id);
+  const navigate = useNavigate();
+  const { data: product, isLoading: productLoading, isError: productError, refetch: refetchProduct } = useProduct(productId);
+  const relatedQuery = useQuery({
+    queryKey: ["related-products", productId],
+    queryFn: () => apiClient.products.list(),
+    staleTime: 60_000,
+  });
+  const relatedProducts = useMemo(
+    () =>
+      relatedQuery.data
+        ?.filter(
+          (p) =>
+            p.ProductId !== productId &&
+            (p.CategoryId ?? 0) === (product?.CategoryId ?? 0),
+        )
+        .slice(0, 4) ?? [],
+    [relatedQuery.data, product?.CategoryId, productId],
+  );
+  const { items, add, update } = useCart();
+  const { isAuthenticated } = useAuth();
+  const { showToast } = useToast();
+  const cartItem = items.find((item) => item.ProductId === productId);
+  const addToCart = async (quantity: number) => {
+    if (!isAuthenticated) {
+      showToast(t("catalog.signInToAdd"), "info");
+      window.location.href = "/login?returnUrl=" + encodeURIComponent(`/products/${productId}`);
+      return;
+    }
+    try {
+      await add({ ProductId: productId, Quantity: quantity });
+      showToast(t("product.addProductToCart", { name: product ? productName(product) : "" }));
+    } catch {
+      showToast(t("catalog.loadError"), "error");
+    }
+  };
+  if (productLoading) return <div className="skeleton h-96 rounded-3xl" />;
+  if (productError || !product) return <ErrorStateWithRetry message={t("catalog.notFound")} onRetry={() => void refetchProduct()} />;
+  return (
+    <div className="animate-float-in space-y-6">
+      <Link to="/products" className="inline-flex items-center gap-1 text-sm font-bold text-leaf hover:text-leaf-dark">
+        <ChevronLeft size={16} /> {t("catalog.backToShopping")}
+      </Link>
+      <div className="grid gap-8 lg:grid-cols-2">
+        <div>
+          <ProductImage product={product} className="w-full" fit="cover" />
+        </div>
+        <div className="flex flex-col gap-4">
+          <div>
+            <p className="mb-1 text-xs font-bold uppercase tracking-[.16em] text-leaf">{product.Category ? product.Category.CategoryName : t("catalog.categoryFallback")}</p>
+            <h1 className="display text-3xl font-extrabold text-ink sm:text-4xl">{productName(product)}</h1>
+            <Money value={product.Price} className="mt-2 text-2xl font-extrabold text-leaf-dark" />
+          </div>
+          <p className="text-sm text-muted">{supplierName(product)}</p>
+          <dl className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <dt className="text-xs text-muted">{t("product.barcode")}</dt>
+              <dd className="font-semibold text-ink">{product.Barcode ?? "—"}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted">{t("product.unit")}</dt>
+              <dd className="font-semibold text-ink">{product.Unit ?? t("product.unitFallback")}</dd>
+            </div>
+          </dl>
+          <p className="text-sm text-muted">{t("product.supplier")}: {product.Supplier?.Name ?? "—"}</p>
+          <div className="rounded-2xl border border-[var(--color-line)] bg-white p-4">
+            <div className="flex items-center justify-between gap-3">
+              <span className={`text-xs font-semibold ${productInStock(product) ? "text-leaf" : "text-danger"}`}>
+                {productInStock(product) ? `${t("product.inStock")}: ${product.Quantity ?? 0}` : t("product.outOfStock")}
+              </span>
+              {cartItem ? (
+                <QuantityControl value={cartItem.Quantity} max={product.Quantity ?? undefined} onChange={(next) => void update(productId, { Quantity: next })} />
+              ) : (
+                <Button onClick={() => void addToCart(1)} disabled={!productInStock(product)} className="h-12 px-5">
+                  {productInStock(product) ? t("product.addToCart") : t("product.outOfStock")}
+                </Button>
+              )}
+            </div>
+            {cartItem && (
+              <div className="mt-3 flex items-center justify-between text-sm">
+                <span className="text-muted">{t("cart.subtotal")}:</span>
+                <Money value={cartItem.Subtotal ?? cartItem.Price * cartItem.Quantity} className="font-extrabold text-ink" />
+              </div>
+            )}
+          </div>
+          <Button variant="outline" onClick={() => void addToCart(1)} disabled={!productInStock(product)} className="w-full">
+            {t("product.buyNow")}
+          </Button>
+        </div>
+      </div>
+      {relatedProducts.length > 0 ? (
+        <section>
+          <SectionHeading eyebrow={t("product.relatedEyebrow")} title={t("product.related")} action={<Link to={`/category/${product.CategoryId}`} className="inline-flex items-center gap-1 text-sm font-bold text-leaf hover:text-leaf-dark">{t("home.viewAll")}</Link>} />
+          {relatedQuery.isLoading ? (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {Array.from({ length: 4 }, (_, index) => (
+                <div key={index} className="skeleton aspect-square rounded-xl" />
+              ))}
+            </div>
+          ) : (
+            <ProductGrid
+              products={relatedProducts}
+              cartQuantities={new Map(items.map((item) => [item.ProductId, item.Quantity]))}
+              onAdd={() => void addToCart(1)}
+            />
+          )}
+        </section>
+      ) : null}
+    </div>
+  );
+}
 
 export function CartPage() {
-  const { items, isLoading, total, update, remove, clear } = useCart(); const navigate = useNavigate();
-  if (isLoading) return <div className="mx-auto max-w-3xl rounded-3xl bg-white p-6"><div className="skeleton h-8 w-48 rounded" /><div className="mt-5 space-y-4">{Array.from({ length: 3 }, (_, index) => <div className="skeleton h-24 rounded-2xl" key={index} />)}</div></div>;
-  if (!items.length) return <div className="mx-auto max-w-2xl pt-8"><EmptyState title="Your cart is empty" body="Find everyday essentials and add them here." action={<Button onClick={() => navigate('/products')}>Start shopping</Button>} /></div>;
-  return <div className="animate-float-in"><div className="mb-7"><p className="mb-1 text-xs font-bold uppercase tracking-[.16em] text-leaf">Ready when you are</p><h1 className="display text-3xl font-extrabold text-ink sm:text-4xl">Your cart</h1><p className="mt-2 text-sm text-muted">{items.reduce((sum, item) => sum + item.Quantity, 0)} items ready for checkout.</p></div><div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]"><section className="rounded-3xl border border-line bg-white px-5 sm:px-7"><div className="flex items-center justify-between border-b border-line py-4"><span className="text-sm font-bold text-ink">Basket items</span><button onClick={() => void clear()} className="text-xs font-bold text-muted hover:text-danger">Clear cart</button></div>{items.map(item => <CartLineRow key={item.ProductId} line={item} onUpdate={quantity => void update(item.ProductId, { Quantity: quantity })} onRemove={() => void remove(item.ProductId)} />)}</section><OrderSummary subtotal={total} onCheckout={() => navigate('/checkout')} /></div></div>;
+  const navigate = useNavigate();
+  const { items, total, isLoading, clear, remove, update } = useCart();
+  const { showToast } = useToast();
+  return (
+    <div className="animate-float-in space-y-6">
+      <h1 className="display text-3xl font-extrabold text-ink">{t("cart.title")}</h1>
+      {isLoading ? (
+        <div className="skeleton h-64 rounded-3xl" />
+      ) : items.length === 0 ? (
+        <EmptyState icon={<ShoppingCart size={28} />} title={t("cart.empty")} body={t("cart.emptyBody")} action={<Button onClick={() => navigate("/products")}>{t("cart.startShopping")}</Button>} />
+      ) : (
+        <div className="space-y-4">
+          {items.map((line) => (
+            <CartLineRow key={line.CartItemId ?? line.ProductId} line={line} onUpdate={(quantity) => void update(line.ProductId, { Quantity: quantity })} onRemove={() => void remove(line.ProductId)} />
+          ))}
+          <div className="rounded-2xl border border-line bg-white p-4 space-y-2">
+            <div className="flex justify-between text-sm"><span className="text-muted">{t("cart.subtotal")}</span><Money value={total} /></div>
+            <div className="flex justify-between text-sm"><span className="text-muted">{t("cart.delivery")}</span><span className="text-muted">{t("cart.free")}</span></div>
+            <div className="flex justify-between text-lg font-extrabold text-ink"><span>{t("cart.total")}</span><Money value={total} /></div>
+            <Button onClick={() => navigate("/checkout")} className="w-full h-12">{t("cart.checkout")}</Button>
+            <button onClick={() => { void clear(); showToast(t("cart.empty")); }} className="text-sm text-muted hover:text-danger">{t("cart.clearCart")}</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
-
-function OrderSummary({ subtotal, discount = 0, onCheckout, disabled = false }: { subtotal: number; discount?: number; onCheckout?: () => void; disabled?: boolean }) { const total = Math.max(0, subtotal - discount); return <aside className="h-fit rounded-3xl border border-line bg-white p-5 sm:p-6 lg:sticky lg:top-32"><h2 className="display text-xl font-extrabold">Order summary</h2><div className="mt-5 space-y-3 text-sm"><div className="flex justify-between text-muted"><span>Subtotal</span><Money value={subtotal} /></div>{discount > 0 && <div className="flex justify-between text-leaf"><span>Discount</span><Money value={-discount} /></div>}<div className="flex justify-between text-muted"><span>Delivery</span><span className="font-semibold text-leaf">Free</span></div><div className="border-t border-line pt-4"><div className="flex justify-between text-base font-extrabold text-ink"><span>Total</span><Money value={total} /></div></div></div>{onCheckout && <Button disabled={disabled} onClick={onCheckout} className="mt-6 w-full">Checkout <ChevronRight size={17} /></Button>}</aside>; }
 
 export function CheckoutPage() {
-  const { items, total, refresh } = useCart(); const { customer } = useAuth(); const { showToast } = useToast(); const navigate = useNavigate();
-  const [form, setForm] = useState({ name: customer?.Name ?? '', phone: customer?.Phone ?? '', email: customer?.Email ?? '', address: customer?.Address ?? '', promo: '', payment: 'cash' }); const [promo, setPromo] = useState<{ id?: number; discount: number; code: string } | null>(null); const [busy, setBusy] = useState(false); const [validation, setValidation] = useState<{ errors: string[]; out: string[]; deleted: string[]; prices: string[] } | null>(null);
-  const subtotal = total; const discount = promo?.discount ?? 0;
-  const applyPromo = async () => { if (!form.promo.trim()) return; try { const result = await apiClient.promotions.apply({ PromoCode: form.promo.trim(), TotalAmount: subtotal }); setPromo({ id: result.PromoId, discount: result.DiscountAmount, code: result.PromoCode }); showToast(`Promo ${result.PromoCode} applied.`); } catch (error) { setPromo(null); showToast(errorMessage(error, 'This promo code is not valid.'), 'error'); } };
-  const placeOrder = async (event: FormEvent) => { event.preventDefault(); if (!items.length) { navigate('/cart'); return; } setBusy(true); setValidation(null); try { const promoCode = promo?.code ?? (form.promo.trim() || null); const check = await apiClient.cart.validateCheckout({ PromoCode: promoCode }); if (!check.IsValid) { setValidation({ errors: check.Errors ?? [], out: (check.OutOfStockProducts ?? []).map(item => `${item.ProductName}: available ${item.AvailableQuantity}`), deleted: (check.DeletedProducts ?? []).map(item => item.ProductName), prices: (check.PriceChangedProducts ?? []).map(item => `${item.ProductName}: ${item.CartPrice} → ${item.CurrentPrice}`) }); setBusy(false); return; } const order = await apiClient.orders.checkout({ PromoId: promo?.id ?? null, PromoCode: promoCode, PaymentMethod: form.payment, CustomerName: form.name.trim(), CustomerPhone: form.phone.trim(), CustomerEmail: form.email.trim(), CustomerAddress: form.address.trim(), SelectedProductIds: items.map(item => item.ProductId) }); await refresh(); if (form.payment === 'vnpay') { const payment = await apiClient.payment.createVNPay({ OrderId: order.OrderId, Amount: order.TotalAmount ?? subtotal - discount, OrderInfo: `Payment for order #${order.OrderId}`, ReturnUrl: `${window.location.origin}/payment-result` }); if (!payment.Success || !payment.PaymentUrl) throw new Error(payment.Message || 'Could not create payment URL.'); window.location.assign(payment.PaymentUrl); return; } navigate(`/payment-result?success=true&orderId=${order.OrderId}&amount=${order.TotalAmount ?? subtotal - discount}`); } catch (error) { showToast(errorMessage(error, 'Could not place your order. Please try again.'), 'error'); } finally { setBusy(false); } };
-  if (!items.length) return <EmptyState title="Your cart is empty" body="Add groceries before checkout." action={<Button onClick={() => navigate('/products')}>Browse products</Button>} />;
-  return <div className="animate-float-in"><div className="mb-7"><p className="mb-1 text-xs font-bold uppercase tracking-[.16em] text-leaf">Almost there</p><h1 className="display text-3xl font-extrabold text-ink sm:text-4xl">Checkout</h1><p className="mt-2 text-sm text-muted">One simple step between your basket and your door.</p></div><form onSubmit={placeOrder} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]"><div className="space-y-5"><section className="rounded-3xl border border-line bg-white p-5 sm:p-7"><StepTitle number="1" title="Delivery information" /><div className="mt-5 grid gap-4 sm:grid-cols-2"><Field label="Name" value={form.name} onChange={value => setForm(current => ({ ...current, name: value }))} /><Field label="Phone" value={form.phone} onChange={value => setForm(current => ({ ...current, phone: value }))} /><Field label="Email" type="email" value={form.email} onChange={value => setForm(current => ({ ...current, email: value }))} /><Field label="Address" value={form.address} onChange={value => setForm(current => ({ ...current, address: value }))} className="sm:col-span-2" /></div></section><section className="rounded-3xl border border-line bg-white p-5 sm:p-7"><StepTitle number="2" title="Payment method" /><div className="mt-5 grid gap-3 sm:grid-cols-2"><PaymentOption value="cash" current={form.payment} onChange={value => setForm(current => ({ ...current, payment: value }))} title="Cash on delivery" body="Pay when your groceries arrive." icon={<Truck size={19} />} /><PaymentOption value="vnpay" current={form.payment} onChange={value => setForm(current => ({ ...current, payment: value }))} title="VNPay" body="Secure online payment." icon={<CreditCard size={19} />} /></div></section><section className="rounded-3xl border border-line bg-white p-5 sm:p-7"><StepTitle number="3" title="Promotion" /><div className="mt-5 flex gap-2"><input value={form.promo} onChange={event => setForm(current => ({ ...current, promo: event.target.value }))} placeholder="Enter promo code" className="h-11 min-w-0 flex-1 rounded-xl border border-line px-3 text-sm outline-none focus:border-leaf" /><Button type="button" variant="outline" onClick={() => void applyPromo()}>Apply</Button></div>{promo && <div className="mt-3 flex items-center justify-between rounded-xl bg-leaf-soft px-3 py-2 text-sm font-semibold text-leaf-dark"><span>✓ {promo.code} · You save <Money value={promo.discount} /></span><button type="button" onClick={() => setPromo(null)} aria-label="Remove promotion"><XCircle size={16} /></button></div>}</section>{validation && <ValidationNotice validation={validation} />}</div><div className="space-y-4"><OrderSummary subtotal={subtotal} discount={discount} disabled={busy} /><Button disabled={busy} className="fixed inset-x-4 bottom-20 z-20 h-12 w-[calc(100%-2rem)] shadow-lg lg:static lg:w-full">{busy ? 'Placing order…' : 'Place order'} <ChevronRight size={17} /></Button><p className="flex items-start gap-2 px-2 text-xs leading-5 text-muted"><ShieldCheck size={15} className="mt-0.5 shrink-0 text-leaf" /> Your details are sent securely to the customer API.</p></div></form></div>;
+  const { items, total, refresh } = useCart();
+  const { customer } = useAuth();
+  const { showToast } = useToast();
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
+    name: customer?.Name ?? "",
+    phone: customer?.Phone ?? "",
+    email: customer?.Email ?? "",
+    address: customer?.Address ?? "",
+    promo: "",
+    payment: "cash",
+  });
+  const [promo, setPromo] = useState<{ id?: number; discount: number; code: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [validation, setValidation] = useState<{ errors: string[]; out: string[]; deleted: string[]; prices: string[] } | null>(null);
+  const subtotal = total;
+  const discount = promo?.discount ?? 0;
+  const applyPromo = async () => {
+    if (!form.promo.trim()) return;
+    try {
+      const result = await apiClient.promotions.apply({ PromoCode: form.promo.trim(), TotalAmount: subtotal });
+      setPromo({ id: result.PromoId, discount: result.DiscountAmount, code: result.PromoCode });
+      showToast(t("checkout.promoApplied", { code: result.PromoCode }));
+    } catch (error) {
+      setPromo(null);
+      showToast(errorMessage(error, t("checkout.promoInvalid")), "error");
+    }
+  };
+  const placeOrder = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!items.length) {
+      navigate("/cart");
+      return;
+    }
+    setBusy(true);
+    setValidation(null);
+    try {
+      const promoCode = promo?.code ?? (form.promo.trim() || null);
+      const check = await apiClient.cart.validateCheckout({ PromoCode: promoCode });
+      if (!check.IsValid) {
+        setValidation({
+          errors: check.Errors ?? [],
+          out: (check.OutOfStockProducts ?? []).map((item) => `${item.ProductName}: chỉ còn ${item.AvailableQuantity}`),
+          deleted: (check.DeletedProducts ?? []).map((item) => item.ProductName),
+          prices: (check.PriceChangedProducts ?? []).map((item) => `${item.ProductName}: ${formatMoney(item.CartPrice)} → ${formatMoney(item.CurrentPrice)}`),
+        });
+        setBusy(false);
+        return;
+      }
+      const order = await apiClient.orders.checkout({
+        PromoId: promo?.id ?? null,
+        PromoCode: promoCode,
+        PaymentMethod: form.payment,
+        CustomerName: form.name.trim(),
+        CustomerPhone: form.phone.trim(),
+        CustomerEmail: form.email.trim(),
+        CustomerAddress: form.address.trim(),
+        SelectedProductIds: items.map((item) => item.ProductId),
+      } as import("../types").CheckoutRequest);
+      await refresh();
+      if (form.payment === "vnpay") {
+        const payment = await apiClient.payment.createVNPay({
+          OrderId: order.OrderId,
+          Amount: order.TotalAmount ?? subtotal - discount,
+          OrderInfo: `Thanh toán đơn hàng #${order.OrderId}`,
+          ReturnUrl: `${window.location.origin}/payment-result`,
+        });
+        if (!payment.Success || !payment.PaymentUrl) throw new Error(payment.Message || t("checkout.orderFailed"));
+        window.location.assign(payment.PaymentUrl);
+        return;
+      }
+      navigate(`/payment-result?success=true&orderId=${order.OrderId}&amount=${order.TotalAmount ?? subtotal - discount}`);
+    } catch (error) {
+      showToast(errorMessage(error, t("checkout.orderFailed")), "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+  if (!items.length)
+    return (
+      <EmptyState
+        title={t("cart.empty")}
+        body={t("cart.emptyGroceries")}
+        action={<Button onClick={() => navigate("/products")}>{t("orders.browseProducts")}</Button>}
+      />
+    );
+  return (
+    <div className="animate-float-in">
+      <form onSubmit={placeOrder} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-5">
+          <section className="rounded-3xl border border-line bg-white p-5 sm:p-7">
+            <StepTitle number="1" title={t("checkout.stepDelivery")} />
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <CheckoutField label={t("checkout.name")} value={form.name} onChange={(value) => setForm((current) => ({ ...current, name: value }))} />
+              <CheckoutField label={t("checkout.phone")} value={form.phone} onChange={(value) => setForm((current) => ({ ...current, phone: value }))} />
+              <CheckoutField label={t("checkout.email")} type="email" value={form.email} onChange={(value) => setForm((current) => ({ ...current, email: value }))} />
+              <CheckoutField label={t("checkout.address")} value={form.address} onChange={(value) => setForm((current) => ({ ...current, address: value }))} className="sm:col-span-2" />
+            </div>
+          </section>
+          <section className="rounded-3xl border border-line bg-white p-5 sm:p-7">
+            <StepTitle number="2" title={t("checkout.stepPayment")} />
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <PaymentOption value="cash" current={form.payment} onChange={(value) => setForm((current) => ({ ...current, payment: value }))} title={t("checkout.cashTitle")} body={t("checkout.cashBody")} icon={<Truck size={19} />} />
+              <PaymentOption value="vnpay" current={form.payment} onChange={(value) => setForm((current) => ({ ...current, payment: value }))} title="VNPay" body={t("checkout.vnpayBody")} icon={<CreditCard size={19} />} />
+            </div>
+          </section>
+          <section className="rounded-3xl border border-line bg-white p-5 sm:p-7">
+            <StepTitle number="3" title={t("checkout.stepPromotion")} />
+            <div className="mt-5 flex gap-2">
+              <input
+                value={form.promo}
+                onChange={(event) => setForm((current) => ({ ...current, promo: event.target.value }))}
+                placeholder={t("cart.promoPlaceholder")}
+                className="h-11 min-w-0 flex-1 rounded-xl border border-line px-3 text-sm outline-none focus:border-leaf focus:ring-4 focus:ring-[#e3f2e7]"
+              />
+              <Button type="button" variant="outline" onClick={() => void applyPromo()}>
+                {t("cart.apply")}
+              </Button>
+            </div>
+            {promo && (
+              <div className="mt-3 flex items-center justify-between rounded-xl bg-leaf-soft px-3 py-2 text-sm font-semibold text-leaf-dark">
+                <span>✓ {promo.code} · Bạn tiết kiệm <Money value={promo.discount} /></span>
+                <button type="button" onClick={() => setPromo(null)} aria-label={t("cart.removePromotion")}>
+                  <XCircle size={16} />
+                </button>
+              </div>
+            )}
+          </section>
+          {validation && <ValidationNotice validation={validation} />}
+        </div>
+        <div className="space-y-4">
+          <div className="rounded-3xl border border-line bg-white p-5">
+            <h2 className="display text-lg font-extrabold text-ink">{t("checkout.orderSummary")}</h2>
+            <div className="mt-4 space-y-2">
+              {items.map((line) => (
+                <div key={line.CartItemId ?? line.ProductId} className="flex justify-between gap-3 text-sm">
+                  <span className="min-w-0 flex-1 truncate text-muted">{line.Product ? productName(line.Product) : `Sản phẩm #${line.ProductId}`} × {line.Quantity}</span>
+                  <Money value={line.Subtotal ?? line.Price * line.Quantity} className="font-semibold text-ink" />
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 space-y-1.5 border-t border-line pt-4 text-sm">
+              <div className="flex justify-between text-muted"><span>{t("cart.subtotal")}</span><Money value={subtotal} /></div>
+              {discount > 0 && <div className="flex justify-between text-leaf"><span>{t("cart.discount")}</span><span>-<Money value={discount} /></span></div>}
+              <div className="flex justify-between text-base font-extrabold text-ink"><span>{t("cart.total")}</span><Money value={subtotal - discount} /></div>
+            </div>
+          </div>
+          <Button disabled={busy} className="h-12 w-full">
+            {busy ? t("checkout.placing") : t("checkout.placeOrder")} <ChevronRight size={17} />
+          </Button>
+          <p className="flex items-start gap-2 px-2 text-xs leading-5 text-muted">
+            <ShieldCheck size={15} className="mt-0.5 shrink-0 text-leaf" /> {t("checkout.detailsSecure")}
+          </p>
+        </div>
+      </form>
+    </div>
+  );
 }
 
-function StepTitle({ number, title }: { number: string; title: string }) { return <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-sm font-bold text-white">{number}</span><h2 className="display text-xl font-extrabold text-ink">{title}</h2></div>; }
-function PaymentOption({ value, current, onChange, title, body, icon }: { value: string; current: string; onChange: (value: string) => void; title: string; body: string; icon: ReactNode }) { return <label className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-4 transition ${current === value ? 'border-leaf bg-leaf-soft' : 'border-line hover:border-leaf/50'}`}><input type="radio" name="payment" checked={current === value} onChange={() => onChange(value)} className="accent-[#247448]" /><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-leaf">{icon}</span><span><span className="block text-sm font-bold text-ink">{title}</span><span className="block text-xs text-muted">{body}</span></span></label>; }
-function ValidationNotice({ validation }: { validation: { errors: string[]; out: string[]; deleted: string[]; prices: string[] } }) { return <div className="rounded-2xl border border-[#f1d69d] bg-[#fff9e9] p-4 text-sm"><p className="font-bold text-warning">Please review your cart before placing the order.</p>{validation.out.map(item => <p key={item} className="mt-2 text-warning">⚠ Stock changed: {item}</p>)}{validation.deleted.map(item => <p key={item} className="mt-2 text-danger">Product unavailable: {item}</p>)}{validation.prices.map(item => <p key={item} className="mt-2 text-warning">Price updated: {item}</p>)}{validation.errors.map(item => <p key={item} className="mt-2 text-muted">{item}</p>)}</div>; }
-function Field({ label, type = 'text', value, onChange, className = '' }: { label: string; type?: string; value: string; onChange: (value: string) => void; className?: string }) { return <label className={`block ${className}`}><span className="mb-1.5 block text-sm font-semibold text-ink">{label}</span><input required type={type} value={value} onChange={event => onChange(event.target.value)} className="h-11 w-full rounded-xl border border-line px-3 text-sm outline-none focus:border-leaf focus:ring-4 focus:ring-[#e3f2e7]" /></label>; }
+function StepTitle({ number, title }: { number: string; title: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-sm font-bold text-white">{number}</span>
+      <h2 className="display text-xl font-extrabold text-ink">{title}</h2>
+    </div>
+  );
+}
 
-export function PaymentResultPage() { const params = new URLSearchParams(useLocation().search); const success = params.get('success') === 'true'; const orderId = params.get('orderId'); const amount = Number(params.get('amount') ?? 0); return <div className="mx-auto max-w-xl py-8 text-center animate-float-in"><div className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full ${success ? 'bg-leaf-soft text-leaf' : 'bg-red-50 text-danger'}`}>{success ? <Check size={38} /> : <XCircle size={38} />}</div><h1 className="display mt-6 text-3xl font-extrabold text-ink">{success ? 'Payment successful' : 'Payment unsuccessful'}</h1><p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-muted">{success ? 'Your order has been confirmed and is now being prepared.' : 'Your order has not been paid. You can review it and try again.'}</p>{orderId && <div className="mx-auto mt-7 max-w-xs rounded-2xl border border-line bg-white p-4 text-sm"><div className="flex justify-between text-muted"><span>Order</span><strong className="text-ink">#{orderId}</strong></div>{amount > 0 && <div className="mt-2 flex justify-between text-muted"><span>Amount</span><Money value={amount} className="font-bold text-ink" /></div>}</div>}<div className="mt-8 flex flex-wrap justify-center gap-3"><Link to={orderId ? `/account/orders/${orderId}` : '/account/orders'}><Button>{success ? 'View order' : 'Review order'}</Button></Link><Link to="/products"><Button variant="outline">Continue shopping</Button></Link></div></div>; }
+function PaymentOption({ value, current, onChange, title, body, icon }: { value: string; current: string; onChange: (value: string) => void; title: string; body: string; icon: ReactNode }) {
+  return (
+    <label className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-4 transition ${current === value ? "border-leaf bg-leaf-soft" : "border-line hover:border-leaf/50"}`}>
+      <input type="radio" name="payment" checked={current === value} onChange={() => onChange(value)} className="accent-[#247448]" />
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-leaf">{icon}</span>
+      <span>
+        <span className="block text-sm font-bold text-ink">{title}</span>
+        <span className="block text-xs text-muted">{body}</span>
+      </span>
+    </label>
+  );
+}
 
-const statuses = ['all', 'pending', 'processing', 'shipping', 'delivered', 'completed'];
-export function OrdersPage() { const navigate = useNavigate(); const [status, setStatus] = useState('all'); const query = useOrders(status === 'all' ? undefined : status); const orders = query.data?.Items ?? []; return <div className="animate-float-in"><AccountIntro title="My orders" body="Track every grocery run in one place." /><div className="hide-scrollbar mb-6 flex gap-2 overflow-x-auto">{statuses.map(item => <button key={item} onClick={() => setStatus(item)} className={`rounded-full px-4 py-2 text-sm font-semibold capitalize ${status === item ? 'bg-ink text-white' : 'border border-line bg-white text-muted'}`}>{item}</button>)}</div>{query.isLoading ? <div className="space-y-3">{Array.from({ length: 3 }, (_, index) => <div key={index} className="skeleton h-36 rounded-3xl" />)}</div> : query.isError ? <ErrorState onRetry={() => void query.refetch()} /> : orders.length ? <div className="grid gap-4">{orders.map(order => <OrderCard key={order.OrderId} order={order} onClick={() => navigate(`/account/orders/${order.OrderId}`)} />)}</div> : <EmptyState icon={<Package />} title="No orders yet" body="Your next grocery run will show up here." action={<Button onClick={() => navigate('/products')}>Browse products</Button>} />}</div>; }
+function ValidationNotice({ validation }: { validation: { errors: string[]; out: string[]; deleted: string[]; prices: string[] } }) {
+  return (
+    <div className="rounded-2xl border border-[#f1d69d] bg-[#fff9e9] p-4 text-sm">
+      <p className="font-bold text-warning">{t("checkout.reviewBody")}</p>
+      {validation.out.map((item) => <p key={item} className="mt-2 text-warning">⚠ Hàng đã thay đổi: {item}</p>)}
+      {validation.deleted.map((item) => <p key={item} className="mt-2 text-danger">Sản phẩm không còn bán: {item}</p>)}
+      {validation.prices.map((item) => <p key={item} className="mt-2 text-warning">Giá đã cập nhật: {item}</p>)}
+      {validation.errors.map((item) => <p key={item} className="mt-2 text-muted">{item}</p>)}
+    </div>
+  );
+}
 
-function OrderCard({ order, onClick }: { order: OrderDto; onClick: () => void }) { return <button onClick={onClick} className="w-full rounded-3xl border border-line bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-leaf hover:shadow-sm sm:p-6"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-sm font-extrabold text-ink">Order #{order.OrderId}</p><p className="mt-1 text-xs text-muted">{formatDate(order.OrderDate)}</p></div><StatusPill status={order.OrderStatus ?? order.PayStatus ?? 'pending'} /></div><div className="mt-5 flex items-end justify-between gap-3"><div className="flex -space-x-2">{(order.OrderItems ?? []).slice(0, 4).map((item, index) => <div key={item.OrderItemId ?? index} className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border-2 border-white bg-[#eef4ef] text-xs font-bold text-muted"><span>{(item.Product?.ProductName ?? 'P').slice(0, 1)}</span></div>)}</div><div className="text-right"><p className="text-xs text-muted">Total</p><Money value={order.TotalAmount} className="text-base font-extrabold text-ink" /></div></div></button>; }
+function CheckoutField({ label, type = "text", value, onChange, className = "" }: { label: string; type?: string; value: string; onChange: (value: string) => void; className?: string }) {
+  return (
+    <label className={`block ${className}`}>
+      <span className="mb-1.5 block text-sm font-semibold text-ink">{label}</span>
+      <input required type={type} value={value} onChange={(event) => onChange(event.target.value)} className="h-11 w-full rounded-xl border border-line px-3 text-sm outline-none focus:border-leaf focus:ring-4 focus:ring-[#e3f2e7]" />
+    </label>
+  );
+}
 
-function StatusPill({ status }: { status: string }) { const normalized = status.toLowerCase(); const style = ['completed', 'delivered', 'paid'].includes(normalized) ? 'bg-leaf-soft text-leaf-dark' : ['canceled', 'cancelled', 'failed'].includes(normalized) ? 'bg-red-50 text-danger' : 'bg-[#fff5dc] text-warning'; return <span className={`rounded-full px-3 py-1 text-xs font-bold capitalize ${style}`}>{status}</span>; }
+export function OrdersPage() {
+  const { data, isLoading, isError, refetch } = useOrders();
+  const orders = data?.Items ?? [];
+  const [selectedOrder, setSelectedOrder] = useState<number | null>(null);
+  const orderQuery = useOrder(selectedOrder ?? undefined);
+  const { showToast } = useToast();
+  const navigate = useNavigate();
+  const cancelOrder = async () => {
+    if (!selectedOrder) return;
+    try {
+      await apiClient.orders.cancel(selectedOrder);
+      showToast(t("orders.orderCanceled"));
+      setSelectedOrder(null);
+      await refetch();
+    } catch {
+      showToast(t("orders.cannotCancel"), "error");
+    }
+  };
+  if (isLoading) return <div className="skeleton h-64 rounded-3xl" />;
+  if (isError) return <ErrorStateWithRetry onRetry={() => void refetch()} />;
+  return (
+    <div className="animate-float-in space-y-6">
+      <h1 className="display text-3xl font-extrabold text-ink">{t("orders.title")}</h1>
+      {orders.length === 0 ? (
+        <EmptyState icon={<ShoppingCart size={28} />} title={t("orders.noOrders")} body={t("orders.noOrdersBody")} action={<Button onClick={() => navigate("/products")}>{t("orders.browseProducts")}</Button>} />
+      ) : (
+        <div className="space-y-3">
+          {orders.map((order) => (
+            <div key={order.OrderId} className="rounded-2xl border border-line bg-white p-4">
+              <div className="flex justify-between items-start gap-4">
+                <div>
+                  <p className="font-bold text-ink">{t("orders.order")} #{order.OrderId}</p>
+                  <p className="text-xs text-muted">{t("orders.placed", { date: new Date(order.OrderDate ?? "").toLocaleDateString("vi-VN") })}</p>
+                  <p className="text-xs text-muted">{order.OrderStatus}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setSelectedOrder(order.OrderId)} className="text-xs">{t("orders.orderDetails")}</Button>
+                  <Button variant="danger" onClick={cancelOrder} disabled={order.OrderStatus !== "Pending" && order.OrderStatus !== "Paid"} className="text-xs">{t("orders.cancelOrder")}</Button>
+                </div>
+              </div>
+              {selectedOrder === order.OrderId && (
+                <div className="mt-4 space-y-2">
+                  {orderQuery.data?.OrderItems.map((item) => (
+                    <div key={item.OrderItemId} className="flex justify-between text-sm">
+                      <span>{item.Product ? productName(item.Product) : `Sản phẩm #${item.ProductId}`} × {item.Quantity}</span>
+                      <Money value={item.Price * item.Quantity} />
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-lg font-bold text-ink">
+                    <span>{t("cart.total")}</span>
+                    <Money value={order.TotalAmount ?? 0} />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
-export function OrderDetailPage() { const { id } = useParams(); const orderId = Number(id); const query = useOrder(orderId); const { showToast } = useToast(); const queryClient = useQueryClient(); const [canceling, setCanceling] = useState(false); const [refundOpen, setRefundOpen] = useState(false); const order = query.data; const canCancel = order && !['processing', 'shipping', 'delivered', 'completed', 'canceled', 'cancelled'].includes((order.OrderStatus ?? '').toLowerCase()); const download = async () => { try { const blob = await apiClient.orders.invoice(orderId); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = `GreenBasket-order-${orderId}.pdf`; anchor.click(); URL.revokeObjectURL(url); } catch (error) { showToast(errorMessage(error, 'Could not download invoice.'), 'error'); } }; const cancel = async () => { setCanceling(true); try { await apiClient.orders.cancel(orderId); showToast('Order canceled.'); await queryClient.invalidateQueries({ queryKey: ['order', orderId] }); await queryClient.invalidateQueries({ queryKey: ['orders'] }); } catch (error) { showToast(errorMessage(error, 'This order cannot be canceled.'), 'error'); } finally { setCanceling(false); } }; if (query.isLoading) return <div className="skeleton h-96 rounded-3xl" />; if (query.isError || !order) return <ErrorState message="Order not found." onRetry={() => void query.refetch()} />; return <div className="mx-auto max-w-4xl animate-float-in"><Link to="/account/orders" className="mb-5 inline-flex items-center gap-1 text-sm font-bold text-muted hover:text-leaf">← Back to orders</Link><div className="mb-6 flex flex-wrap items-end justify-between gap-4"><div><p className="mb-1 text-xs font-bold uppercase tracking-[.16em] text-leaf">Order details</p><h1 className="display text-3xl font-extrabold text-ink">Order #{order.OrderId}</h1><p className="mt-2 text-sm text-muted">Placed {formatDate(order.OrderDate)}</p></div><StatusPill status={order.OrderStatus ?? order.PayStatus ?? 'pending'} /></div><div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_310px]"><div className="space-y-5"><section className="rounded-3xl border border-line bg-white p-5 sm:p-7"><h2 className="display text-xl font-extrabold">Order progress</h2><OrderTimeline status={order.OrderStatus ?? 'pending'} /></section><section className="rounded-3xl border border-line bg-white p-5 sm:p-7"><h2 className="display text-xl font-extrabold">Items</h2><div className="mt-4 divide-y divide-line">{(order.OrderItems ?? []).map((item, index) => <div key={item.OrderItemId ?? index} className="flex items-center gap-3 py-3"><div className="h-14 w-14 overflow-hidden rounded-xl bg-[#f2f6f2]">{item.Product ? <ProductImage product={item.Product} className="h-full w-full p-1" /> : <div />}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{item.Product?.ProductName ?? `Product #${item.ProductId}`}</p><p className="mt-1 text-xs text-muted">{item.Quantity} × <Money value={item.Price} /></p></div><Money value={item.Subtotal ?? item.Price * item.Quantity} className="text-sm font-extrabold" /></div>)}</div></section><section className="rounded-3xl border border-line bg-white p-5 sm:p-7"><div className="flex items-center gap-2"><MapPin size={18} className="text-leaf" /><h2 className="display text-xl font-extrabold">Delivery</h2></div><div className="mt-4 grid gap-2 text-sm"><p className="font-bold">{order.Name ?? '—'}</p><p className="text-muted">{order.Phone ?? '—'} · {order.Email ?? '—'}</p><p className="text-muted">{order.Address ?? '—'}</p></div></section></div><aside className="h-fit space-y-4 lg:sticky lg:top-32"><OrderSummary subtotal={order.TotalAmount ?? 0} discount={order.DiscountAmount ?? 0} /><div className="rounded-3xl border border-line bg-white p-5"><Button variant="outline" onClick={() => void download()} className="w-full"><Download size={16} /> Download invoice</Button>{canCancel && <Button variant="danger" disabled={canceling} onClick={() => void cancel()} className="mt-2 w-full"><XCircle size={16} /> {canceling ? 'Canceling…' : 'Cancel order'}</Button>}{['delivered', 'completed'].includes((order.OrderStatus ?? '').toLowerCase()) && <Button variant="soft" onClick={() => setRefundOpen(true)} className="mt-2 w-full"><RefreshCw size={16} /> Request refund</Button>}</div></aside></div>{refundOpen && <RefundDialog order={order} onClose={() => setRefundOpen(false)} onSuccess={() => { setRefundOpen(false); showToast('Refund request submitted.'); }} />}</div>; }
+export function OrderDetailPage() {
+  const { id } = useParams() as { id?: string };
+  const orderId = Number(id);
+  const { data: order, isLoading: orderLoading, isError: orderError, refetch: refetchOrder } = useOrder(orderId);
+  const { data: orderItems = [], isLoading: itemsLoading, isError: itemsError, refetch: refetchItems } = useQuery({
+    queryKey: ["order-items", orderId],
+    queryFn: () => apiClient.orders.items(orderId),
+    staleTime: 30_000,
+    enabled: Number.isInteger(orderId) && orderId > 0,
+  });
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const refund = async () => {
+    try {
+      await apiClient.refunds.create({ OrderId: orderId, Reason: "Yêu cầu hoàn tiền", RefundAmount: order?.TotalAmount ?? 0 });
+      showToast(t("refund.submitted"));
+      navigate("/account/refunds");
+    } catch {
+      showToast(t("refund.submitFailed"), "error");
+    }
+  };
+  if (orderLoading || itemsLoading) return <div className="skeleton h-96 rounded-3xl" />;
+  if (orderError || itemsError) return <ErrorStateWithRetry message={t("orders.notFound")} onRetry={() => { void refetchOrder(); void refetchItems(); }} />;
+  if (!order) return null;
+  return (
+    <div className="animate-float-in space-y-6">
+      <Link to="/account/orders" className="inline-flex items-center gap-1 text-sm font-bold text-leaf hover:text-leaf-dark"><ChevronLeft size={16} /> {t("orders.backToOrders")}</Link>
+      <h1 className="display text-3xl font-extrabold text-ink">{t("orders.orderDetails")} #{orderId}</h1>
+      <dl className="rounded-2xl border border-line bg-white p-4 grid gap-2 text-sm">
+        <div className="flex justify-between"><dt className="text-muted">{t("orders.orderProgress")}</dt><dd className="font-bold text-ink">{order.OrderStatus ?? "—"}</dd></div>
+        <div className="flex justify-between"><dt className="text-muted">{t("checkout.deliveryAddress")}</dt><dd>{order.Address ?? "—"}</dd></div>
+        <div className="flex justify-between"><dt className="text-muted">{t("cart.total")}</dt><dd className="font-extrabold text-ink"><Money value={order.TotalAmount ?? 0} /></dd></div>
+      </dl>
+      <div className="rounded-2xl border border-line bg-white p-4">
+        <h2 className="mb-3 text-lg font-bold text-ink">{t("checkout.items")}</h2>
+        {orderItems.map((item) => (
+          <div key={item.OrderItemId} className="flex justify-between gap-3 rounded-xl border border-line bg-[#f7faf7] p-3">
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-ink">{item.Product ? productName(item.Product) : `Sản phẩm #${item.ProductId}`}</p>
+              <p className="text-xs text-muted">{item.Unit ? `${item.Quantity} ${item.Unit}` : ""}</p>
+            </div>
+            <Money value={item.Price * item.Quantity} className="font-extrabold text-ink" />
+          </div>
+        ))}
+        <div className="mt-3 flex justify-between text-lg font-extrabold text-ink">
+          <span>{t("cart.total")}</span>
+          <Money value={order.TotalAmount ?? 0} />
+        </div>
+      </div>
+      <Button variant="danger" onClick={refund} disabled={order.OrderStatus !== "Delivered"} className="w-full">
+        <RefreshCw size={17} /> {t("orders.requestRefund")}
+      </Button>
+    </div>
+  );
+}
 
-function OrderTimeline({ status }: { status: string }) { const steps = ['pending', 'confirmed', 'processing', 'shipping', 'delivered', 'completed']; const current = Math.max(0, steps.indexOf(status.toLowerCase())); return <div className="mt-6 grid grid-cols-3 gap-y-5 sm:grid-cols-6">{steps.map((step, index) => <div key={step} className="relative text-center"><span className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${index <= current ? 'bg-leaf text-white' : 'bg-[#eef3ee] text-muted'}`}>{index <= current ? <Check size={14} /> : index + 1}</span><span className={`mt-2 block text-[10px] font-bold capitalize ${index <= current ? 'text-leaf-dark' : 'text-muted'}`}>{step}</span>{index < steps.length - 1 && <span className={`absolute left-[calc(50%+17px)] right-[-50%] top-4 hidden h-px sm:block ${index < current ? 'bg-leaf' : 'bg-line'}`} />}</div>)}</div>; }
+export function RefundRequestPage() {
+  const { id } = useParams() as { id?: string };
+  const orderId = Number(id);
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const [form, setForm] = useState({ Reason: "", CustomerBankName: "", CustomerBankAccount: "", CustomerAccountHolder: "", RefundAmount: 0 });
+  const [busy, setBusy] = useState(false);
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!form.Reason || !form.CustomerBankName || !form.CustomerBankAccount || !form.CustomerAccountHolder) {
+      showToast(t("refund.submitFailed"), "error");
+      return;
+    }
+    setBusy(true);
+    try {
+      await apiClient.refunds.create({
+        OrderId: orderId,
+        Reason: form.Reason,
+        CustomerBankName: form.CustomerBankName,
+        CustomerBankAccount: form.CustomerBankAccount,
+        CustomerAccountHolder: form.CustomerAccountHolder,
+        RefundAmount: form.RefundAmount,
+      } as import("../types").CreateRefundRequest);
+      showToast(t("refund.submitted"));
+      navigate("/account/refunds");
+    } catch {
+      showToast(t("refund.submitFailed"), "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="animate-float-in space-y-6 max-w-xl">
+      <Link to={`/products/${orderId}`} className="inline-flex items-center gap-1 text-sm font-bold text-leaf hover:text-leaf-dark"><ChevronLeft size={16} /> {t("catalog.backToShopping")}</Link>
+      <h1 className="display text-3xl font-extrabold text-ink">{t("refund.title")}</h1>
+      <form onSubmit={submit} className="space-y-4 rounded-2xl border border-line bg-white p-4">
+        <input value={form.RefundAmount} onChange={(e) => setForm((f) => ({ ...f, RefundAmount: Number(e.target.value) }))} type="number" placeholder={t("refund.amount")} className="h-12 w-full rounded-xl border border-line px-3.5 text-sm outline-none focus:border-leaf focus:ring-4 focus:ring-[#e3f2e7]" />
+        <input value={form.Reason} onChange={(e) => setForm((f) => ({ ...f, Reason: e.target.value }))} placeholder={t("refund.reason")} className="h-12 w-full rounded-xl border border-line px-3.5 text-sm outline-none focus:border-leaf focus:ring-4 focus:ring-[#e3f2e7]" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <input value={form.CustomerBankName} onChange={(e) => setForm((f) => ({ ...f, CustomerBankName: e.target.value }))} placeholder={t("refund.bank")} className="h-12 w-full rounded-xl border border-line px-3.5 text-sm outline-none focus:border-leaf focus:ring-4 focus:ring-[#e3f2e7]" />
+          <input value={form.CustomerBankAccount} onChange={(e) => setForm((f) => ({ ...f, CustomerBankAccount: e.target.value }))} placeholder={t("refund.accountNumber")} className="h-12 w-full rounded-xl border border-line px-3.5 text-sm outline-none focus:border-leaf focus:ring-4 focus:ring-[#e3f2e7]" />
+        </div>
+        <input value={form.CustomerAccountHolder} onChange={(e) => setForm((f) => ({ ...f, CustomerAccountHolder: e.target.value }))} placeholder={t("refund.accountHolder")} className="h-12 w-full rounded-xl border border-line px-3.5 text-sm outline-none focus:border-leaf focus:ring-4 focus:ring-[#e3f2e7]" />
+        <Button type="submit" disabled={busy} className="w-full h-12">{busy ? t("refund.submitting") : t("refund.submit")}</Button>
+      </form>
+    </div>
+  );
+}
 
-function RefundDialog({ order, onClose, onSuccess }: { order: OrderDto; onClose: () => void; onSuccess: () => void }) { const { showToast } = useToast(); const [form, setForm] = useState({ amount: String(order.TotalAmount ?? 0), reason: '', bank: '', account: '', holder: '' }); const [busy, setBusy] = useState(false); const submit = async (event: FormEvent) => { event.preventDefault(); setBusy(true); try { await apiClient.refunds.create({ OrderId: order.OrderId, RefundAmount: Number(form.amount), Reason: form.reason, CustomerBankName: form.bank, CustomerBankAccount: form.account, CustomerAccountHolder: form.holder }); onSuccess(); } catch (error) { showToast(errorMessage(error, 'Could not submit refund request.'), 'error'); } finally { setBusy(false); } }; return <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/30 p-0 sm:items-center sm:p-4"><div className="w-full max-w-lg rounded-t-3xl bg-white p-6 sm:rounded-3xl"><div className="flex items-center justify-between"><h2 className="display text-xl font-extrabold">Request refund</h2><button onClick={onClose} aria-label="Close"><XCircle size={20} className="text-muted" /></button></div><form onSubmit={submit} className="mt-5 space-y-4"><Field label="Refund amount" type="number" value={form.amount} onChange={value => setForm(current => ({ ...current, amount: value }))} /><Field label="Reason" value={form.reason} onChange={value => setForm(current => ({ ...current, reason: value }))} /><div className="grid gap-4 sm:grid-cols-2"><Field label="Bank" value={form.bank} onChange={value => setForm(current => ({ ...current, bank: value }))} /><Field label="Account number" value={form.account} onChange={value => setForm(current => ({ ...current, account: value }))} /><Field label="Account holder" value={form.holder} onChange={value => setForm(current => ({ ...current, holder: value }))} className="sm:col-span-2" /></div><div className="flex justify-end gap-2 pt-2"><Button type="button" variant="ghost" onClick={onClose}>Cancel</Button><Button disabled={busy}>{busy ? 'Submitting…' : 'Submit request'}</Button></div></form></div></div>; }
+export function PaymentResultPage() {
+  const search = new URLSearchParams(location.search);
+  const status = search.get("status");
+  const success = status === "success" || status === "paid";
+  const navigate = useNavigate();
+  return (
+    <div className="animate-float-in flex min-h-[60vh] items-center justify-center">
+      <div className="rounded-3xl border border-line bg-white p-8 text-center shadow-[0_20px_60px_rgba(32,62,42,.08)] sm:p-12">
+        <span className={`inline-flex h-16 w-16 items-center justify-center rounded-full ${success ? "bg-leaf-soft text-leaf" : "bg-red-50 text-danger"}`}>
+          {success ? <Check size={32} /> : <XCircle size={32} />}
+        </span>
+        <h1 className="mt-6 display text-3xl font-extrabold text-ink">{success ? t("payment.successTitle") : t("payment.failTitle")}</h1>
+        <p className="mt-3 max-w-sm text-sm leading-6 text-muted">{success ? t("payment.successBody") : t("payment.failBody")}</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Button onClick={() => navigate("/account/orders")}>{t("payment.viewOrder")}</Button>
+          <Button variant="outline" onClick={() => navigate("/products")}>{t("home.shopAll")}</Button>
+        </div>
+      </div>
+    </div>
+  );
+}

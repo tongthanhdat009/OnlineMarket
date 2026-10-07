@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -10,6 +9,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../api";
 import { errorMessage, normalizeError } from "../lib";
+import { translator } from "../lib/translator";
 import {
   clearStoredSession,
   getStoredCustomer,
@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  useEffect(() => {
+  useMemo(() => {
     void refresh();
   }, [refresh]);
   const login = useCallback(async (request: LoginRequest) => {
@@ -194,7 +194,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   }, [isAuthenticated, logout]);
-  useEffect(() => {
+  useMemo(() => {
     void refresh();
   }, [refresh]);
   const invalidate = useCallback(async () => {
@@ -287,5 +287,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
 export function useCart() {
   const value = useContext(CartContext);
   if (!value) throw new Error("useCart must be used inside CartProvider");
+  return value;
+}
+
+type LocaleContextValue = {
+  locale: "vi";
+  setLocale: (locale: "vi") => void;
+  t: (key: string, vars?: Record<string, string | number | null | undefined>) => string;
+};
+const LocaleContext = createContext<LocaleContextValue | null>(null);
+
+export function LocaleProvider({ children }: { children: ReactNode }) {
+  const [locale] = useState<"vi">("vi");
+  const setLocale = useCallback((_: "vi") => {}, []);
+  const t = useCallback(
+    (key: string, vars?: Record<string, string | number | null | undefined>) =>
+      translator(key, vars),
+    [],
+  );
+  const value = useMemo(
+    () => ({ locale, setLocale, t }),
+    [locale, setLocale, t],
+  );
+  return (
+    <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
+  );
+}
+
+export function useLocale() {
+  const value = useContext(LocaleContext);
+  if (!value) throw new Error("useLocale must be used inside LocaleProvider");
   return value;
 }
