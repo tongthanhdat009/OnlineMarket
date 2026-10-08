@@ -130,6 +130,7 @@ builder.Services.AddSingleton<IAgentActivityBroadcaster, AgentActivityBroadcaste
 builder.Services.AddScoped<IAgentRuntime, AgentRuntime>();
 builder.Services.AddScoped<IAgentOperationsService, AgentOperationsService>();
 builder.Services.AddScoped<IAgentReportService, AgentReportService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 // 🔹 Đăng ký AWS S3 Service
 var awsAccessKey = GetSetting(builder.Configuration, "AWS:AccessKey", "AWS_ACCESS_KEY_ID");
@@ -201,6 +202,9 @@ app.UseCors("AllowFrontendApps");
 // ✅ 8. 🔐 Kích hoạt Authentication và Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// 📝 Ghi nhật ký audit cho mọi API thay đổi dữ liệu thành công
+app.UseMiddleware<dotnet_backend.Middleware.AuditLogMiddleware>();
 
 app.MapControllers();
 

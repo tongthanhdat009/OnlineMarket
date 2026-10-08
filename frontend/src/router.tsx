@@ -12,11 +12,11 @@ function AuthenticatedShell() {
     if (!auth.loading && !user) navigate('/login', { replace: true });
   }, [auth.loading, user, navigate]);
   if (auth.loading || !user) {
-    return <div className="flex min-h-screen items-center justify-center bg-canvas"><div className="h-9 w-9 animate-spin rounded-full border-2 border-zinc-300 border-t-indigo-600" aria-label="Loading session" /></div>;
+    return <div className="flex min-h-screen items-center justify-center bg-canvas"><div className="h-9 w-9 animate-spin rounded-full border-2 border-zinc-300 border-t-indigo-600" aria-label="Đang tải phiên" /></div>;
   }
   return <AppShell
     permissions={user?.Permissions}
-    user={{ name: user.FullName ?? user.Username, email: user.Username, role: String(user.Role ?? 'Administrator') }}
+    user={{ name: user.FullName ?? user.Username, email: user.Username, role: user.Role === 1 ? 'Quản trị viên' : user.Role === 2 ? 'Quản lý' : user.Role === 3 ? 'Nhân viên' : 'Quản trị' }}
     onSignOut={auth.logout}
   />;
 }
@@ -36,7 +36,8 @@ function page(name: string) {
   }
   if (name.startsWith('ai-')) return <pages.AiPage page={name.slice(3).replace('-detail', '')} />;
   if (name.startsWith('admin-')) return <pages.AdminPage page={name.slice(6)} />;
-  return <PlaceholderPage title="Page not found" />;
+  if (name === 'audit-log') return <pages.AuditLogPage />;
+  return <PlaceholderPage title="Không tìm thấy trang" />;
 }
 
 export const router = createBrowserRouter([
@@ -71,6 +72,7 @@ export const router = createBrowserRouter([
       { path: 'admin/users', element: page('admin-users') },
       { path: 'admin/roles', element: page('admin-roles') },
       { path: 'admin/permissions', element: page('admin-permissions') },
+      { path: 'audit-log', element: page('audit-log') },
       { path: '*', element: page('not-found') },
     ],
   },

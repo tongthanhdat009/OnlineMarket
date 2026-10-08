@@ -72,7 +72,7 @@ public sealed class AdminChatSessionService : IAdminChatSessionService
             Summary = session.Summary,
             SummaryMessageCount = session.SummaryMessageCount,
             History = session.Messages.OrderBy(x => x.AdminChatMessageId).TakeLast(MaxHistoryMessages)
-                .Select(x => new ChatMessageDto { Role = x.Role, Content = x.Content }).ToList()
+                .Select(x => new ChatMessageDto { Role = x.Role, Content = x.Content, CreatedAt = x.CreatedAt }).ToList()
         };
     }
 
@@ -110,6 +110,6 @@ public sealed class AdminChatSessionService : IAdminChatSessionService
         SummaryMessageCount = session.SummaryMessageCount,
         CreatedAt = session.CreatedAt,
         UpdatedAt = session.UpdatedAt,
-        Messages = messages?.Select(x => new ChatMessageDto { Role = x.Role, Content = x.Content }).ToList() ?? new()
+        Messages = messages?.Select(x => new ChatMessageDto { Role = x.Role, Content = x.Content, CreatedAt = x.CreatedAt }).ToList() ?? new()
     };
 }

@@ -7,7 +7,7 @@ export interface AdminChatSession {
   SummaryMessageCount: number;
   CreatedAt: string;
   UpdatedAt: string;
-  Messages: Array<{ Role: string; Content: string }>;
+  Messages: Array<{ Role: string; Content: string; CreatedAt?: string | null }>;
 }
 
 export interface AdminChatEvent {

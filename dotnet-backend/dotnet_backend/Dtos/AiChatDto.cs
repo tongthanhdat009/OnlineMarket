@@ -40,6 +40,11 @@ namespace dotnet_backend.Dtos
         /// Nội dung tin nhắn
         /// </summary>
         public string Content { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Thời điểm tạo (nếu nguồn có) — dùng cho timeline giám sát agent.
+        /// </summary>
+        public DateTime? CreatedAt { get; set; }
     }
 
     /// <summary>

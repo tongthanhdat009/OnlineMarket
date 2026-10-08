@@ -108,10 +108,6 @@ public class UserService : IUserService
         {
             throw new ArgumentException("Username là bắt buộc");
         }
-        if (string.IsNullOrEmpty(userDto.Password))
-        {
-            throw new ArgumentException("Password là bắt buộc");
-        }
         if (string.IsNullOrEmpty(fullname))
         {
             throw new ArgumentException("FullName là bắt buộc");
@@ -129,13 +125,16 @@ public class UserService : IUserService
         {
             return null;
         }
-        
-        // Băm mật khẩu trước khi cập nhật vào database
-        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
-        
+
+        // Chỉ băm mật khẩu khi client gửi mật khẩu mới; bỏ trống = giữ nguyên mật khẩu cũ
+        // (UI sửa user không thể biết mật khẩu hiện tại).
+        if (!string.IsNullOrEmpty(userDto.Password))
+        {
+            userToUpdate.Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+        }
+
         // update fields
         userToUpdate.Username = username;
-        userToUpdate.Password = hashedPassword;
         userToUpdate.FullName = fullname;
         userToUpdate.Role = userDto.Role;
 

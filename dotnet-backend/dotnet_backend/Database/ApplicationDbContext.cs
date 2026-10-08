@@ -602,6 +602,8 @@ public partial class ApplicationDbContext : DbContext
 
         modelBuilder.ApplySeedData();
 
+        ConfigureAuditLog(modelBuilder);
+
         OnModelCreatingPartial(modelBuilder);
     }
 

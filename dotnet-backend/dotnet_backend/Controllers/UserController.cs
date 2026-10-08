@@ -49,8 +49,9 @@ namespace dotnet_backend.Controllers
 
         // POST: api/users - CHỈ Admin hoặc Manager mới tạo được user
         [HttpPost]
-        public async Task<ActionResult<UserDto>> CreateUser([FromBody] UserDto userDto)
+        public async Task<ActionResult<UserDto>> CreateUser([FromBody] UserRequestDto req)
         {
+            var userDto = new UserDto { Username = req.Username, Password = req.Password, FullName = req.FullName, Role = req.Role };
             // fixed validation
             UserDto createdUser;
             try
@@ -73,8 +74,9 @@ namespace dotnet_backend.Controllers
 
         // PUT: api/users/5 - CHỈ Admin hoặc Manager mới update được
         [HttpPut("{id}")]
-        public async Task<ActionResult<UserDto>> UpdateUser(int id, [FromBody] UserDto userDto)
+        public async Task<ActionResult<UserDto>> UpdateUser(int id, [FromBody] UserRequestDto req)
         {
+            var userDto = new UserDto { UserId = req.UserId, Username = req.Username, Password = req.Password, FullName = req.FullName, Role = req.Role };
             if (id != userDto.UserId)
             {
                 return BadRequest(new { message = "ID trên endpoint khác với body" });

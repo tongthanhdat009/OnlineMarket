@@ -127,6 +127,8 @@ public sealed class AgentRunDetailDto : AgentRunListItemDto
     public string? Input { get; set; }
     public string? Output { get; set; }
     public string? Model { get; set; }
+    public int? InputTokens { get; set; }
+    public int? OutputTokens { get; set; }
     public List<AgentEventDto> Events { get; set; } = new();
     public List<AgentToolCallDto> ToolCalls { get; set; } = new();
 }
