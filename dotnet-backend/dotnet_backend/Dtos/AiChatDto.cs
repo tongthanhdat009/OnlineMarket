@@ -142,6 +142,7 @@ namespace dotnet_backend.Dtos
         public string? Error { get; set; }
         public int? SessionId { get; set; }
         public long? RunId { get; set; }
+        public string? ChartJson { get; set; }
     }
 
     /// <summary>

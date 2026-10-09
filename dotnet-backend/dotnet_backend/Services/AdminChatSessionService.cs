@@ -15,9 +15,16 @@ public sealed class AdminChatSessionService : IAdminChatSessionService
 
     public AdminChatSessionService(ApplicationDbContext context) => _context = context;
 
-    public async Task<List<AdminChatSessionDto>> GetSessionsAsync(int userId, CancellationToken cancellationToken = default) =>
-        await _context.AdminChatSessions.AsNoTracking().Where(x => x.UserId == userId)
-            .OrderByDescending(x => x.UpdatedAt).Select(x => Map(x, null)).ToListAsync(cancellationToken);
+    public async Task<List<AdminChatSessionDto>> GetSessionsAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        var sessions = await _context.AdminChatSessions.AsNoTracking().Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.UpdatedAt).ToListAsync(cancellationToken);
+        var ids = sessions.Select(x => x.AdminChatSessionId).ToList();
+        var counts = await _context.AdminChatMessages.AsNoTracking().Where(x => ids.Contains(x.AdminChatSessionId))
+            .GroupBy(x => x.AdminChatSessionId).Select(g => new { Id = g.Key, Count = g.Count() }).ToListAsync(cancellationToken);
+        var map = counts.ToDictionary(x => x.Id, x => x.Count);
+        return sessions.Select(x => Map(x, null, map.TryGetValue(x.AdminChatSessionId, out var c) ? c : 0)).ToList();
+    }
 
     public async Task<AdminChatSessionDto?> GetSessionAsync(int userId, int sessionId, CancellationToken cancellationToken = default)
     {
@@ -102,7 +109,7 @@ public sealed class AdminChatSessionService : IAdminChatSessionService
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    private static AdminChatSessionDto Map(AdminChatSession session, IEnumerable<AdminChatMessage>? messages) => new()
+    private static AdminChatSessionDto Map(AdminChatSession session, IEnumerable<AdminChatMessage>? messages, int messageCount = 0) => new()
     {
         SessionId = session.AdminChatSessionId,
         Title = session.Title,
@@ -110,6 +117,7 @@ public sealed class AdminChatSessionService : IAdminChatSessionService
         SummaryMessageCount = session.SummaryMessageCount,
         CreatedAt = session.CreatedAt,
         UpdatedAt = session.UpdatedAt,
+        MessageCount = messages?.Count() ?? messageCount,
         Messages = messages?.Select(x => new ChatMessageDto { Role = x.Role, Content = x.Content, CreatedAt = x.CreatedAt }).ToList() ?? new()
     };
 }

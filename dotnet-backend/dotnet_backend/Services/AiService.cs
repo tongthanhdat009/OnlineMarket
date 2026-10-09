@@ -124,7 +124,10 @@ namespace dotnet_backend.Services
                     if (!string.IsNullOrEmpty(delta.Content))
                     {
                         fullText.Append(delta.Content);
-                        yield return new AiChatStreamEventDto { Type = "text", Text = delta.Content };
+                        // Strip [ID:x,QTY:y] metadata truoc khi day ra UI; ParseAiResponse cuoi van trich suggestions tu fullText.
+                        var visible = IdQtyPattern.Replace(delta.Content, string.Empty);
+                        if (!string.IsNullOrEmpty(visible))
+                            yield return new AiChatStreamEventDto { Type = "text", Text = visible };
                     }
                     if (delta.ToolCalls != null)
                     {
@@ -368,11 +371,13 @@ namespace dotnet_backend.Services
             return null;
         }
 
+        private static readonly Regex IdQtyPattern = new(@"\[ID:(\d+)(?:,QTY:(\d+))?\]", RegexOptions.Compiled);
+
         private static (string Message, List<ProductSuggestionDto> Suggestions) ParseAiResponse(string response, IEnumerable<ProductSearchData> products)
         {
             var map = products.ToDictionary(x => x.ProductId);
             var suggestions = new List<ProductSuggestionDto>();
-            var regex = new Regex(@"\[ID:(\d+)(?:,QTY:(\d+))?\]", RegexOptions.Compiled);
+            var regex = IdQtyPattern;
             foreach (Match match in regex.Matches(response))
             {
                 if (!int.TryParse(match.Groups[1].Value, out var id) || !map.TryGetValue(id, out var product) || suggestions.Any(x => x.ProductId == id)) continue;

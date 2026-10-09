@@ -1,12 +1,13 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Heart, House, ListFilter, LogIn, Menu, Package, Search, ShoppingBag, Sparkles, UserRound, X } from "lucide-react";
+import { House, ListFilter, LogIn, Menu, Package, ShoppingBag, Sparkles, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { apiClient } from "../api";
 import { useAuth, useCart, useToast } from "../app/providers";
 import { categoryName } from "../app/types";
 import { AiButton, SearchBar, Toast } from "../components/store-ui";
 import { AiAssistant } from "../components/ai/AiAssistant";
+
 import { StoreFooter } from "../components/StoreFooter";
 import { translator } from "../lib/translator";
 
@@ -19,6 +20,7 @@ export function StoreLayout() {
   const { items } = useCart();
   const { toasts, dismissToast } = useToast();
   const [search, setSearch] = useState(new URLSearchParams(location.search).get("q") ?? "");
+
   const [aiOpen, setAiOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: () => apiClient.products.categories(), staleTime: 300_000 });
@@ -28,25 +30,24 @@ export function StoreLayout() {
   return (
     <div className="store-shell">
       <header className="sticky top-0 z-40 border-b border-line/80 bg-white/95 backdrop-blur">
-        <div className="container-store flex h-[4.4rem] items-center gap-3">
-          <button aria-label={t("common.openMenu")} onClick={() => setMenuOpen((value) => !value)} className="rounded-xl p-2 text-muted hover:bg-canvas md:hidden">
-            <Menu size={21} />
-          </button>
-          <Link to="/" className="flex shrink-0 items-center gap-2.5">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-leaf text-white shadow-sm">
-              <ShoppingBag size={20} strokeWidth={2.5} />
-            </span>
-            <span className="display hidden text-lg font-extrabold tracking-tight text-ink sm:block">
-              Green<span className="text-leaf">Basket</span>
-            </span>
-          </Link>
-          <div className="hidden max-w-xl flex-1 md:block">
+        <div className="container-store flex h-[4.4rem] items-center gap-3 md:grid md:grid-cols-[1fr_minmax(0,32rem)_1fr] md:gap-6">
+          <div className="flex items-center gap-1 md:justify-self-start">
+            <button aria-label={t("common.openMenu")} onClick={() => setMenuOpen((value) => !value)} className="rounded-xl p-2 text-muted hover:bg-canvas md:hidden">
+              <Menu size={21} />
+            </button>
+            <Link to="/" className="flex shrink-0 items-center gap-2.5">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-leaf text-white shadow-sm">
+                <ShoppingBag size={20} strokeWidth={2.5} />
+              </span>
+              <span className="display hidden text-lg font-extrabold tracking-tight text-ink sm:block">
+                Green<span className="text-leaf">Basket</span>
+              </span>
+            </Link>
+          </div>
+          <div className="hidden w-full md:block md:justify-self-center">
             <SearchBar value={search} onChange={setSearch} onSubmit={submitSearch} />
           </div>
-          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-            <button onClick={() => setAiOpen(true)} className="hidden items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-ink hover:bg-leaf-soft md:flex">
-              <Sparkles size={17} className="text-leaf" /> {t("nav.askAi")}
-            </button>
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2 md:ml-0 md:justify-self-end">
             {isAuthenticated ? (
               <div className="group relative">
                 <button className="flex items-center gap-2 rounded-xl p-2 text-left hover:bg-canvas">
@@ -149,7 +150,8 @@ export function StoreLayout() {
         </div>
       </nav>
       <AiButton onClick={() => setAiOpen(true)} />
-      <AiAssistant open={aiOpen} onClose={() => setAiOpen(false)} />      <div className="fixed right-4 top-4 z-[60] flex w-[calc(100%-2rem)] max-w-sm flex-col items-end gap-2 md:right-6 md:top-6 md:w-auto">{toasts.map((toast) => (
+      <AiAssistant open={aiOpen} onClose={() => setAiOpen(false)} />
+      <div className="fixed right-4 top-4 z-[60] flex w-[calc(100%-2rem)] max-w-sm flex-col items-end gap-2 md:right-6 md:top-6 md:w-auto">{toasts.map((toast) => (
         <Toast key={toast.id} message={toast.message} kind={toast.kind} onClose={() => dismissToast(toast.id)} />
       ))}</div>
     </div>

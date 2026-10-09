@@ -97,11 +97,13 @@ public sealed class AdminAiController : ControllerBase
         await Response.StartAsync(cancellationToken);
 
         var assistantText = new StringBuilder();
+        var pendingChartJson = new List<string>();
         try
         {
             await foreach (var evt in _adminAiService.StreamChatAsync(serviceRequest, User, sessionContext.SessionId, cancellationToken))
             {
                 if (evt.Type == "text") assistantText.Append(evt.Text);
+                if (evt.Type == "chart" && !string.IsNullOrWhiteSpace(evt.ChartJson)) pendingChartJson.Add(evt.ChartJson!);
                 if (evt.Type == "summary")
                 {
                     sessionContext.Summary = evt.Summary;
@@ -109,6 +111,8 @@ public sealed class AdminAiController : ControllerBase
                 }
                 if (evt.Type == "done")
                 {
+                    foreach (var chartJson in pendingChartJson)
+                        assistantText.Append("\n```chart " + chartJson + "```\n");
                     await _sessionService.SaveChatAsync(
                         sessionContext, assistantText.ToString(), cancellationToken);
                 }

@@ -130,6 +130,8 @@ builder.Services.AddSingleton<IAgentActivityBroadcaster, AgentActivityBroadcaste
 builder.Services.AddScoped<IAgentRuntime, AgentRuntime>();
 builder.Services.AddScoped<IAgentOperationsService, AgentOperationsService>();
 builder.Services.AddScoped<IAgentReportService, AgentReportService>();
+builder.Services.AddScoped<IAgentAutoAnalysisService, AgentAutoAnalysisService>();
+builder.Services.AddHostedService<AgentAutoAnalysisWorker>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 // 🔹 Đăng ký AWS S3 Service
@@ -194,6 +196,12 @@ if (app.Environment.IsDevelopment())
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     dbContext.Database.Migrate();
     Console.WriteLine("✅ Database migrations đã được áp dụng.");
+    var chartTools = new[] { "search_products", "get_stock", "search_inventory", "search_orders", "get_order", "sales_summary", "sales_chart" };
+    var agentTools = dbContext.Set<dotnet_backend.Models.AgentTool>();
+    foreach (var tool in chartTools)
+        if (!agentTools.Any(x => x.AgentId == 1 && x.ToolName == tool))
+            agentTools.Add(new dotnet_backend.Models.AgentTool { AgentId = 1, ToolName = tool });
+    dbContext.SaveChanges();
 }
 
 // ✅ 7. Kích hoạt CORS

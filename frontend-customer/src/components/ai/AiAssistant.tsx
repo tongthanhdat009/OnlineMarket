@@ -9,6 +9,40 @@ import { translator } from "../../lib/translator";
 
 const t = translator;
 
+function renderMarkdown(text: string) {
+  const clean = text.replace(/\[ID:\d+(?:,QTY:\d+)?\]/g, "");
+  const lines = clean.split("\n");
+  return lines.map((line, index) => {
+    const trimmed = line.trim();
+    if (/^[-*]\s+/.test(trimmed)) {
+      return (
+        <div key={index} className="flex gap-2">
+          <span className="text-leaf">•</span>
+          <span>{renderInline(trimmed.replace(/^[-*]\s+/, ""))}</span>
+        </div>
+      );
+    }
+    if (/^#{1,4}\s+/.test(trimmed)) {
+      return <p key={index} className="font-extrabold text-ink">{renderInline(trimmed.replace(/^#{1,4}\s+/, ""))}</p>;
+    }
+    if (trimmed === "") return <div key={index} className="h-2" />;
+    return <p key={index}>{renderInline(line)}</p>;
+  });
+}
+
+function renderInline(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*\n]+\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**") && part.length > 4)
+      return <strong key={index} className="font-bold">{part.slice(2, -2)}</strong>;
+    if (part.startsWith("`") && part.endsWith("`") && part.length > 2)
+      return <code key={index} className="rounded bg-canvas px-1 font-mono text-[12px]">{part.slice(1, -1)}</code>;
+    if (part.startsWith("*") && part.endsWith("*") && part.length > 2)
+      return <em key={index}>{part.slice(1, -1)}</em>;
+    return <span key={index}>{part}</span>;
+  });
+}
+
 type ChatRow = { role: "user" | "assistant"; content: string; suggestions?: ProductSuggestionDto[] };
 
 export function AiAssistant({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -113,7 +147,12 @@ export function AiAssistant({ open, onClose }: { open: boolean; onClose: () => v
                 className={`rounded-2xl px-4 py-3 text-sm leading-6 ${row.role === "user" ? "rounded-br-md bg-ink text-white" : "rounded-bl-md border border-line bg-white text-ink"}`}
               >
                 {row.role === "assistant" && <Bot size={15} className="mb-1 text-leaf" />}
-                {row.content || (
+                {row.role === "assistant" ? (
+                  <div className="space-y-1 whitespace-pre-wrap">{renderMarkdown(row.content || "…")}</div>
+                ) : (
+                  <span>{row.content}</span>
+                )}
+                {!row.content && (
                   <span className="inline-flex gap-1">
                     <i className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted" />
                     <i className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted [animation-delay:100ms]" />

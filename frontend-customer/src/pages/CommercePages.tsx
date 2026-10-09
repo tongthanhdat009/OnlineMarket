@@ -66,12 +66,9 @@ export function ProductDetailPage() {
   if (productError || !product) return <ErrorStateWithRetry message={t("catalog.notFound")} onRetry={() => void refetchProduct()} />;
   return (
     <div className="animate-float-in space-y-6">
-      <Link to="/products" className="inline-flex items-center gap-1 text-sm font-bold text-leaf hover:text-leaf-dark">
-        <ChevronLeft size={16} /> {t("catalog.backToShopping")}
-      </Link>
       <div className="grid gap-8 lg:grid-cols-2">
-        <div>
-          <ProductImage product={product} className="w-full" fit="cover" />
+        <div className="overflow-hidden rounded-3xl border border-line bg-white">
+          <ProductImage product={product} className="aspect-square max-h-[520px] w-full" fit="contain" />
         </div>
         <div className="flex flex-col gap-4">
           <div>
@@ -111,9 +108,6 @@ export function ProductDetailPage() {
               </div>
             )}
           </div>
-          <Button variant="outline" onClick={() => void addToCart(1)} disabled={!productInStock(product)} className="w-full">
-            {t("product.buyNow")}
-          </Button>
         </div>
       </div>
       {relatedProducts.length > 0 ? (
@@ -233,7 +227,6 @@ export function CheckoutPage() {
           OrderId: order.OrderId,
           Amount: order.TotalAmount ?? subtotal - discount,
           OrderInfo: `Thanh toán đơn hàng #${order.OrderId}`,
-          ReturnUrl: `${window.location.origin}/payment-result`,
         });
         if (!payment.Success || !payment.PaymentUrl) throw new Error(payment.Message || t("checkout.orderFailed"));
         window.location.assign(payment.PaymentUrl);
@@ -377,12 +370,11 @@ export function OrdersPage() {
   const orderQuery = useOrder(selectedOrder ?? undefined);
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const cancelOrder = async () => {
-    if (!selectedOrder) return;
+  const cancelOrder = async (orderId: number) => {
     try {
-      await apiClient.orders.cancel(selectedOrder);
+      await apiClient.orders.cancel(orderId);
       showToast(t("orders.orderCanceled"));
-      setSelectedOrder(null);
+      if (selectedOrder === orderId) setSelectedOrder(null);
       await refetch();
     } catch {
       showToast(t("orders.cannotCancel"), "error");
@@ -406,22 +398,55 @@ export function OrdersPage() {
                   <p className="text-xs text-muted">{order.OrderStatus}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setSelectedOrder(order.OrderId)} className="text-xs">{t("orders.orderDetails")}</Button>
-                  <Button variant="danger" onClick={cancelOrder} disabled={order.OrderStatus !== "Pending" && order.OrderStatus !== "Paid"} className="text-xs">{t("orders.cancelOrder")}</Button>
+                  <Button variant="outline" onClick={() => setSelectedOrder((current) => (current === order.OrderId ? null : order.OrderId))} className="text-xs">{t("orders.orderDetails")}</Button>
+                  <Button variant="danger" onClick={() => void cancelOrder(order.OrderId)} disabled={order.OrderStatus !== "Pending" && order.OrderStatus !== "Paid"} className="text-xs">{t("orders.cancelOrder")}</Button>
                 </div>
               </div>
               {selectedOrder === order.OrderId && (
-                <div className="mt-4 space-y-2">
-                  {orderQuery.data?.OrderItems.map((item) => (
-                    <div key={item.OrderItemId} className="flex justify-between text-sm">
-                      <span>{item.Product ? productName(item.Product) : `Sản phẩm #${item.ProductId}`} × {item.Quantity}</span>
-                      <Money value={item.Price * item.Quantity} />
-                    </div>
-                  ))}
-                  <div className="flex justify-between text-lg font-bold text-ink">
-                    <span>{t("cart.total")}</span>
-                    <Money value={order.TotalAmount ?? 0} />
-                  </div>
+                <div className="mt-4 overflow-x-auto rounded-xl border border-line">
+                  {orderQuery.isLoading ? (
+                    <div className="skeleton h-32" />
+                  ) : orderQuery.isError ? (
+                    <div className="p-4 text-center"><ErrorStateWithRetry onRetry={() => void orderQuery.refetch()} /></div>
+                  ) : (orderQuery.data?.OrderItems ?? []).length === 0 ? (
+                    <p className="p-4 text-center text-sm text-muted">{t("orders.noOrdersBody")}</p>
+                  ) : (
+                  <table className="w-full min-w-[560px] text-sm">
+                    <thead>
+                      <tr className="bg-canvas text-left text-xs uppercase tracking-wide text-muted">
+                        <th className="px-3 py-2 font-bold">Sản phẩm</th>
+                        <th className="px-3 py-2 text-right font-bold">SL</th>
+                        <th className="px-3 py-2 text-right font-bold">Đơn giá</th>
+                        <th className="px-3 py-2 text-right font-bold">Thành tiền</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(orderQuery.data?.OrderItems ?? []).map((item) => {
+                        const name = item.Product ? productName(item.Product) : (item as { ProductName?: string }).ProductName ? (item as { ProductName?: string }).ProductName as string : `Sản phẩm #${item.ProductId}`;
+                        return (
+                          <tr key={item.OrderItemId} className="border-t border-line">
+                            <td className="px-3 py-2 font-semibold text-ink">{name}{item.Product?.Unit ? <span className="ml-1 text-xs font-normal text-muted">({item.Product.Unit})</span> : null}</td>
+                            <td className="px-3 py-2 text-right text-muted">× {item.Quantity}</td>
+                            <td className="px-3 py-2 text-right text-muted"><Money value={item.Price} /></td>
+                            <td className="px-3 py-2 text-right font-bold text-ink"><Money value={item.Price * item.Quantity} /></td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot>
+                      {(orderQuery.data?.DiscountAmount ?? order.DiscountAmount ?? 0) > 0 && (
+                        <tr className="border-t border-line text-leaf-dark">
+                          <td colSpan={3} className="px-3 py-2 text-right font-semibold">Khuyến mãi</td>
+                          <td className="px-3 py-2 text-right font-bold">−<Money value={orderQuery.data?.DiscountAmount ?? order.DiscountAmount ?? 0} /></td>
+                        </tr>
+                      )}
+                      <tr className="border-t border-line">
+                        <td colSpan={3} className="px-3 py-2 text-right text-lg font-bold text-ink">{t("cart.total")}</td>
+                        <td className="px-3 py-2 text-right text-lg font-bold text-ink"><Money value={order.TotalAmount ?? 0} /></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                  )}
                 </div>
               )}
             </div>
@@ -465,20 +490,46 @@ export function OrderDetailPage() {
         <div className="flex justify-between"><dt className="text-muted">{t("checkout.deliveryAddress")}</dt><dd>{order.Address ?? "—"}</dd></div>
         <div className="flex justify-between"><dt className="text-muted">{t("cart.total")}</dt><dd className="font-extrabold text-ink"><Money value={order.TotalAmount ?? 0} /></dd></div>
       </dl>
-      <div className="rounded-2xl border border-line bg-white p-4">
-        <h2 className="mb-3 text-lg font-bold text-ink">{t("checkout.items")}</h2>
-        {orderItems.map((item) => (
-          <div key={item.OrderItemId} className="flex justify-between gap-3 rounded-xl border border-line bg-[#f7faf7] p-3">
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-ink">{item.Product ? productName(item.Product) : `Sản phẩm #${item.ProductId}`}</p>
-              <p className="text-xs text-muted">{item.Unit ? `${item.Quantity} ${item.Unit}` : ""}</p>
-            </div>
-            <Money value={item.Price * item.Quantity} className="font-extrabold text-ink" />
-          </div>
-        ))}
-        <div className="mt-3 flex justify-between text-lg font-extrabold text-ink">
-          <span>{t("cart.total")}</span>
-          <Money value={order.TotalAmount ?? 0} />
+      <div className="overflow-hidden rounded-2xl border border-line bg-white">
+        <h2 className="px-4 pt-4 text-lg font-bold text-ink">{t("checkout.items")}</h2>
+        <div className="overflow-x-auto p-4 pt-3">
+          <table className="w-full min-w-[620px] text-sm">
+            <thead>
+              <tr className="bg-canvas text-left text-xs uppercase tracking-wide text-muted">
+                <th className="rounded-l-lg px-3 py-2 font-bold">Sản phẩm</th>
+                <th className="px-3 py-2 text-right font-bold">SL</th>
+                <th className="px-3 py-2 text-right font-bold">Đơn vị</th>
+                <th className="px-3 py-2 text-right font-bold">Đơn giá</th>
+                <th className="rounded-r-lg px-3 py-2 text-right font-bold">Thành tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orderItems.map((item) => {
+                const name = item.Product ? productName(item.Product) : item.ProductName ? item.ProductName : `Sản phẩm #${item.ProductId}`;
+                return (
+                  <tr key={item.OrderItemId} className="border-t border-line">
+                    <td className="px-3 py-2 font-semibold text-ink">{name}</td>
+                    <td className="px-3 py-2 text-right text-muted">× {item.Quantity}</td>
+                    <td className="px-3 py-2 text-right text-muted">{item.Unit ?? item.Product?.Unit ?? "—"}</td>
+                    <td className="px-3 py-2 text-right text-muted"><Money value={item.Price} /></td>
+                    <td className="px-3 py-2 text-right font-bold text-ink"><Money value={item.Subtotal ?? item.Price * item.Quantity} /></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              {(order.DiscountAmount ?? 0) > 0 && (
+                <tr className="border-t border-line text-leaf-dark">
+                  <td colSpan={4} className="px-3 py-2 text-right font-semibold">Khuyến mãi</td>
+                  <td className="px-3 py-2 text-right font-bold">−<Money value={order.DiscountAmount ?? 0} /></td>
+                </tr>
+              )}
+              <tr className="border-t border-line">
+                <td colSpan={4} className="px-3 py-2 text-right text-lg font-bold text-ink">{t("cart.total")}</td>
+                <td className="px-3 py-2 text-right text-lg font-bold text-ink"><Money value={order.TotalAmount ?? 0} /></td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
       </div>
       <Button variant="danger" onClick={refund} disabled={order.OrderStatus !== "Delivered"} className="w-full">
@@ -539,8 +590,13 @@ export function RefundRequestPage() {
 
 export function PaymentResultPage() {
   const search = new URLSearchParams(location.search);
-  const status = search.get("status");
-  const success = status === "success" || status === "paid";
+  const status = (search.get("status") ?? "").toLowerCase();
+  const rawSuccess = (search.get("success") ?? "").toLowerCase();
+  const success =
+    status === "success" ||
+    status === "paid" ||
+    rawSuccess === "true" ||
+    rawSuccess === "1";
   const navigate = useNavigate();
   return (
     <div className="animate-float-in flex min-h-[60vh] items-center justify-center">

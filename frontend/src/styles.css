@@ -8,8 +8,11 @@
   --color-ink: #18181b;
   --color-muted: #71717a;
   --color-line: #e5e7eb;
-  --color-brand: #4f46e5;
-  --color-brand-soft: #eef2ff;
+  --color-brand: #247448;
+  --color-brand-soft: #eaf6ef;
+  --color-leaf: #247448;
+  --color-leaf-dark: #15532f;
+  --color-leaf-soft: #eaf6ef;
   --color-success: #16a34a;
   --color-warning: #d97706;
   --color-danger: #dc2626;

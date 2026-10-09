@@ -16,6 +16,7 @@ public sealed class AdminChatSessionDto
     public int SummaryMessageCount { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public int MessageCount { get; set; }
     public List<ChatMessageDto> Messages { get; set; } = new();
 }
 

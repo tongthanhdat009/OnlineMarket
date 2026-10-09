@@ -64,12 +64,21 @@ public static partial class AgentPayloadSanitizer
     private static JsonNode? Redact(JsonNode? node)
     {
         if (node is JsonObject obj)
+        {
             foreach (var item in obj.ToList())
-                obj[item.Key] = SecretKey().IsMatch(item.Key) ? "[REDACTED]" : Redact(item.Value);
+            {
+                obj.Remove(item.Key);
+                obj[item.Key] = SecretKey().IsMatch(item.Key) ? JsonValue.Create("[REDACTED]") : Redact(item.Value?.DeepClone());
+            }
+        }
         else if (node is JsonArray array)
-            for (var i = 0; i < array.Count; i++) array[i] = Redact(array[i]);
+        {
+            for (var i = 0; i < array.Count; i++) array[i] = Redact(array[i]?.DeepClone());
+        }
         else if (node is JsonValue value && value.TryGetValue<string>(out var text))
+        {
             return JsonValue.Create(SensitiveValue().Replace(text, "[REDACTED]"));
+        }
         return node;
     }
 

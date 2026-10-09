@@ -53,6 +53,13 @@ export type TranslatorKey =
   | 'catalog.loadError'
   | 'catalog.priceRange'
   | 'catalog.filters'
+  | 'catalog.sort'
+  | 'catalog.sortDefault'
+  | 'catalog.sortPriceAsc'
+  | 'catalog.sortPriceDesc'
+  | 'catalog.sortNameAsc'
+  | 'catalog.sortNewest'
+  | 'catalog.allUnits'
   | 'product.unitFallback'
   | 'catalog.notFound'
   | 'catalog.signInToAdd'
@@ -300,6 +307,13 @@ const dict: Record<TranslatorKey, string> = {
   'catalog.loadError': 'Không tải được dữ liệu lúc này.',
   'catalog.priceRange': 'Khoảng giá',
   'catalog.filters': 'Bộ lọc',
+  'catalog.sort': 'Sắp xếp',
+  'catalog.sortDefault': 'Mặc định',
+  'catalog.sortPriceAsc': 'Giá tăng dần',
+  'catalog.sortPriceDesc': 'Giá giảm dần',
+  'catalog.sortNameAsc': 'Tên A–Z',
+  'catalog.sortNewest': 'Mới nhất',
+  'catalog.allUnits': 'Tất cả',
   'product.unitFallback': 'sản phẩm',
   'catalog.notFound': 'Không tìm thấy sản phẩm hoặc đã ngừng bán.',
   'catalog.signInToAdd': 'Đăng nhập để thêm sản phẩm vào giỏ hàng.',

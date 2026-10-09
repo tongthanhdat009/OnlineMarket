@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { createBrowserRouter, Navigate, useNavigate } from 'react-router-dom';
 import { AppShell } from './layouts/AppShell';
 import { pages, PlaceholderPage, OrderDetailPage, LoginPage } from './pages/AdminPages';
+import { ProfilePage } from './pages/ProfilePage';
 import { useAuth } from './auth/AuthContext';
 
 function AuthenticatedShell() {
@@ -12,10 +13,11 @@ function AuthenticatedShell() {
     if (!auth.loading && !user) navigate('/login', { replace: true });
   }, [auth.loading, user, navigate]);
   if (auth.loading || !user) {
-    return <div className="flex min-h-screen items-center justify-center bg-canvas"><div className="h-9 w-9 animate-spin rounded-full border-2 border-zinc-300 border-t-indigo-600" aria-label="Đang tải phiên" /></div>;
+    return <div className="flex min-h-screen items-center justify-center bg-canvas"><div className="h-9 w-9 animate-spin rounded-full border-2 border-zinc-300 border-t-leaf" aria-label="Đang tải phiên" /></div>;
   }
   return <AppShell
     permissions={user?.Permissions}
+    storeName="GREEN BASKET"
     user={{ name: user.FullName ?? user.Username, email: user.Username, role: user.Role === 1 ? 'Quản trị viên' : user.Role === 2 ? 'Quản lý' : user.Role === 3 ? 'Nhân viên' : 'Quản trị' }}
     onSignOut={auth.logout}
   />;
@@ -37,6 +39,7 @@ function page(name: string) {
   if (name.startsWith('ai-')) return <pages.AiPage page={name.slice(3).replace('-detail', '')} />;
   if (name.startsWith('admin-')) return <pages.AdminPage page={name.slice(6)} />;
   if (name === 'audit-log') return <pages.AuditLogPage />;
+  if (name === 'profile') return <ProfilePage />;
   return <PlaceholderPage title="Không tìm thấy trang" />;
 }
 
@@ -73,6 +76,7 @@ export const router = createBrowserRouter([
       { path: 'admin/roles', element: page('admin-roles') },
       { path: 'admin/permissions', element: page('admin-permissions') },
       { path: 'audit-log', element: page('audit-log') },
+      { path: 'profile', element: page('profile') },
       { path: '*', element: page('not-found') },
     ],
   },

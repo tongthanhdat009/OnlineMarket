@@ -77,6 +77,10 @@ export function useReports(query?: ReportQuery) {
   return useQuery({ queryKey: ['reports', query], queryFn: () => reportsApi.list(query) });
 }
 
+export function useAutoAnalysisStatus(enabled = true) {
+  return useQuery({ queryKey: ['auto-analysis-status'], queryFn: () => reportsApi.autoStatus(), refetchInterval: 60000, enabled });
+}
+
 export function useUsers(query?: ListQuery) {
   return useQuery({ queryKey: ['users', query], queryFn: () => usersApi.list(query) });
 }

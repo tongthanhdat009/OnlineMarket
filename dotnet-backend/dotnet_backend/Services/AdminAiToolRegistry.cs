@@ -8,6 +8,7 @@ public static class AdminAiToolRegistry
     public const string SearchOrders = "search_orders";
     public const string GetOrder = "get_order";
     public const string SalesSummary = "sales_summary";
+    public const string SalesChart = "sales_chart";
 
     public static readonly object[] Declarations =
     {
@@ -137,10 +138,30 @@ public static class AdminAiToolRegistry
                     }
                 }
             }
+        },
+        new
+        {
+            type = "function",
+            function = new
+            {
+                name = SalesChart,
+                description = "Dữ liệu biểu đồ doanh thu theo ngày từ đơn completed và paid. Dùng khi người dùng xin biểu đồ/doanh thu theo thời gian.",
+                parameters = new
+                {
+                    type = "object",
+                    properties = new
+                    {
+                        from = new { type = "string", description = "Ngày bắt đầu, ISO date, bao gồm; mặc định 30 ngày gần nhất" },
+                        to = new { type = "string", description = "Ngày kết thúc, ISO date, không bao gồm" },
+                        order_type = new { type = "string", description = "online hoặc offline" },
+                        metric = new { type = "string", description = "revenue (doanh thu) hoặc orders (số đơn)" }
+                    }
+                }
+            }
         }
     };
 
-    public static readonly string[] Names = { SearchProducts, GetStock, SearchInventory, SearchOrders, GetOrder, SalesSummary };
+    public static readonly string[] Names = { SearchProducts, GetStock, SearchInventory, SearchOrders, GetOrder, SalesSummary, SalesChart };
 
     public static readonly IReadOnlyDictionary<string, AdminAiToolDefinition> Definitions = Names.ToDictionary(
         name => name,

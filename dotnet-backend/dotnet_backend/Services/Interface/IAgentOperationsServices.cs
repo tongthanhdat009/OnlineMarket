@@ -55,3 +55,21 @@ public interface IAgentReportService
     Task<AgentReportDto> GenerateSalesReportAsync(int userId, GenerateAgentReportDto request, CancellationToken cancellationToken);
     Task<byte[]?> GeneratePdfAsync(long reportId, CancellationToken cancellationToken);
 }
+
+public sealed class AgentAutoAnalysisStatusDto
+{
+    public bool Enabled { get; set; }
+    public int IntervalSeconds { get; set; }
+    public int LookbackSeconds { get; set; }
+    public DateTime? LastRunAt { get; set; }
+    public string? LastStatus { get; set; }
+    public long? LastRunId { get; set; }
+    public long? LastReportId { get; set; }
+    public string? LastError { get; set; }
+}
+
+public interface IAgentAutoAnalysisService
+{
+    AgentAutoAnalysisStatusDto GetStatus();
+    Task<AgentReportDto?> RunOnceAsync(CancellationToken cancellationToken);
+}

@@ -7,6 +7,7 @@ export interface AdminChatSession {
   SummaryMessageCount: number;
   CreatedAt: string;
   UpdatedAt: string;
+  MessageCount?: number;
   Messages: Array<{ Role: string; Content: string; CreatedAt?: string | null }>;
 }
 
@@ -15,6 +16,7 @@ export interface AdminChatEvent {
   Text?: string | null;
   Error?: string | null;
   SessionId?: number | null;
+  ChartJson?: string | null;
 }
 
 export const adminAiApi = {

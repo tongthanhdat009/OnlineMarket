@@ -74,3 +74,11 @@ public sealed class AgentReportsController : AgentAdminControllerBase
     [HttpPost("sales"), HttpPost("generate")] public async Task<IActionResult> Generate(GenerateAgentReportDto request, CancellationToken ct) { if (!HasPermission("agent_report_generate")) return Forbid(); try { return Ok(await _reports.GenerateSalesReportAsync(UserId, request, ct)); } catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); } }
     [HttpGet("{id:long}/pdf")] public async Task<IActionResult> Pdf(long id, CancellationToken ct) { if (!HasPermission("agent_report_view")) return Forbid(); var bytes = await _reports.GeneratePdfAsync(id, ct); return bytes == null ? NotFound() : File(bytes, "application/pdf", $"agent-report-{id}.pdf"); }
 }
+
+[Authorize, ApiController, Route("api/admin/agent-auto-analysis")]
+public sealed class AgentAutoAnalysisController : AgentAdminControllerBase
+{
+    private readonly IAgentAutoAnalysisService _auto; public AgentAutoAnalysisController(IAgentAutoAnalysisService auto) => _auto = auto;
+    [HttpGet("status")] public IActionResult Status() => HasPermission("agent_report_view") ? Ok(_auto.GetStatus()) : Forbid();
+    [HttpPost("trigger")] public async Task<IActionResult> Trigger(CancellationToken ct) { if (!HasPermission("agent_report_generate")) return Forbid(); var report = await _auto.RunOnceAsync(ct); return Ok(report ?? (object)new { skipped = true, status = _auto.GetStatus() }); }
+}
