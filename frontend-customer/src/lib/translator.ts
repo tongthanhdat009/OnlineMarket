@@ -275,7 +275,7 @@ const dict: Record<TranslatorKey, string> = {
   'home.fastDelivery': 'Giao hàng nhanh',
   'home.fastDeliveryBody': 'Tận cửa, đơn giản.',
   'home.qualityChecked': 'Kiểm tra chất lượng',
-  'home.qualityBody': 'Độ tươi luôn đặt lên hàng đầu.',
+  'home.qualityBody': 'Tươi ngon hàng đầu.',
   'home.easyCheckout': 'Thanh toán dễ dàng',
   'home.easyCheckoutBody': 'Ít bước hơn, nhiều thời gian hơn.',
   'home.explore': 'Khám phá',

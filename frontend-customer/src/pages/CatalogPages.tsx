@@ -52,9 +52,9 @@ export function HomePage() {
     void add({ ProductId: product.ProductId, Quantity: 1 });
   };
   const heroSlides = [
-    { badge: t("home.heroBadge"), titleA: t("home.heroTitleA"), titleB: t("home.heroTitleB"), body: t("home.heroBody"), art: "\U0001F96C", bg: "bg-[#dff1e3]" },
-    { badge: t("home.fastDelivery"), titleA: t("home.fastDelivery"), titleB: t("home.fastDeliveryBody"), body: t("home.heroBody"), art: "\U0001F69A", bg: "bg-[#e3eefb]" },
-    { badge: t("home.qualityChecked"), titleA: t("home.qualityChecked"), titleB: t("home.qualityBody"), body: t("home.heroBody"), art: "\U0001F34E", bg: "bg-[#fdf0d5]" },
+    { badge: t("home.heroBadge"), titleA: t("home.heroTitleA"), titleB: t("home.heroTitleB"), body: t("home.heroBody"), art: "\u{1F96C}", bg: "bg-[#dff1e3]" },
+    { badge: t("home.fastDelivery"), titleA: t("home.fastDelivery"), titleB: t("home.fastDeliveryBody"), body: t("home.heroBody"), art: "\u{1F69A}", bg: "bg-[#e3eefb]" },
+    { badge: t("home.qualityChecked"), titleA: t("home.qualityChecked"), titleB: t("home.qualityBody"), body: t("home.heroBody"), art: "\u{1F34E}", bg: "bg-[#fdf0d5]" },
   ];
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
