@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Bot, LoaderCircle, Send, Sparkles, X } from 'lucide-react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { adminAiApi } from '../../api';
@@ -38,12 +38,75 @@ function WidgetChart({ chart }: { chart: AiChartData }) {
   return <div className="mt-2 overflow-hidden rounded-xl border border-zinc-200 bg-white"><div className="border-b border-zinc-100 px-3 py-1.5"><p className="text-[11px] font-bold text-zinc-800">{chart.title}</p><div className="mt-1 flex flex-wrap gap-1 text-[10px]">{stats.revenue != null ? <span className="rounded-md bg-leaf-soft px-1.5 py-px font-bold text-leaf">Tổng {widgetFullMoney(stats.revenue)}</span> : <span className="rounded-md bg-leaf-soft px-1.5 py-px font-bold text-leaf">Tổng {stats.money ? widgetFullMoney(stats.total) : `${Math.round(stats.total)} đơn`}</span>}{stats.orders != null && stats.money ? <span className="rounded-md bg-zinc-100 px-1.5 py-px font-semibold text-zinc-700">{stats.orders} đơn</span> : null}<span className="rounded-md bg-zinc-100 px-1.5 py-px font-semibold text-zinc-700">TB {stats.money ? widgetFullMoney(Math.round(stats.avg)) : `${stats.avg.toFixed(1)} đơn`}</span><span className="rounded-md bg-zinc-100 px-1.5 py-px font-semibold text-zinc-700">Đỉnh {stats.peak.label.slice(5)}: {stats.money ? widgetFullMoney(Math.round(stats.peak.value)) : `${Math.round(stats.peak.value)} đơn`}</span></div></div><div className="h-[180px] p-1.5"><ResponsiveContainer width="100%" height="100%">{chart.type === 'bar' ? <BarChart data={data} margin={{ top: 6, right: 6, left: -14, bottom: 0 }}><CartesianGrid stroke="#f1f1f4" vertical={false} /><XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 9, fill: '#a1a1aa' }} interval="preserveStartEnd" /><YAxis tickLine={false} axisLine={false} tick={{ fontSize: 9, fill: '#a1a1aa' }} /><Tooltip formatter={tip} /><Bar dataKey="value" fill="#247448" radius={[3, 3, 0, 0]} /></BarChart> : <AreaChart data={data} margin={{ top: 6, right: 6, left: -14, bottom: 0 }}><defs><linearGradient id="widget-chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#247448" stopOpacity={0.25} /><stop offset="100%" stopColor="#247448" stopOpacity={0} /></linearGradient></defs><CartesianGrid stroke="#f1f1f4" vertical={false} /><XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 9, fill: '#a1a1aa' }} interval="preserveStartEnd" /><YAxis tickLine={false} axisLine={false} tick={{ fontSize: 9, fill: '#a1a1aa' }} /><Tooltip formatter={tip} /><Area type="monotone" dataKey="value" stroke="#247448" strokeWidth={2} fill="url(#widget-chart-fill)" /></AreaChart>}</ResponsiveContainer></div></div>;
 }
 
+function renderWidgetInline(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*\n]+\*|\[[^\]]+\]\([^)\s]+\))/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) return <strong key={index} className="font-bold text-zinc-900">{renderWidgetInline(part.slice(2, -2))}</strong>;
+    if (part.startsWith('`') && part.endsWith('`') && part.length > 2) return <code key={index} className="rounded bg-zinc-100 px-1 font-mono text-[12px]">{part.slice(1, -1)}</code>;
+    if (part.startsWith('*') && part.endsWith('*') && part.length > 2) return <em key={index}>{renderWidgetInline(part.slice(1, -1))}</em>;
+    const link = part.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/);
+    if (link) {
+      const url = link[2].trim();
+      if (/^(https?:\/\/|\/|#|mailto:)/i.test(url)) return <a key={index} href={url} target={url.startsWith('http') ? '_blank' : undefined} rel="noreferrer" className="break-all font-semibold text-leaf underline underline-offset-2">{link[1]}</a>;
+      return <span key={index}>{link[1]}</span>;
+    }
+    return <span key={index}>{part}</span>;
+  });
+}
+
 function renderWidgetText(text: string) {
   const all = [...text.matchAll(/```chart[\s\S]*?```/g)];
   if (all.length > 1) { let seen = 0; text = text.replace(/```chart[\s\S]*?```/g, (m) => (++seen < all.length ? '' : m)); }
   const chart = parseAiChart(text);
-  const stripped = text.replace(/```chart[\s\S]*?```/g, '').trim() || (chart ? '' : text);
-  return <>{stripped ? <p className="whitespace-pre-wrap">{stripped}</p> : null}{chart ? <WidgetChart chart={chart} /> : null}</>;
+  const stripped = text.replace(/```chart[\s\S]*?```/g, '').replace(/\[ID:\d+(?:,QTY:\d+)?\]/g, '').replace(/(\d)(đ\b)/g, '$1 $2');
+  if (!stripped.trim()) return <>{chart ? <WidgetChart chart={chart} /> : null}</>;
+  const lines = stripped.split('\n');
+  for (let i = lines.length - 1; i > 0; i--) {
+    const cur = lines[i].trim();
+    const prev = lines[i - 1].trim();
+    if (/^\|/.test(cur) && !/\|\s*$/.test(cur) && /\|\s*$/.test(prev)) { lines[i - 1] = `${prev} ${cur}`; lines.splice(i, 1); }
+    else if (/^\|/.test(cur) && /^#{1,4}\s/.test(prev) && /\|/.test(prev)) { lines[i - 1] = `${prev} ${cur}`; lines.splice(i, 1); }
+  }
+  const blocks: ReactNode[] = [];
+  let table: string[][] = [];
+  let code: string[] | null = null;
+  const hideTablesForChart = chart != null;
+  const flushTable = (key: string) => {
+    if (!table.length) return;
+    if (hideTablesForChart) { table = []; return; }
+    const header = table[0];
+    const body = table.slice(1).filter((row) => !row.every((cell) => /^:?-{2,}:?$/.test(cell.trim())));
+    blocks.push(<div key={key} className="overflow-x-auto"><table className="w-full border-collapse text-left text-[12px]"><thead><tr>{header.map((cell, i) => <th key={i} className="border-b border-zinc-200 px-2 py-1.5 font-bold text-zinc-800">{renderWidgetInline(cell.trim())}</th>)}</tr></thead><tbody>{body.map((row, r) => <tr key={r} className="odd:bg-zinc-50/70">{row.map((cell, i) => <td key={i} className="border-b border-zinc-100 px-2 py-1.5 text-zinc-700">{renderWidgetInline(cell.trim())}</td>)}</tr>)}</tbody></table></div>);
+    table = [];
+  };
+  const flushCode = (key: string) => {
+    if (code == null) return;
+    blocks.push(<pre key={key} className="overflow-x-auto rounded-lg bg-zinc-950 px-2.5 py-2 font-mono text-[11px] leading-5 text-zinc-100">{code.join('\n') || ' '}</pre>);
+    code = null;
+  };
+  lines.forEach((line, index) => {
+    const trimmed = line.trim();
+    if (/^```/.test(trimmed)) {
+      if (code == null) { flushTable(`t-${index}`); code = []; }
+      else flushCode(`c-${index}`);
+      return;
+    }
+    if (code != null) { code.push(line.replace(/\t/g, '  ')); return; }
+    if (/^#{1,4}\s/.test(trimmed) && trimmed.includes('|')) { const title = trimmed.replace(/\|.*$/, '').trim(); blocks.push(<p key={index} className="font-extrabold text-zinc-900">{renderWidgetInline(title.replace(/^#{1,4}\s+/, ''))}</p>); const rest = trimmed.slice(title.length).trim().replace(/^\|+/, '').trim(); if (rest) table.push(`| ${rest}`.replace(/^\||\|$/g, '').split('|')); return; }
+    if ((/^\|/.test(trimmed) || /\|.*\|/.test(trimmed)) && (table.length || trimmed.split('|').length >= 3)) { const row = trimmed.includes('|') ? trimmed : `${trimmed} |`; table.push(row.replace(/^\||\|$/g, '').split('|')); return; }
+    flushTable(`t-${index}`);
+    if (!trimmed) { blocks.push(<div key={index} className="h-1.5" />); return; }
+    if (/^(---|\*\*\*|___)\s*$/.test(trimmed)) { blocks.push(<hr key={index} className="border-zinc-200" />); return; }
+    if (/^>\s?/.test(trimmed)) { blocks.push(<blockquote key={index} className="border-l-2 border-leaf/40 pl-2 text-zinc-600">{renderWidgetInline(trimmed.replace(/^>\s?/, ''))}</blockquote>); return; }
+    if (/^#{1,4}\s+/.test(trimmed)) { blocks.push(<p key={index} className="font-extrabold text-zinc-900">{renderWidgetInline(trimmed.replace(/^#{1,4}\s+/, ''))}</p>); return; }
+    if (/^[-*]\s+/.test(trimmed)) { blocks.push(<div key={index} className="flex gap-1.5"><span className="text-leaf">•</span><span className="min-w-0 flex-1">{renderWidgetInline(trimmed.replace(/^[-*]\s+/, ''))}</span></div>); return; }
+    if (/^\d+[.)]\s+/.test(trimmed)) { blocks.push(<div key={index} className="flex gap-1.5"><span className="font-bold text-leaf">{trimmed.match(/^\d+[.)]/)?.[0]}</span><span className="min-w-0 flex-1">{renderWidgetInline(trimmed.replace(/^\d+[.)]\s+/, ''))}</span></div>); return; }
+    blocks.push(<p key={index} className="whitespace-pre-wrap break-words">{renderWidgetInline(line)}</p>);
+  });
+  flushTable('t-end');
+  flushCode('c-end');
+  if (chart) blocks.push(<WidgetChart key="widget-chart" chart={chart} />);
+  return <div className="space-y-1.5">{blocks}</div>;
 }
 
 type ChatRow = { role: 'user' | 'assistant'; content: string };
