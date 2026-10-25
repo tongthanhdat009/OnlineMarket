@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd frontend-customer && wc -l src/main.tsx src/app/*.ts* src/styles.css src/api/*.ts src/components/*.ts* src/components/ai/*.tsx src/hooks/*.ts src/layouts/*.tsx src/lib/*.ts src/pages/*....",
+  "error": "Exit code 1\n/bin/bash: line 1: cd: frontend-customer: No such file or directory",
+  "timestamp": "2026-10-22T07:01:00.740Z",
+  "retry_count": 1
+}
