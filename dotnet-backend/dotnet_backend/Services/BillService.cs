@@ -12,10 +12,12 @@ namespace dotnet_backend.Services
     public class BillService : IBillService
     {
         private readonly ApplicationDbContext _context;
+        private readonly OdooHookService? _odoo;
 
-        public BillService(ApplicationDbContext context)
+        public BillService(ApplicationDbContext context, OdooHookService? odoo = null)
         {
             _context = context;
+            _odoo = odoo;
         }
 
         /// <summary>
@@ -133,6 +135,7 @@ namespace dotnet_backend.Services
 
             _context.Bills.Update(bill);
             await _context.SaveChangesAsync();
+            if (status.ToLower() == "paid" && _odoo != null) _ = _odoo.FirePaidAsync(bill.OrderId);
 
             return bill;
         }
@@ -152,6 +155,7 @@ namespace dotnet_backend.Services
 
             _context.Bills.Update(bill);
             await _context.SaveChangesAsync();
+            if (_odoo != null) _ = _odoo.FirePaidAsync(bill.OrderId);
 
             return bill;
         }
