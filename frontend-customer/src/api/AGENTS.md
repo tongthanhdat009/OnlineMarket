@@ -11,8 +11,15 @@ The transport boundary. One client, one file.
 
 | File | Description |
 |---|---|
-| `client.ts` | 480 lines. Exports `RequestOptions`, `OrderPageQuery`, `ApiClientOptions`, `resolveApiBaseUrl`, `API_BASE_URL`, the `CustomerApiClient` class and the singleton `apiClient` (also aliased as `customerApi`), plus `queryString`. |
-| `index.ts` | Barrel — `export * from './client'`. |
+| `client.ts` | Facade: re-exports `core/client-core` + every `*.api.ts`; creates the `apiClient`/`customerApi` singleton |
+| `index.ts` | Barrel — `export * from './client'` |
+| `*.api.ts` | One namespace factory per domain (`createAuthNamespace`, `createProductsNamespace`, …) |
+
+## Subdirectories
+
+| Directory | Purpose |
+|---|---|
+| `core/` | `CustomerApiClient` + pure URL/error helpers (see `core/AGENTS.md`) |
 
 ## For AI Agents
 

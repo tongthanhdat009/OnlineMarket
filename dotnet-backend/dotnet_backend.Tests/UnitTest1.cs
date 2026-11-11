@@ -43,7 +43,7 @@ public class AgentOperationsTests
     [Fact]
     public void ToolRegistry_IsReadOnlyAndComplete()
     {
-        Assert.Equal(6, AdminAiToolRegistry.Definitions.Count);
+        Assert.Equal(7, AdminAiToolRegistry.Definitions.Count);
         Assert.All(AdminAiToolRegistry.Definitions.Values, tool => Assert.Equal("READ_ONLY", tool.Risk));
         Assert.False(AdminAiToolRegistry.IsAllowed("execute_sql"));
     }

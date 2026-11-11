@@ -24,7 +24,7 @@ Domain logic & integrations behind `Interface/I*Service` contracts; controllers 
 | `SalesReportService.cs` | Sales reporting queries (namespace `dotnet_backend.Services`) |
 | `EmailService.cs`, `InvoicePdfService.cs` | SMTP send + QuestPDF invoice render |
 | `RefundRequestService.cs`, `RoleService.cs`, `PermissionService.cs`, `RolePermissionService.cs` | Refunds + RBAC |
-| `OdooHookService.cs` | Fire-and-forget outbound webhook to the Odoo connector on a paid order (`/ingest/market`, HMAC-SHA256 `X-Signature` header) |
+| `OdooHookService.cs` | Fire-and-forget outbound webhook to the Odoo shop API on a paid order (`POST {Odoo:Url}/api/channel/order_push` + stock pull `GET /api/channel/stock`, `X-Channel-Key` header, `channel_code` payload field, 3-attempt retry, fail-open) |
 
 ## Subdirectories
 
@@ -42,7 +42,7 @@ Domain logic & integrations behind `Interface/I*Service` contracts; controllers 
 - Preserve domain invariants & payment signature checks; add validation before mutating `Models/`.
 - `S3Service` requires `AWS_BUCKET` + creds; missing config must still build via `UnavailableS3Service`.
 - `AdminAiToolRegistry` is **read-only** by design — every tool is `Risk = "READ_ONLY"` and arbitrary SQL / `execute_sql` is rejected. Keep that when adding a tool.
-- `OdooHookService` is registered as a concrete type (`AddScoped<OdooHookService>()`), not behind an interface. It swallows all exceptions — a failed webhook must never fail the order. It reads `ODOO_CONNECTOR_URL` and `ODOO_WEBHOOK_SECRET` from the environment; there is no `.env` entry for them yet.
+- `OdooHookService` is registered as a concrete type (`AddScoped<OdooHookService>()`) and re-exposed as `IOdooSyncService`. It swallows all exceptions — a failed webhook must never fail the order. It reads `Odoo:Url` / `Odoo:ChannelKey` / `Odoo:ChannelCode` from configuration (see `dotnet-backend/.env.example`: `Odoo__Url`, `Odoo__ChannelKey`, `Odoo__ChannelCode`); there is no `ODOO_CONNECTOR_URL` / `ODOO_WEBHOOK_SECRET` / HMAC in this repo.
 - `AgentRuntime` broadcasts activity in-process through `IAgentActivityBroadcaster` (a singleton). SSE delivery is in-process only — there is no broker.
 
 ### Testing Requirements

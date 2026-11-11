@@ -41,7 +41,8 @@ namespace dotnet_backend.Services
                     !(Uri.TryCreate(item.Product.ImageUrl, UriKind.Absolute, out var imageUri) &&
                       (imageUri.Scheme == Uri.UriSchemeHttp || imageUri.Scheme == Uri.UriSchemeHttps)))
                 {
-                    item.Product!.ImageUrl = await _s3Service.GetImageUrlAsync(item.Product.ImageUrl!);
+                    try { item.Product!.ImageUrl = await _s3Service.GetImageUrlAsync(item.Product.ImageUrl!); }
+                    catch (Exception) { }
                 }
             }
 

@@ -48,7 +48,8 @@ public class OrderItemService : IOrderItemService
                 !(Uri.TryCreate(item.ImageUrl, UriKind.Absolute, out var imageUri) &&
                   (imageUri.Scheme == Uri.UriSchemeHttp || imageUri.Scheme == Uri.UriSchemeHttps)))
             {
-                item.ImageUrl = await _s3Service.GetImageUrlAsync(item.ImageUrl);
+                try { item.ImageUrl = await _s3Service.GetImageUrlAsync(item.ImageUrl); }
+                catch (Exception) { }
             }
         }
 

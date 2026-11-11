@@ -14,7 +14,7 @@ namespace dotnet_backend.Services;
 /// </summary>
 public class OdooHookService : IOdooSyncService
 {
-    private readonly ApplicationDbContext _db;
+    private readonly IServiceScopeFactory _scopes;
     private readonly IHttpClientFactory _httpFactory;
     private readonly ILogger<OdooHookService> _log;
     private readonly string _url;
@@ -22,12 +22,12 @@ public class OdooHookService : IOdooSyncService
     private readonly string _code;
 
     public OdooHookService(
-        ApplicationDbContext db,
+        IServiceScopeFactory scopes,
         IHttpClientFactory httpFactory,
         ILogger<OdooHookService> log,
         IConfiguration configuration)
     {
-        _db = db;
+        _scopes = scopes;
         _httpFactory = httpFactory;
         _log = log;
         _url = (configuration["Odoo:Url"] ?? configuration["Odoo__Url"] ?? "http://localhost:8069").TrimEnd('/');
@@ -43,7 +43,9 @@ public class OdooHookService : IOdooSyncService
         {
             try
             {
-                var o = await _db.Orders
+                using var scope = _scopes.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var o = await db.Orders
                     .Include(x => x.OrderItems)
                     .Include(x => x.Payments)
                     .FirstOrDefaultAsync(x => x.OrderId == orderId, ct);
