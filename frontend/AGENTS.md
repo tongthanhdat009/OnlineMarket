@@ -12,7 +12,7 @@ Admin SPA. package `store-admin-frontend`. React 19 + Vite 8 + TypeScript 7 + Ta
 | File                       | Description                                                                                                                                        |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `package.json`             | `dev`/`build`/`preview`/`test` only — **no `lint` and no `typecheck` script**. Type checking happens inside `build` via `tsc -b`. Node `>=20.19.0` |
-| `vite.config.ts`           | Port **5173**, proxies `/api` → `http://localhost:7000`. No `test` block, so vitest runs on its defaults                                           |
+| `vite.config.ts`           | Port **5188**, proxies `/api` → `http://localhost:7000`. No `test` block, so vitest runs on its defaults                                           |
 | `.env.example`             | `VITE_API_URL=/api`                                                                                                                                |
 | `src/router.tsx`           | The whole route table, built eagerly — no `lazy()` anywhere                                                                                        |
 | `src/pages/AdminPages.tsx` | **1172 lines holding every page in the app**                                                                                                        |
@@ -100,7 +100,7 @@ The router dispatches pages by **string key** (`router.tsx:27-44`): `page('dashb
 - A `401` triggers exactly one refresh-and-retry (`api-client.ts:313`), and refresh itself is de-duplicated through `refreshInFlight`. Requests to `/api/auth/login` and `/api/auth/refresh` are excluded. If retry-once is not enough, the client calls `onSessionExpired` and gives up.
 - **Base URL default is `""`, not `/api` (`api-client.ts:214`).** With no `.env`, requests go to `/api/<path>` on the current origin, which the Vite proxy forwards. In a production build there is no proxy — set `VITE_API_URL` to an absolute origin or every call 404s.
 - `api-client.ts` is 445 lines of hand-rolled fetch. There is no axios, no react-query query-default fetcher and no retry/backoff library; `request` and `requestRaw` (`:278`, `:333`) are near-duplicates by design, because `requestRaw` must not consume the body — the agent SSE reader needs the stream.
-- The backend CORS allowlist covers `localhost` and `127.0.0.1` on :5173 only. Opening the dev server via a LAN IP makes login fail with no on-screen error.
+- The backend CORS allowlist covers `localhost` and `127.0.0.1` on :5188 only. Opening the dev server via a LAN IP makes login fail with no on-screen error.
 - `permissions.ts` is a UX filter only. The backend enforces permissions on the agent and AI endpoints alone.
 
 <!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->

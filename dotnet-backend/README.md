@@ -223,7 +223,7 @@ dotnet-backend/
 ### CORS Configuration
 
 - Allowed Origins:
-  - `http://localhost:5173` (React admin), `http://localhost:5193` (React customer)
+  - `http://localhost:5188` (React admin), `http://localhost:5193` (React customer)
 
 ## Local MySQL (Docker)
 

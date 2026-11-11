@@ -48,7 +48,7 @@ Phạm vi: API ASP.NET Core + MySQL 8.0, admin SPA, customer SPA, payment/checko
 - Admin Vitest: **10/10 consecutive**, mỗi lần `4/4 passed`.
 - Customer Vitest: **10/10 consecutive**, mỗi lần `2 files / 9 tests passed`.
 - `make build`: backend + 2 SPA build pass; backend **0 warning / 0 error**.
-- SPA dev smoke: `http://127.0.0.1:5173/` và `:5193/` đều HTTP 200 HTML.
+- SPA dev smoke: `http://127.0.0.1:5188/` và `:5193/` đều HTTP 200 HTML.
 - `9router` container: `running`, `/api/health` HTTP 200, port `20128`; authenticated `/v1/models` **10/10 HTTP 200**, configured model `onlinemarket` tồn tại; authenticated `/v1/chat/completions` **3/3 HTTP 200**; customer AI chat retry **3/3 HTTP 200**, customer/admin AI SSE đều có event `done`. `/v1/*` cần API key lưu trong local 9router DB và khớp `.env`; không ghi key vào report.
 - Admin Agent Operations: `/api/admin/agents`, `agent-runs`, `agent-activity`, `agent-tools`, `agent-analytics`, `agent-reports` **10/10 lần × 6 endpoint**; admin 200, staff/customer 403, anonymous 401. Activity SSE được test admin **3/3 header 200**, staff **3/3 403**.
 

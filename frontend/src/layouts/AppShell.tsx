@@ -30,6 +30,8 @@ import {
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { IconButton, ShortcutHint } from '../components/primitives';
 import { AdminAssistantWidget } from '../components/ai/AdminAssistantWidget';
+import { useQuery } from '@tanstack/react-query';
+import { ordersApi, productsApi, billsApi } from '../api';
 import type { ReactNode } from 'react';
 
 export type PermissionValue = string[] | Set<string>;
@@ -95,17 +97,37 @@ export function AppShell({ permissions, storeName = 'GREEN BASKET', storeSubtitl
   const [collapsed, setCollapsed] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const visibleGroups = useMemo(() => navGroups.map((group) => ({ ...group, items: group.items.filter((item) => canSee(item, permissions)) })).filter((group) => group.items.length > 0), [permissions]);
+
+  const pendingOrdersQuery = useQuery({ queryKey: ['notifications', 'pending-orders'], queryFn: () => ordersApi.online({ pageSize: 50 }), staleTime: 60_000 });
+  const pendingRefundsQuery = useQuery({ queryKey: ['notifications', 'refunds'], queryFn: () => ordersApi.refundRequests({ pageSize: 50 }), staleTime: 60_000 });
+  const lowStockQuery = useQuery({ queryKey: ['notifications', 'low-stock'], queryFn: () => productsApi.list({ pageSize: 200 }), staleTime: 60_000 });
+  const unpaidBillsQuery = useQuery({ queryKey: ['notifications', 'bills'], queryFn: () => billsApi.list({ pageSize: 100 }), staleTime: 60_000 });
+
+  const notifications = useMemo(() => {
+    const items: Array<{ id: string; title: string; count: number; to: string }> = [];
+    const pendingOrders = (pendingOrdersQuery.data?.items ?? []).filter((order) => ['pending', 'processing'].includes((order.OrderStatus ?? '').toLowerCase()));
+    if (pendingOrders.length) items.push({ id: 'orders', title: 'Đơn hàng cần xử lý', count: pendingOrders.length, to: '/orders' });
+    const pendingRefunds = (pendingRefundsQuery.data?.items ?? []).filter((refund) => (refund.Status ?? '').toLowerCase() === 'pending');
+    if (pendingRefunds.length) items.push({ id: 'refunds', title: 'Yêu cầu hoàn tiền chờ duyệt', count: pendingRefunds.length, to: '/refunds' });
+    const lowStock = (lowStockQuery.data?.items ?? []).filter((product) => !product.Deleted && (product.Quantity ?? 0) <= 5);
+    if (lowStock.length) items.push({ id: 'low-stock', title: 'Sản phẩm sắp hết / hết hàng', count: lowStock.length, to: '/inventory' });
+    const unpaidBills = (unpaidBillsQuery.data?.items ?? []).filter((bill) => (bill.PayStatus ?? '').toLowerCase() === 'unpaid');
+    if (unpaidBills.length) items.push({ id: 'bills', title: 'Hóa đơn chưa thanh toán', count: unpaidBills.length, to: '/bills' });
+    return items;
+  }, [pendingOrdersQuery.data, pendingRefundsQuery.data, lowStockQuery.data, unpaidBillsQuery.data]);
+  const notificationCount = notifications.reduce((sum, item) => sum + item.count, 0);
 
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setSearchOpen(true); }
-      if (event.key === 'Escape') { setSearchOpen(false); setProfileOpen(false); }
+      if (event.key === 'Escape') { setSearchOpen(false); setProfileOpen(false); setNotificationsOpen(false); }
     };
     window.addEventListener('keydown', listener);
     return () => window.removeEventListener('keydown', listener);
@@ -128,7 +150,7 @@ export function AppShell({ permissions, storeName = 'GREEN BASKET', storeSubtitl
     <div className={`min-h-screen transition-[padding] duration-200 ${collapsed ? 'lg:pl-[76px]' : 'lg:pl-[252px]'}`}>
       <header className="sticky top-0 z-20 flex h-[72px] items-center justify-between gap-3 border-b border-zinc-200/90 bg-white/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-2"><IconButton label="Mở menu" onClick={() => setSidebarOpen(true)} className="lg:hidden"><Menu size={20} /></IconButton><button type="button" onClick={() => setSearchOpen(true)} className="hidden h-10 min-w-0 items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50/60 px-3 text-sm text-zinc-400 transition hover:border-zinc-300 hover:bg-white sm:flex sm:w-[280px] lg:w-[360px]"><Search size={16} /><span className="flex-1 text-left">Tìm kiếm mọi thứ...</span><ShortcutHint>⌘ K</ShortcutHint></button></div>
-        <div className="flex items-center gap-1 sm:gap-2"><IconButton label="Thông báo" className="relative"><Bell size={18} /><span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-red-500 ring-2 ring-white" /></IconButton><div className="relative ml-1"><button type="button" onClick={() => setProfileOpen((value) => !value)} className="flex items-center gap-2 rounded-lg p-1.5 pr-2 transition hover:bg-zinc-100"><span className="flex size-8 items-center justify-center rounded-lg bg-leaf text-xs font-bold text-white">{initials(user.name)}</span><span className="hidden max-w-[120px] text-left sm:block"><span className="block truncate text-xs font-bold text-zinc-800">{user.name ?? 'Quản trị viên'}</span><span className="block truncate text-[10px] text-zinc-400">{user.role ?? 'Quản trị'}</span></span></button>{profileOpen ? <div className="absolute right-0 top-12 w-52 overflow-hidden rounded-xl border border-zinc-200 bg-white p-1.5 shadow-xl"><div className="border-b border-zinc-100 px-3 py-2.5"><p className="truncate text-xs font-bold text-zinc-800">{user.name ?? 'Quản trị viên'}</p><p className="truncate text-[11px] text-zinc-400">{user.email ?? 'Tài khoản quản trị'}</p></div><button type="button" onClick={() => { setProfileOpen(false); navigate('/profile'); }} className="mt-1 flex h-9 w-full items-center gap-2 rounded-lg px-3 text-xs font-semibold text-zinc-600 hover:bg-zinc-50"><CircleUserRound size={15} /> Hồ sơ cá nhân</button><button type="button" onClick={onSignOut} className="flex h-9 w-full items-center gap-2 rounded-lg px-3 text-xs font-semibold text-red-600 hover:bg-red-50"><LogOut size={15} /> Đăng xuất</button></div> : null}</div></div>
+        <div className="flex items-center gap-1 sm:gap-2"><div className="relative"><IconButton label="Thông báo" onClick={() => setNotificationsOpen((value) => !value)} className="relative"><Bell size={18} />{notificationCount > 0 ? <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-red-500 ring-2 ring-white" /> : null}</IconButton>{notificationsOpen ? <div className="absolute right-0 top-12 w-80 overflow-hidden rounded-xl border border-zinc-200 bg-white p-1.5 shadow-xl"><div className="border-b border-zinc-100 px-3 py-2.5"><p className="text-sm font-bold text-zinc-900">Thông báo</p><p className="text-[11px] text-zinc-400">{notificationCount ? `${notificationCount} mục cần chú ý` : 'Không có thông báo mới'}</p></div><div className="max-h-80 overflow-y-auto">{notifications.length ? notifications.map((item) => <button key={item.id} type="button" onClick={() => { setNotificationsOpen(false); navigate(item.to); }} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-zinc-50"><span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700"><Bell size={15} /></span><span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold text-zinc-800">{item.title}</span><span className="block text-[11px] text-zinc-400">{item.count} mục</span></span><ChevronRight size={14} className="text-zinc-300" /></button>) : <p className="px-3 py-6 text-center text-xs text-zinc-400">Không có thông báo mới.</p>}</div></div> : null}</div><div className="relative ml-1"><button type="button" onClick={() => setProfileOpen((value) => !value)} className="flex items-center gap-2 rounded-lg p-1.5 pr-2 transition hover:bg-zinc-100"><span className="flex size-8 items-center justify-center rounded-lg bg-leaf text-xs font-bold text-white">{initials(user.name)}</span><span className="hidden max-w-[120px] text-left sm:block"><span className="block truncate text-xs font-bold text-zinc-800">{user.name ?? 'Quản trị viên'}</span><span className="block truncate text-[10px] text-zinc-400">{user.role ?? 'Quản trị'}</span></span></button>{profileOpen ? <div className="absolute right-0 top-12 w-52 overflow-hidden rounded-xl border border-zinc-200 bg-white p-1.5 shadow-xl"><div className="border-b border-zinc-100 px-3 py-2.5"><p className="truncate text-xs font-bold text-zinc-800">{user.name ?? 'Quản trị viên'}</p><p className="truncate text-[11px] text-zinc-400">{user.email ?? 'Tài khoản quản trị'}</p></div><button type="button" onClick={() => { setProfileOpen(false); navigate('/profile'); }} className="mt-1 flex h-9 w-full items-center gap-2 rounded-lg px-3 text-xs font-semibold text-zinc-600 hover:bg-zinc-50"><CircleUserRound size={15} /> Hồ sơ cá nhân</button><button type="button" onClick={onSignOut} className="flex h-9 w-full items-center gap-2 rounded-lg px-3 text-xs font-semibold text-red-600 hover:bg-red-50"><LogOut size={15} /> Đăng xuất</button></div> : null}</div></div>
       </header>
       <main className="mx-auto w-full max-w-[1680px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8"><Outlet /></main>
     </div>

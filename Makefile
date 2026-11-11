@@ -22,7 +22,7 @@ help: ## Hiện tất cả lệnh
 	@echo "  make db-up            # bật MySQL docker"
 	@echo "  make dev              # bật DB + API + 2 React app"
 	@echo "  make dev-api          # chỉ API (http://localhost:7000)"
-	@echo "  make dev-admin        # React admin (http://localhost:5173)"
+	@echo "  make dev-admin        # React admin (http://localhost:5188)"
 	@echo "  make dev-customer     # React customer (http://localhost:5193)"
 
 # ── Env ───────────────────────────────────────────────────────────
@@ -113,7 +113,7 @@ dev-api: env-check db-up ## Chạy API (http://localhost:7000)
 	set -a; source $(ENV_FILE); set +a; \
 	ASPNETCORE_ENVIRONMENT=Development dotnet run --project $(BACKEND_PROJ)
 
-dev-admin: ## Chạy React admin (http://localhost:5173)
+dev-admin: ## Chạy React admin (http://localhost:5188)
 	npm run dev --prefix $(ADMIN_DIR) -- --host 0.0.0.0
 
 dev-customer: ## Chạy React customer storefront (http://localhost:5193)
@@ -122,7 +122,7 @@ dev-customer: ## Chạy React customer storefront (http://localhost:5193)
 # ── Dev — chạy full ───────────────────────────────────────────────
 .PHONY: dev dev-all dev-bg dev-stop urls open
 dev: db-up ## Bật DB + API + 2 React app song song (Ctrl+C để dừng tất cả)
-	@echo "→ Khởi động API (7000) + React admin (5173) + customer (5193)..."
+	@echo "→ Khởi động API (7000) + React admin (5188) + customer (5193)..."
 	@$(MAKE) -j3 dev-api dev-admin dev-customer
 
 dev-all: dev ## Alias của dev
@@ -144,13 +144,13 @@ dev-stop: ## Dừng các process dev-bg
 
 urls: ## In URLs dev
 	@echo "  API:    http://localhost:7000  (swagger: http://localhost:7000/swagger nếu bật)"
-	@echo "  Admin:  http://localhost:5173"
+	@echo "  Admin:  http://localhost:5188"
 	@echo "  Customer: http://localhost:5193"
 	@echo "  MySQL:  127.0.0.1:3308  (db: store_management, user: root)"
 
 open: ## Mở API + React apps bằng xdg-open/open
-	@(command -v xdg-open >/dev/null && xdg-open http://localhost:7000 & xdg-open http://localhost:5173 & xdg-open http://localhost:5193 &) || \
-	 (command -v open >/dev/null && open http://localhost:7000 & open http://localhost:5173 & open http://localhost:5193 &) || \
+	@(command -v xdg-open >/dev/null && xdg-open http://localhost:7000 & xdg-open http://localhost:5188 & xdg-open http://localhost:5193 &) || \
+	 (command -v open >/dev/null && open http://localhost:7000 & open http://localhost:5188 & open http://localhost:5193 &) || \
 	 echo "Không tìm thấy xdg-open/open — dùng 'make urls' để xem URL"
 
 # ── Clean ─────────────────────────────────────────────────────────

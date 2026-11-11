@@ -17,7 +17,7 @@ The app is a desktop-first operational console with a 240–260px sidebar, topba
 - Tailwind CSS 4.3.3 using the `@tailwindcss/vite` plugin and CSS-first theme tokens.
 - React Router 7, TanStack Query 5, Lucide React icons, Recharts for charts.
 - Vitest + Testing Library for focused component and adapter checks.
-- Dev server port `5173`; Vite proxy `/api` → `http://localhost:7000`.
+- Dev server port `5188`; Vite proxy `/api` → `http://localhost:7000`.
 
 ## Architecture and boundaries
 

@@ -172,7 +172,7 @@ else
     Console.WriteLine("⚠️ AWS credentials or bucket not configured. S3 service will not be available.");
 }
 
-// ✅ 6. Bật CORS cho các frontend (React admin 5173, React customer 5193)
+// ✅ 6. Bật CORS cho các frontend (React admin 5188, React customer 5193)
 // Ghi rõ cả localhost và 127.0.0.1: trình duyệt coi chúng là origin khác
 // nhau, và CORS khớp theo scheme+host+port chính xác. Thiếu alias loopback
 // khiến POST /api/Auth/login bị chặn và màn hình đăng nhập "không hoạt động".
@@ -181,8 +181,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontendApps",
         policy => policy
             .WithOrigins(
-                "http://localhost:5173", // React admin
-                "http://127.0.0.1:5173",
+                "http://localhost:5188", // React admin
+                "http://127.0.0.1:5188",
                 "http://localhost:5193", // React customer
                 "http://127.0.0.1:5193"
             )

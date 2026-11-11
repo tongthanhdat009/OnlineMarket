@@ -46,7 +46,7 @@ Monorepo store-management: .NET 10 API + MySQL, React admin/customer SPAs.
 - Auth: admin `AuthService`/`AuthController` vs customer `CustomerAuthService`/`CustomerAuthController`; JWT `sub` claim via `JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear()` + `NameClaimType="sub"`
 - Payments: `VNPayService` + `S3Service`/`UnavailableS3Service` (graceful when AWS env missing), `InvoicePdfService` (QuestPDF)
 - AI: `AiService` (customer chat), `AdminAiService` + `AgentRuntime`/`AdminAiToolRegistry`/`AgentOperationsService`/`AgentReportService`/`AgentAutoAnalysisService`
-- Outbound integration: `Services/OdooHookService.cs` fires a signed order-paid webhook to `ODOO_CONNECTOR_URL`
+- Outbound integration: `Services/OdooHookService.cs` fires a fail-open order-paid webhook to `{Odoo:Url}/api/channel/order_push` with `X-Channel-Key` header (config `Odoo__Url` / `Odoo__ChannelKey` / `Odoo__ChannelCode`, see `dotnet-backend/.env.example`)
 
 ## Conventions
 
@@ -99,7 +99,7 @@ Monorepo store-management: .NET 10 API + MySQL, React admin/customer SPAs.
 ```bash
 make install          # dotnet restore API + npm install (admin/customer)
 make db-up && make db-wait   # MySQL 127.0.0.1:3308 / store_management
-make dev              # DB + API :7000 + React admin :5173 + customer :5193
+make dev              # DB + API :7000 + React admin :5188 + customer :5193
 make build            # build API + React admin/customer
 make static-check     # pre-push gate (== make build)
 # granular:

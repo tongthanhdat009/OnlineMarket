@@ -38,7 +38,7 @@
 - Keep `nullable` + `implicitUsings`; don't add secrets to `appsettings*.json`.
 - New `I*Service` → register in `Program.cs` (`AddScoped`); new entity → update `ApplicationDbContext` + `Models/` + `Dtos/` together.
 - Duplicate registration exists (`AddScoped<IOrderService>` twice, plus concrete `PromotionService`); preserve until intentional dedupe.
-- CORS policy `AllowFrontendApps` must allow React admin `:5173` and React customer `:5193` (localhost and 127.0.0.1).
+- CORS policy `AllowFrontendApps` must allow React admin `:5188` and React customer `:5193` (localhost and 127.0.0.1).
 - `Program.cs` calls `Database.Migrate()` **only** when `ASPNETCORE_ENVIRONMENT=Development`; staging/prod migrations run from the `efbundle` in `deploy/staging/deploy.sh`.
 - The dev-only block in `Program.cs` also seeds agent tools for `AgentId == 1` — it is a dev convenience, not a migration.
 

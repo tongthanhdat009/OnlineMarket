@@ -16,7 +16,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`. Vite proxies `/api/*` to `http://localhost:7000`, so the API client does not need a separate CORS origin during local development. Set `VITE_API_URL` to an absolute API origin for a deployed environment.
+Open `http://localhost:5188`. Vite proxies `/api/*` to `http://localhost:7000`, so the API client does not need a separate CORS origin during local development. Set `VITE_API_URL` to an absolute API origin for a deployed environment.
 
 ```bash
 npm run test -- --run

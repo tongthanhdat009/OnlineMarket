@@ -8,7 +8,7 @@
 
 ## Global Constraints
 
-- Root app path: `frontend/`; dev port: `5173`; API proxy: `http://localhost:7000`.
+- Root app path: `frontend/`; dev port: `5188`; API proxy: `http://localhost:7000`.
 - Preserve .NET PascalCase response/request fields unless a documented adapter derives a view value.
 - Paginated requests always include both `page` and `pageSize`.
 - Frontend permissions are UX guards only; never claim they replace API authorization.

@@ -5,7 +5,7 @@ Monorepo quản lý cửa hàng: .NET 10 API + MySQL, React admin + customer SPA
 | Thành phần | Tech | Dev URL | Vai trò |
 |---|---|---|---|
 | API | ASP.NET Core `net10.0`, EF Core + Pomelo MySQL | `http://localhost:7000` | Auth, nghiệp vụ, MySQL, VNPay, S3, AI, PDF |
-| Admin | React `19.3.0` + TS + Vite `8.3.1` | `http://localhost:5173` | Dashboard, POS, orders, catalog, finance, AI agents, RBAC |
+| Admin | React `19.3.0` + TS + Vite `8.3.1` | `http://localhost:5188` | Dashboard, POS, orders, catalog, finance, AI agents, RBAC |
 | Storefront | React `19.3.0` + TS + Vite `8.3.1` | `http://localhost:5193` | Home, catalog, cart, checkout, VNPay, account, AI chat |
 | DB | MySQL `8.0` Docker | `127.0.0.1:3308` | DB `store_management`, user `root`, no password |
 
@@ -19,7 +19,7 @@ OnlineMarket/
 ├── Makefile                      # source of truth lệnh dev/build/db
 ├── dotnet-backend/               # ASP.NET Core API + docker-compose.yml MySQL 8.0
 │   └── dotnet_backend/           # project chính: Controllers/Services/Models/Dtos/Database/Migrations
-├── frontend/                     # React admin SPA (:5173)
+├── frontend/                     # React admin SPA (:5188)
 ├── frontend-customer/            # React customer storefront (:5193)
 ├── e2e/                          # Playwright admin + customer
 ├── deploy/staging/               # nginx + PM2 + bootstrap/deploy staging VPS
@@ -33,7 +33,7 @@ Chi tiết: `dotnet-backend/AGENTS.md`, `frontend/AGENTS.md`, `frontend-customer
 
 - .NET SDK `10`, Node `>=20.19.0` + npm, Docker Engine + Compose v2.
 - `openssl` tùy chọn (`make env` sinh `Jwt__Secret`).
-- Port trống: `7000`, `5173`, `5193`, `3308`.
+- Port trống: `7000`, `5188`, `5193`, `3308`.
 
 ## Chạy nhanh
 
@@ -42,7 +42,7 @@ make env                  # copy .env.example → .env, sinh Jwt__Secret nếu c
 # mở dotnet-backend/.env điền VNPay/AWS/OpenAI/Email nếu test tích hợp
 make install              # dotnet restore + npm install admin/customer
 make db-up && make db-wait
-make dev                  # DB + API :7000 + admin :5173 + customer :5193
+make dev                  # DB + API :7000 + admin :5188 + customer :5193
 make urls                 # in URLs
 ```
 
@@ -50,7 +50,7 @@ Chạy lẻ / nền:
 
 ```bash
 make dev-api              # API :7000, tự bật DB, Development tự Migrate
-make dev-admin            # admin :5173
+make dev-admin            # admin :5188
 make dev-customer         # customer :5193
 make dev-bg               # nền, log .make-dev-*.log, PID .make-dev-*.pid
 make dev-stop             # dừng dev-bg

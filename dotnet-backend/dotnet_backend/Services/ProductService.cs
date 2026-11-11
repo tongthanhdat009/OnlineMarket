@@ -61,7 +61,8 @@ public class ProductService : IProductService
         {
             if (!string.IsNullOrEmpty(product.ImageUrl))
             {
-                product.ImageUrl = await _s3Service.GetImageUrlAsync(product.ImageUrl);
+                try { product.ImageUrl = await _s3Service.GetImageUrlAsync(product.ImageUrl); }
+                catch (Exception) { }
             }
         }
 
@@ -106,7 +107,8 @@ public class ProductService : IProductService
         {
             if (!string.IsNullOrEmpty(product.ImageUrl))
             {
-                product.ImageUrl = await _s3Service.GetImageUrlAsync(product.ImageUrl);
+                try { product.ImageUrl = await _s3Service.GetImageUrlAsync(product.ImageUrl); }
+                catch (Exception) { }
             }
         }
 
@@ -118,19 +120,31 @@ public class ProductService : IProductService
         var result = await _context.OrderItems
             .Join(
                 _context.Products,
-                oi => oi.ProductId,        
-                p => p.ProductId,          
-                (oi, p) => new { p.ProductName, oi.ProductId }
+                oi => oi.ProductId,
+                p => p.ProductId,
+                (oi, p) => new { p.ProductId, p.ProductName, p.ImageUrl, oi.Quantity }
             )
-            .GroupBy(x => x.ProductName)
+            .GroupBy(x => new { x.ProductId, x.ProductName, x.ImageUrl })
             .Select(g => new TopProductDto
             {
-                ProductName = g.Key,
-                TotalOrders = g.Count()
+                ProductId = g.Key.ProductId,
+                ProductName = g.Key.ProductName,
+                ImageUrl = g.Key.ImageUrl,
+                TotalOrders = g.Count(),
+                SoldQuantity = g.Sum(x => x.Quantity)
             })
-            .OrderByDescending(x => x.TotalOrders)
+            .OrderByDescending(x => x.SoldQuantity)
             .Take(topCount)
             .ToListAsync();
+
+        foreach (var product in result)
+        {
+            if (!string.IsNullOrEmpty(product.ImageUrl))
+            {
+                try { product.ImageUrl = await _s3Service.GetImageUrlAsync(product.ImageUrl); }
+                catch (Exception) { }
+            }
+        }
 
         return result;
     }
@@ -187,7 +201,8 @@ public class ProductService : IProductService
 
         if (productDto != null && !string.IsNullOrEmpty(productDto.ImageUrl))
         {
-            productDto.ImageUrl = await _s3Service.GetImageUrlAsync(productDto.ImageUrl);
+            try { productDto.ImageUrl = await _s3Service.GetImageUrlAsync(productDto.ImageUrl); }
+            catch (Exception) { }
         }
 
         return productDto;
@@ -291,7 +306,8 @@ public class ProductService : IProductService
         // Generate presigned URL for image (including 0.png)
         if (createdProduct != null && !string.IsNullOrEmpty(createdProduct.ImageUrl))
         {
-            createdProduct.ImageUrl = await _s3Service.GetImageUrlAsync(createdProduct.ImageUrl);
+            try { createdProduct.ImageUrl = await _s3Service.GetImageUrlAsync(createdProduct.ImageUrl); }
+            catch (Exception) { }
         }
 
         return createdProduct ?? throw new InvalidOperationException("Không thể tải sản phẩm vừa tạo.");
@@ -393,7 +409,8 @@ public class ProductService : IProductService
         // Generate presigned URL for image (including 0.png)
         if (updatedProduct != null && !string.IsNullOrEmpty(updatedProduct.ImageUrl))
         {
-            updatedProduct.ImageUrl = await _s3Service.GetImageUrlAsync(updatedProduct.ImageUrl);
+            try { updatedProduct.ImageUrl = await _s3Service.GetImageUrlAsync(updatedProduct.ImageUrl); }
+            catch (Exception) { }
         }
 
         return updatedProduct;
@@ -527,7 +544,11 @@ public class ProductService : IProductService
             Supplier = p.Supplier != null ? new SupplierDto { SupplierId = p.Supplier.SupplierId, Name = p.Supplier.Name, Phone = p.Supplier.Phone, Email = p.Supplier.Email, Address = p.Supplier.Address } : null
         }).ToList();
         foreach (var dto in dtos)
-            if (!string.IsNullOrEmpty(dto.ImageUrl)) dto.ImageUrl = await _s3Service.GetImageUrlAsync(dto.ImageUrl);
+            if (!string.IsNullOrEmpty(dto.ImageUrl))
+            {
+                try { dto.ImageUrl = await _s3Service.GetImageUrlAsync(dto.ImageUrl); }
+                catch (Exception) { }
+            }
         return new PagedResultDto<ProductDto> { Items = dtos, TotalCount = total, Page = page, PageSize = pageSize };
     }
 }

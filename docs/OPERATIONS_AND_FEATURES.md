@@ -21,7 +21,7 @@ API JSON giữ PascalCase (`PropertyNamingPolicy=null`); client phải chấp nh
 - .NET SDK 10 (`dotnet-backend/dotnet_backend/dotnet-backend.csproj`) và Node.js + npm cho `frontend/`, `frontend-customer/`.
 - Docker Engine + Docker Compose v2.
 - `openssl` tùy chọn; `make env` dùng để tạo JWT secret.
-- Cổng trống: `7000`, `5173`, `5193`, `3308`.
+- Cổng trống: `7000`, `5188`, `5193`, `3308`.
 
 ## 3. Cài đặt và chạy local
 
@@ -45,7 +45,7 @@ Chạy lẻ:
 
 ```bash
 make dev-api       # API :7000; tự bật DB, Development migration
-make dev-admin      # React admin :5173
+make dev-admin      # React admin :5188
 make dev-customer   # React customer :5193
 make dev-bg        # chạy nền; log .make-dev-*.log, PID .make-dev-*.pid
 make dev-stop      # dừng process do dev-bg tạo
@@ -100,7 +100,7 @@ Không commit `.env`, JWT secret, AWS key, VNPay hash secret, OpenAI key, email 
 
 - Backend load `.env`, bắt buộc connection string + JWT issuer/audience/secret.
 - JWT giữ claim `sub`, kiểm tra issuer, audience, signing key, lifetime; `ClockSkew=Zero`.
-- CORS cho React admin `5173` và React customer `5193`; credentials được bật.
+- CORS cho React admin `5188` và React customer `5193`; credentials được bật.
 - S3 có fallback an toàn: thiếu `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` hoặc bucket thì upload ảnh không hoạt động thay vì làm API không khởi động.
 - AI dùng OpenAI-compatible gateway, HTTP timeout cấu hình được; admin/customer chat stream theo SSE.
 - Invoice PDF dùng QuestPDF Community.
@@ -216,7 +216,7 @@ Dùng sandbox URL mặc định trong template. Cấu hình `VNPay__*` bắt bu�
 | React CORS hoặc API fail       | Kiểm tra API `:7000`, React customer `:5193`, CORS trong `Program.cs`                  |
 | MySQL không healthy             | `make db-ps`, `make db-logs`, `make db-wait`                                                       |
 | S3 upload không chạy            | Điền `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_BUCKET`; xem log fallback                  |
-| Dev nền treo/cổng bận           | `make dev-stop`; `lsof -i :7000 -i :5173 -i :5193 -i :3308`                                      |
+| Dev nền treo/cổng bận           | `make dev-stop`; `lsof -i :7000 -i :5188 -i :5193 -i :3308`                                      |
 | Build fail                      | Chạy granular build theo mục 3 để cô lập ứng dụng lỗi                                              |
 | Production migration thiếu      | Chạy `dotnet ef database update`/migration pipeline trước chạy API; auto migration chỉ Development |
 
