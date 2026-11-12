@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { ImageOff, Minus, Plus, Search, ShoppingCart, Sparkles, Trash2, X, Check, ChevronRight } from "lucide-react";
-import { useLocale } from "../app/providers";
+import { useLocale, useToast } from "../app/providers";
 import {
   categoryName,
   productInStock,
@@ -461,6 +461,18 @@ export function Toast({
       <button aria-label={t("common.dismiss")} onClick={onClose}>
         <X size={16} />
       </button>
+    </div>
+  );
+}
+
+export function Toaster() {
+  const { toasts, dismissToast } = useToast();
+  if (toasts.length === 0) return null;
+  return (
+    <div className="fixed right-4 top-4 z-[60] flex w-[calc(100%-2rem)] max-w-sm flex-col items-end gap-2 md:right-6 md:top-6 md:w-auto">
+      {toasts.map((toast) => (
+        <Toast key={toast.id} message={toast.message} kind={toast.kind} onClose={() => dismissToast(toast.id)} />
+      ))}
     </div>
   );
 }

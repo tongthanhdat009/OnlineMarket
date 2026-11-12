@@ -23,6 +23,29 @@ import { translator } from "../lib/translator";
 
 const t = translator;
 
+// Ảnh danh mục (public/images/categories/*), tra cứu theo tên không dấu.
+// Danh mục nào chưa có ảnh sẽ fallback về emoji như cũ.
+const CATEGORY_IMAGE_BY_NAME: Record<string, string> = {
+  "do uong": "/images/categories/do-uong.jpg",
+  "banh keo": "/images/categories/banh-keo.jpg",
+  "gia vi": "/images/categories/gia-vi.jpg",
+  "do gia dung": "/images/categories/do-gia-dung.jpg",
+  "my pham": "/images/categories/my-pham.jpg",
+};
+const CATEGORY_FALLBACK_EMOJI = ["🥤", "🍜", "🧼", "🍪", "🥦", "🧴"];
+
+function categoryImageSrc(categoryName: string | undefined): string | undefined {
+  if (!categoryName) return undefined;
+  const key = categoryName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return CATEGORY_IMAGE_BY_NAME[key];
+}
+
 export function HomePage() {
   const { data: products = [], isLoading, isError, refetch } = useCatalog();
   const { data: categories = [] } = useCategories();
@@ -52,9 +75,9 @@ export function HomePage() {
     void add({ ProductId: product.ProductId, Quantity: 1 });
   };
   const heroSlides = [
-    { badge: t("home.heroBadge"), titleA: t("home.heroTitleA"), titleB: t("home.heroTitleB"), body: t("home.heroBody"), art: "\u{1F96C}", bg: "bg-[#dff1e3]" },
-    { badge: t("home.fastDelivery"), titleA: t("home.fastDelivery"), titleB: t("home.fastDeliveryBody"), body: t("home.heroBody"), art: "\u{1F69A}", bg: "bg-[#e3eefb]" },
-    { badge: t("home.qualityChecked"), titleA: t("home.qualityChecked"), titleB: t("home.qualityBody"), body: t("home.heroBody"), art: "\u{1F34E}", bg: "bg-[#fdf0d5]" },
+    { badge: t("home.heroBadge"), titleA: t("home.heroTitleA"), titleB: t("home.heroTitleB"), body: t("home.heroBody"), img: "/images/hero-bg-fresh.jpg", bg: "bg-[#dff1e3]" },
+    { badge: t("home.fastDelivery"), titleA: t("home.fastDelivery"), titleB: t("home.fastDeliveryBody"), body: t("home.heroBody"), img: "/images/hero-bg-delivery.jpg", bg: "bg-[#e3eefb]" },
+    { badge: t("home.qualityChecked"), titleA: t("home.qualityChecked"), titleB: t("home.qualityBody"), body: t("home.heroBody"), img: "/images/hero-bg-quality.jpg", bg: "bg-[#fdf0d5]" },
   ];
   const [heroIndex, setHeroIndex] = useState(0);
   const [heroPaused, setHeroPaused] = useState(false);
@@ -63,6 +86,12 @@ export function HomePage() {
     const timer = window.setInterval(() => setHeroIndex((current) => (current + 1) % heroSlides.length), 5000);
     return () => window.clearInterval(timer);
   }, [heroPaused, heroSlides.length]);
+  useEffect(() => {
+    heroSlides.forEach((slide) => {
+      const image = new Image();
+      image.src = slide.img;
+    });
+  }, []);
   const hero = heroSlides[heroIndex];
   return (
     <div className="animate-float-in space-y-12">
@@ -70,7 +99,9 @@ export function HomePage() {
         onMouseEnter={() => setHeroPaused(true)}
         onMouseLeave={() => setHeroPaused(false)}
         className={`relative overflow-hidden rounded-[2rem] px-6 py-10 transition-colors duration-500 sm:px-10 sm:py-14 lg:px-16 ${hero.bg}`}
+        style={{ backgroundImage: `url(${hero.img})`, backgroundSize: "cover", backgroundPosition: "right center" }}
       >
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/75 via-white/30 to-transparent" />
         <div key={heroIndex} className="animate-float-in relative z-10 max-w-xl">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-bold text-leaf-dark">
             <Leaf size={14} /> {hero.badge}
@@ -98,11 +129,6 @@ export function HomePage() {
               {t("home.findHealthy")}
             </Button>
           </div>
-        </div>
-        <div className="pointer-events-none absolute -right-12 -top-20 h-72 w-72 rounded-full bg-white/40" />
-        <div className="pointer-events-none absolute -bottom-24 right-10 h-64 w-64 rounded-full bg-white/40" />
-        <div className="absolute bottom-0 right-6 hidden w-72 text-[10rem] leading-none lg:block">
-          {hero.art}
         </div>
         <button aria-label="Slide trước" onClick={() => setHeroIndex((heroIndex - 1 + heroSlides.length) % heroSlides.length)} className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-ink shadow transition hover:bg-white">
           <ChevronLeft size={20} />
@@ -139,23 +165,36 @@ export function HomePage() {
           title={t("home.shopByCategory")}
           action={<LinkArrow to="/products"> {t("home.viewAll")}</LinkArrow>}
         />
-        <div className="hide-scrollbar flex gap-3 overflow-x-auto pb-2">
-          {categories.slice(0, 8).map((category, index) => (
-            <Link
-              key={category.CategoryId}
-              to={`/category/${category.CategoryId}`}
-              className="group min-w-[116px] rounded-2xl border border-line bg-white p-4 text-center transition hover:-translate-y-0.5 hover:border-leaf hover:shadow-[0_0_0_1px_var(--color-leaf)] hover:shadow-sm sm:min-w-0 sm:flex-1"
-            >
-              <span
-                className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-2xl ${["bg-[#fff3d7]", "bg-[#e2f4e6]", "bg-[#e9e5fb]", "bg-[#fde5e2]"][index % 4]}`}
+        <div className="hide-scrollbar flex gap-3 overflow-x-auto px-0.5 py-2">
+          {categories.slice(0, 8).map((category, index) => {
+            const imgSrc = categoryImageSrc(category.CategoryName);
+            const fallbackEmoji = CATEGORY_FALLBACK_EMOJI[index % CATEGORY_FALLBACK_EMOJI.length];
+            return (
+              <Link
+                key={category.CategoryId}
+                to={`/category/${category.CategoryId}`}
+                className="group min-w-[116px] rounded-2xl border border-line bg-white p-4 text-center transition hover:-translate-y-0.5 hover:border-leaf hover:shadow-[0_0_0_1px_var(--color-leaf)] hover:shadow-sm sm:min-w-0 sm:flex-1"
               >
-                {["🥤", "🍜", "🧼", "🍪", "🥦", "🧴"][index % 6]}
-              </span>
-              <span className="mt-3 block truncate text-sm font-bold text-ink group-hover:text-leaf">
-                {category.CategoryName}
-              </span>
-            </Link>
-          ))}
+                {imgSrc ? (
+                  <img
+                    src={imgSrc}
+                    alt={category.CategoryName}
+                    loading="lazy"
+                    className="mx-auto h-14 w-14 rounded-2xl object-cover"
+                  />
+                ) : (
+                  <span
+                    className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-2xl ${["bg-[#fff3d7]", "bg-[#e2f4e6]", "bg-[#e9e5fb]", "bg-[#fde5e2]"][index % 4]}`}
+                  >
+                    {fallbackEmoji}
+                  </span>
+                )}
+                <span className="mt-3 block truncate text-sm font-bold text-ink group-hover:text-leaf">
+                  {category.CategoryName}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </section>
       <section>

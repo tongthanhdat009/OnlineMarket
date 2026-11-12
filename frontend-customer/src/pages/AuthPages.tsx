@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Eye, EyeOff, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { apiClient } from "../api";
 import { useAuth, useToast } from "../app/providers";
 import { errorMessage } from "../lib";
@@ -61,13 +61,8 @@ function Field({
 
 function BrandMark() {
   return (
-    <Link to="/" className="mb-8 flex items-center justify-center gap-2.5">
-      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-leaf text-white">
-        <ShoppingBag size={22} />
-      </span>
-      <span className="display text-xl font-extrabold">
-        Green<span className="text-leaf">Basket</span>
-      </span>
+    <Link to="/" className="mb-8 flex items-center justify-center">
+      <img src="/images/logo.png" alt="GreenBasket" className="h-14 w-auto rounded-2xl object-contain" />
     </Link>
   );
 }
@@ -182,7 +177,7 @@ export function RegisterPage() {
         Phone: form.Phone.trim() || null,
         Address: form.Address.trim() || null,
       });
-      showToast(t("auth.accountCreated"));
+      showToast(t("auth.accountCreated"), "success");
       navigate("/login");
     } catch (error) {
       showToast(errorMessage(error, t("auth.createFailed")), "error");

@@ -7,7 +7,7 @@ import { apiClient } from "../api";
 import { useAuth, useCart, useToast } from "../app/providers";
 import { errorMessage, formatMoney } from "../lib";
 import { useOrders, useOrder } from "../hooks";
-import { productInStock, productName, supplierName } from "../app/types";
+import { productInStock, productName } from "../app/types";
 import { useProduct } from "../hooks";
 import { Button, Money, ProductGrid, ProductImage, QuantityControl, SectionHeading, EmptyState, ErrorState, CartLineRow } from "../components/store-ui";
 import { translator } from "../lib/translator";
@@ -76,7 +76,6 @@ export function ProductDetailPage() {
             <h1 className="display text-3xl font-extrabold text-ink sm:text-4xl">{productName(product)}</h1>
             <Money value={product.Price} className="mt-2 text-2xl font-extrabold text-leaf-dark" />
           </div>
-          <p className="text-sm text-muted">{supplierName(product)}</p>
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div>
               <dt className="text-xs text-muted">{t("product.barcode")}</dt>

@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag } from "lucide-react";
 import { translator } from "../lib/translator";
 
 const t = translator;
@@ -9,13 +8,8 @@ export function StoreFooter() {
     <footer className="border-t border-line bg-white pb-24 md:pb-10">
       <div className="container-store grid gap-8 py-10 sm:grid-cols-2 md:pt-12 lg:grid-cols-4">
         <div>
-          <Link to="/" className="flex items-center gap-2.5">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-leaf text-white shadow-sm">
-              <ShoppingBag size={20} strokeWidth={2.5} />
-            </span>
-            <span className="display text-lg font-extrabold tracking-tight text-ink">
-              Green<span className="text-leaf">Basket</span>
-            </span>
+          <Link to="/" className="flex items-center">
+            <img src="/images/logo.png" alt="GreenBasket" className="h-16 w-auto rounded-xl object-contain md:h-20" />
           </Link>
           <p className="mt-3 max-w-xs text-sm leading-6 text-muted">
             {t("footer.tagline")}

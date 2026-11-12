@@ -8,6 +8,7 @@ import {
   LocaleProvider,
   ToastProvider,
 } from "./app/providers";
+import { Toaster } from "./components/store-ui";
 import { appRoutes } from "./app/router";
 import "./styles.css";
 
@@ -23,6 +24,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
+        <Toaster />
         <LocaleProvider>
           <AuthProvider>
             <CartProvider>
